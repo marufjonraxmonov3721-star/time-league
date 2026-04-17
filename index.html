@@ -427,20 +427,29 @@
 
         .ef-mini-btn { width: 100%; background: #000; border: 1px solid var(--accent-color); color: var(--accent-color); padding: 16px; border-radius: 12px; font-weight: bold; margin-top: 10px; }
 
-        /* --- PROFIL VA PECHAT --- */
-        #profile-page { padding: 20px; text-align: center; }
-        .profile-card { background: #0a0a0a; border-radius: 20px; border: 1px solid #1a1a1a; padding: 30px 15px; position: relative; overflow: hidden; }
-        .pechat-canvas { background: transparent; margin: 20px auto; display: block; filter: drop-shadow(0 0 10px rgba(241, 196, 15, 0.4)); }
-        .privilege-box { background: rgba(241, 196, 15, 0.1); border: 1px dashed var(--accent-color); border-radius: 12px; padding: 15px; margin-top: 20px; text-align: left; }
-        .privilege-title { font-size: 14px; font-weight: 900; color: var(--accent-color); margin-bottom: 8px; text-transform: uppercase; }
-        .privilege-item { font-size: 12px; color: #eee; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
-        
-        /* Mavsum yakunlangan holat */
-        .season-ended-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(5px);
-            z-index: 100; display: none; align-items: center; justify-content: center;
-            flex-direction: column; text-align: center; padding: 20px; border-radius: 20px;
+        /* --- PROFIL SAHIFA VA CANVAS PECHAT --- */
+        #profile-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        #stamp-canvas {
+            background: #000;
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(241, 196, 15, 0.4);
+            margin-top: 20px;
+            max-width: 100%;
+        }
+        .winner-notice {
+            background: linear-gradient(45deg, #000, #111);
+            border: 1px solid #f1c40f;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            color: #fff;
+            font-size: 14px;
+            margin-top: 20px;
         }
 
     </style>
@@ -533,12 +542,7 @@
             <p class="relegation-warning" id="danger-info">⚠️ Xavf! Diviziondan tushib ketishingiz mumkin!</p>
         </div>
 
-        <div id="timer-container" style="position: relative;">
-            <div id="season-end-blocker" class="season-ended-overlay">
-                <span style="font-size: 40px;">⏳</span>
-                <h2 style="color: var(--accent-color); margin: 10px 0;">MAVSUM YAKUNLANDI</h2>
-                <p style="color: #eee; font-size: 12px;">Hozirda o'yin to'xtatilgan. Yangi mavsum boshlanishini kuting!</p>
-            </div>
+        <div id="timer-container">
             <div class="embedded-info">
                 <div class="info-line target-box" id="target-ui-box">
                     <div class="info-label">🎯 MAQSAD</div>
@@ -578,21 +582,11 @@
 
     <div id="profile-page" class="page">
         <div class="ef-header">
-            <span class="ef-main-title">MENING PROFILIM</span>
+            <span class="ef-main-title">PROFIL VA PECHAT</span>
         </div>
-        <div class="profile-card">
-            <h2 id="profile-name" style="margin: 0; color: #fff;">...</h2>
-            <p id="profile-div" style="color: var(--accent-color); font-weight: 900; letter-spacing: 2px;">DIVIZION --</p>
-            
-            <canvas id="pechatCanvas" width="200" height="200" class="pechat-canvas"></canvas>
-            
-            <div id="privileges" class="privilege-box" style="display: none;">
-                <div class="privilege-title">💎 DIVISION 1 IMTIYOZLARI:</div>
-                <div class="privilege-item">✨ Keyingi mavsumda D4 dan boshlash</div>
-                <div class="privilege-item">⚡ Har bir g'alaba uchun +5% ball bonusi</div>
-                <div class="privilege-item">🏆 Maxsus oltin "G'olib" muhri (Pechat)</div>
-            </div>
-            <p id="no-pechat-msg" style="color: #444; font-size: 11px; margin-top: 15px;">Faqat Division 1 egalariga maxsus muhr beriladi.</p>
+        <div id="profile-content">
+            <canvas id="stamp-canvas" width="300" height="300"></canvas>
+            <div id="winner-info-area"></div>
         </div>
     </div>
 
@@ -608,6 +602,7 @@
                     <span class="slider"></span>
                 </label>
             </div>
+            <p style="color: #333; font-size: 12px; margin-top: 20px;"></p>
         </div>
     </div>
 
@@ -671,7 +666,7 @@
         const myId = user?.id || "guest_" + Math.random().toString(36).substring(7);
         const myName = (user?.first_name || "O'yinchi");
 
-        let startTime, timerInterval, isRunning = false, isSeasonEnded = false;
+        let startTime, timerInterval, isRunning = false;
         let divSettings = {};
         let myCurrentData = { points: 100, division: 10, isWarning: false, wins: 0, losses: 0, isRegistered: false };
         let fullLeaderboard = [];
@@ -759,11 +754,11 @@
             return new Date(y, m - 1, d, h, min).getTime();
         }
 
+        // --- YANGILANGAN TIMER FUNKSIYASI ---
         function startSeasonCountdown(endTimeMs) {
             if(countdownTimerId) clearInterval(countdownTimerId);
+            
             const countdownEl = document.getElementById('season-countdown');
-            const endBlocker = document.getElementById('season-end-blocker');
-            const actionBtn = document.getElementById('actionBtn');
             
             function updateCounter() {
                 const now = Date.now();
@@ -771,18 +766,11 @@
 
                 if (diff <= 0) {
                     countdownEl.innerHTML = "<span style='color:#e74c3c; font-weight:900;'>MAVSUM YAKUNLANDI</span>";
-                    isSeasonEnded = true;
-                    endBlocker.style.display = 'flex';
-                    actionBtn.style.opacity = '0.3';
-                    actionBtn.disabled = true;
+                    document.getElementById('actionBtn').disabled = true;
+                    document.getElementById('actionBtn').style.opacity = "0.5";
                     clearInterval(countdownTimerId);
                     return;
                 }
-
-                isSeasonEnded = false;
-                endBlocker.style.display = 'none';
-                actionBtn.style.opacity = '1';
-                actionBtn.disabled = false;
 
                 const d = Math.floor(diff / (1000 * 60 * 60 * 24));
                 const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -809,12 +797,42 @@
                 const season = s.val();
                 document.getElementById('season-start-val').innerText = season.start || "--.-- --:--";
                 document.getElementById('season-end-val').innerText = season.end || "--.-- --:--";
+                
+                const now = Date.now();
                 const endTime = parseUzDate(season.end);
+
                 startSeasonCountdown(endTime);
+
+                if (now >= endTime && season.status !== "resetting") {
+                    handleSeasonReset();
+                }
             }
             loadedResources.settings = true;
             checkAllLoaded();
         });
+
+        async function handleSeasonReset() {
+            await update(ref(db, 'settings/season'), { status: "resetting" });
+            
+            onValue(ref(db, 'leaderboard'), async (snapshot) => {
+                const allPlayers = snapshot.val();
+                if (allPlayers) {
+                    const updates = {};
+                    Object.keys(allPlayers).forEach(uid => {
+                        updates[`leaderboard/${uid}/points`] = 0;
+                        updates[`leaderboard/${uid}/division`] = 10;
+                        updates[`leaderboard/${uid}/wins`] = 0;
+                        updates[`leaderboard/${uid}/losses`] = 0;
+                        updates[`leaderboard/${uid}/isWarning`] = false;
+                    });
+                    
+                    await update(ref(db), updates);
+                    await update(ref(db, 'settings/season'), { status: "active" });
+                    tg.showAlert("Mavsum yakunlandi! Barcha natijalar qayta nolga tushirildi.");
+                    window.location.reload();
+                }
+            }, { onlyOnce: true });
+        }
 
         onValue(ref(db, 'settings/divisions'), (snapshot) => {
             divSettings = snapshot.val();
@@ -826,80 +844,40 @@
         onValue(ref(db, 'leaderboard/' + myId), (snapshot) => {
             if (snapshot.exists()) {
                 myCurrentData = { ...snapshot.val(), isRegistered: true };
+                if (myCurrentData.wins === undefined) myCurrentData.wins = 0;
+                if (myCurrentData.losses === undefined) myCurrentData.losses = 0;
+                
                 document.getElementById('user-div-icon').innerText = myCurrentData.division || 10;
                 document.getElementById('user-div-title').innerText = myCurrentData.division || 10;
                 document.getElementById('user-pts').innerText = (myCurrentData.points || 0).toLocaleString();
-                const total = (myCurrentData.wins || 0) + (myCurrentData.losses || 0);
-                document.getElementById('user-win-rate').innerText = (total > 0 ? Math.round((myCurrentData.wins / total) * 100) : 0) + "%";
-                document.getElementById('user-wl-stat').innerText = `${myCurrentData.wins || 0}/${myCurrentData.losses || 0}`;
                 
-                // Profil yangilash
-                document.getElementById('profile-name').innerText = myCurrentData.name;
-                document.getElementById('profile-div').innerText = `DIVIZION ${myCurrentData.division}`;
+                const total = myCurrentData.wins + myCurrentData.losses;
+                const wr = total > 0 ? Math.round((myCurrentData.wins / total) * 100) : 0;
+                document.getElementById('user-win-rate').innerText = wr + "%";
+                document.getElementById('user-wl-stat').innerText = `${myCurrentData.wins}/${myCurrentData.losses}`;
                 
-                if(myCurrentData.division === 1) {
-                    drawPechat();
-                    document.getElementById('privileges').style.display = 'block';
-                    document.getElementById('no-pechat-msg').style.display = 'none';
-                } else {
-                    document.getElementById('privileges').style.display = 'none';
-                    document.getElementById('no-pechat-msg').style.display = 'block';
-                    const canvas = document.getElementById('pechatCanvas');
-                    const ctx = canvas.getContext('2d');
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                }
                 updateGameUI();
+                drawStamp(); // Profil yangilanganda pechatni chizish
+            } else {
+                myCurrentData = { name: myName, points: 0, division: 10, wins: 0, losses: 0, isWarning: false, isRegistered: false };
+                document.getElementById('user-div-icon').innerText = 10;
+                document.getElementById('user-div-title').innerText = 10;
+                document.getElementById('user-pts').innerText = "0";
+                document.getElementById('user-win-rate').innerText = "0%";
+                document.getElementById('user-wl-stat').innerText = "0/0";
+                updateGameUI();
+                drawStamp();
             }
-            loadedResources.leaderboard = true; checkAllLoaded();
+            loadedResources.leaderboard = true;
+            checkAllLoaded();
         });
-
-        function drawPechat() {
-            const canvas = document.getElementById('pechatCanvas');
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Tashqi oltin doira
-            ctx.beginPath();
-            ctx.arc(100, 100, 80, 0, Math.PI * 2);
-            ctx.strokeStyle = '#f1c40f';
-            ctx.lineWidth = 5;
-            ctx.stroke();
-
-            // Ichki naqshli doira
-            ctx.beginPath();
-            ctx.arc(100, 100, 72, 0, Math.PI * 2);
-            ctx.setLineDash([5, 5]);
-            ctx.strokeStyle = '#9a7d0a';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.setLineDash([]);
-
-            // Markazdagi matn
-            ctx.fillStyle = '#f1c40f';
-            ctx.font = 'bold 24px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('D1 ELITE', 100, 95);
-
-            ctx.font = '900 30px Arial';
-            ctx.fillText('G\'OLIB', 100, 130);
-
-            // Doira bo'ylab matn
-            ctx.font = 'bold 12px Arial';
-            ctx.fillStyle = '#fff';
-            ctx.save();
-            ctx.translate(100, 100);
-            for (let i = 0; i < 8; i++) {
-                ctx.fillText('★ TIME LEAGUE ★', 0, -60);
-                ctx.rotate(Math.PI / 4);
-            }
-            ctx.restore();
-        }
 
         function updateGameUI() {
             const d = myCurrentData.division || 10;
             const pts = myCurrentData.points || 0;
             if (divSettings && divSettings[d]) {
                 const rules = divSettings[d];
+                
                 const divColor = rules.color || '#f1c40f';
                 const divEffect = rules.effect || 'none';
 
@@ -910,13 +888,25 @@
                 const timerText = document.getElementById('display');
                 const timerBox = document.getElementById('timer-container');
                 const mainCard = document.getElementById('main-div-card');
+                const targetBox = document.getElementById('target-ui-box');
 
                 timerText.style.color = divColor.includes('gradient') ? '#fff' : divColor;
+                timerText.style.textShadow = `0 0 15px ${divColor.includes('gradient') ? 'rgba(255,255,255,0.5)' : divColor}`;
+                
                 [timerBox, mainCard].forEach(el => {
                     el.className = el.className.replace(/effect-\w+/g, '').trim();
                     if(divEffect !== 'none') el.classList.add(divEffect);
-                    el.style.borderColor = divColor.includes('gradient') ? '#fff' : divColor;
+                    
+                    if(divColor.includes('gradient')) {
+                        el.style.borderImage = `${divColor} 1`;
+                    } else {
+                        el.style.borderImage = "none";
+                        el.style.borderColor = divColor;
+                    }
                 });
+
+                targetBox.style.borderColor = divColor.includes('gradient') ? 'rgba(255,255,255,0.2)' : divColor;
+                document.getElementById('target-label').style.color = divColor.includes('gradient') ? '#fff' : divColor;
 
                 document.getElementById('target-label').innerText = `${rules.target.toFixed(3)}s`;
                 document.getElementById('limit-label').innerText = `±${rules.nearLimit.toFixed(3)}s`;
@@ -924,62 +914,107 @@
                 document.getElementById('minus-label').innerText = `-${rules.minusPoints} ball`;
 
                 let promoText = "";
-                if (d > 1) promoText += `🚀 Keyingi Divizionga o'tish: ${rules.promotionPoints} ball. <br>`;
-                if (d < 10) promoText += `⚠️ Tushish: Ballingiz ${rules.relegationPoints} dan kamaysa.`;
+                if (d > 1) promoText += `🚀 Keyingi Divizionga ko'tarilish uchun: ${rules.promotionPoints} ball to'plashingiz kerak. <br>`;
+                if (d < 10) promoText += `⚠️ Pastki Divizionga tushish chegarasi: Ballingiz ${rules.relegationPoints} dan kamaysa pasayasiz.`;
                 document.getElementById('promo-info').innerHTML = promoText || "Siz eng cho'qqidasiz! 🏆";
-                document.getElementById('danger-info').style.display = (d < 10 && pts <= (rules.relegationPoints + 20)) ? 'block' : 'none';
+
+                const dangerZone = (rules.relegationPoints || 0) + 20;
+                document.getElementById('danger-info').style.display = (d < 10 && pts <= dangerZone) ? 'block' : 'none';
             }
         }
 
         window.handleAction = () => {
-            if(isSeasonEnded) return;
             const btn = document.getElementById('actionBtn');
             const display = document.getElementById('display');
             let currentDiv = myCurrentData.division || 10;
-            const rules = divSettings[currentDiv];
+            const rules = divSettings[currentDiv] || { 
+                target: 10.0, 
+                nearLimit: 0.05, 
+                plusPoints: 30, 
+                minusPoints: 30, 
+                promotionPoints: 500, 
+                relegationPoints: 50,
+                jackpotPoints: 100,
+                jackpotJumpDiv: (currentDiv > 1 ? currentDiv - 1 : 1),
+                color: '#f1c40f'
+            };
 
             if (!isRunning) {
-                isRunning = true; startTime = Date.now();
+                isRunning = true;
+                startTime = Date.now();
                 btn.innerText = "STOP"; btn.className = "btn-main stop";
                 playSound('tick'); 
+                tg.HapticFeedback.impactOccurred('medium');
                 timerInterval = setInterval(() => {
                     display.innerText = ((Date.now() - startTime) / 1000).toFixed(3);
                 }, 10);
+                document.getElementById('last-result').innerText = "";
             } else {
-                isRunning = false; clearInterval(timerInterval);
+                isRunning = false;
+                clearInterval(timerInterval);
                 const finalTime = (Date.now() - startTime) / 1000;
                 display.innerText = finalTime.toFixed(3);
                 btn.innerText = "START"; btn.className = "btn-main start";
                 
+                let soundToPlay = 'click';
                 const diffVal = Math.abs(rules.target - finalTime);
                 const diffStr = diffVal.toFixed(3);
                 let pointChange = 0, newDivision = currentDiv, newPoints = myCurrentData.points || 0, newWarning = myCurrentData.isWarning || false;
                 let newWins = myCurrentData.wins || 0, newLosses = myCurrentData.losses || 0;
 
                 if (diffStr === "0.000") {
-                    newPoints = parseInt(rules.jackpotPoints); newDivision = parseInt(rules.jackpotJumpDiv);
-                    newWins++; playSound('jackpot'); showResult("🔥 JACKPOT!", "#f1c40f");
+                    newPoints = parseInt(rules.jackpotPoints || 100); 
+                    newDivision = parseInt(rules.jackpotJumpDiv || (currentDiv > 1 ? currentDiv - 1 : 1));
+                    newWarning = false;
+                    newWins++;
+                    soundToPlay = 'jackpot';
+                    showResult(`🔥 JACKPOT! PERFECT 0.000! Ballaringiz ${newPoints} ga yangilandi va D${newDivision} ga sakradingiz!`, "#f1c40f");
                 } else if (diffVal <= rules.nearLimit) {
                     pointChange = parseInt(rules.plusPoints); 
-                    // Bonus 5% if Division 1
-                    if(currentDiv === 1) pointChange = Math.round(pointChange * 1.05);
-                    newPoints += pointChange; newWins++; playSound('win'); showResult(`✅ +${pointChange} ball`, "#2ecc71");
+                    newPoints += pointChange;
+                    newWarning = false;
+                    newWins++;
+                    soundToPlay = 'win';
+                    showResult(`✅ Zo‘r! Aniq urinish! +${pointChange} ball`, "#2ecc71");
                 } else {
                     pointChange = -parseInt(rules.minusPoints); 
-                    newPoints = Math.max(0, newPoints + pointChange); newLosses++; playSound('lose'); showResult(`❌ ${pointChange} ball`, "#e74c3c");
+                    newPoints += pointChange;
+                    if (newPoints < 0) newPoints = 0;
+                    newLosses++;
+                    soundToPlay = 'lose';
+                    showResult(`❌ Juda uzoq! Qayta urinib ko‘ring! ${pointChange} ball`, "#e74c3c");
                 }
 
                 if (diffStr !== "0.000" && newDivision > 1 && newPoints >= rules.promotionPoints) {
-                    newDivision -= 1; playSound('promo'); tg.showAlert(`🚀 Divizion ${newDivision} ga chiqdingiz!`);
+                    newDivision -= 1; 
+                    newWarning = false;
+                    soundToPlay = 'promo';
+                    tg.showAlert("🎉 Tabriklaymiz! Siz Divizion " + newDivision + " ga ko'tarildingiz!");
                 }
                 
-                if (newDivision < 10 && newPoints < rules.relegationPoints) {
-                    if (newWarning) { newDivision += 1; newWarning = false; playSound('relegate'); }
-                    else { newWarning = true; tg.showAlert("⚠️ Xavf!"); }
+                if (newDivision < 10 && newPoints < (rules.relegationPoints || 0)) {
+                    if (newWarning) {
+                        newDivision += 1; 
+                        newWarning = false;
+                        soundToPlay = 'relegate';
+                        tg.showAlert("😔 Afsus! Siz pastki divizionga tushib ketdingiz");
+                    } else {
+                        newWarning = true;
+                        tg.showAlert("⚠️ Ogohlantirish! Ballaringiz juda kam. Yana yutqazsangiz divizioningiz pasayadi!");
+                    }
                 }
 
+                playSound(soundToPlay);
+
                 update(ref(db, 'leaderboard/' + myId), { 
-                    name: myName, points: newPoints, division: newDivision, bestDiff: diffStr, lastTime: finalTime.toFixed(3), isWarning: newWarning, wins: newWins, losses: newLosses
+                    name: myName, 
+                    points: newPoints, 
+                    division: newDivision, 
+                    bestDiff: diffStr, 
+                    lastTime: finalTime.toFixed(3), 
+                    isWarning: newWarning,
+                    wins: newWins,
+                    losses: newLosses
                 });
             }
         };
@@ -995,6 +1030,7 @@
             if (!data) return;
             fullLeaderboard = Object.entries(data).map(([id, val]) => ({id, ...val}))
                 .sort((a, b) => (a.division !== b.division) ? a.division - b.division : (b.points || 0) - (a.points || 0));
+            
             const idx = fullLeaderboard.findIndex(p => String(p.id) === String(myId));
             document.getElementById('user-rank-pos').innerText = idx !== -1 ? `#${idx + 1}` : "#---";
             renderRanking();
@@ -1005,14 +1041,26 @@
             container.innerHTML = '';
             fullLeaderboard.forEach((p, i) => {
                 const row = document.createElement('div');
-                const rowRules = divSettings[p.division] || { color: '#f1c40f', effect: 'none' };
+                const rowRules = (divSettings && divSettings[p.division]) ? divSettings[p.division] : { color: '#f1c40f', effect: 'none' };
+                const rowDivColor = rowRules.color;
+                const rowDivEffect = rowRules.effect;
+
                 row.className = `ef-row ${String(p.id) === String(myId) ? 'me' : ''}`;
-                if(rowRules.effect !== 'none') row.classList.add(rowRules.effect);
+                if(String(p.id) === String(myId)) row.id = "my-rank-row";
+                
+                if(rowDivEffect !== 'none') row.classList.add(rowDivEffect);
+                
+                if(rowDivColor.includes('gradient')) {
+                    row.style.borderImage = `${rowDivColor} 1`;
+                } else {
+                    row.style.borderColor = rowDivColor;
+                }
+
                 row.innerHTML = `
                     <div class="ef-rank-num">${i+1}</div>
-                    <div class="ef-avatar">⏱️<div class="ef-div-tag" style="background:${rowRules.color}">D${p.division || 10}</div></div>
+                    <div class="ef-avatar">⏱️<div class="ef-div-tag" style="background:${rowDivColor.includes('gradient') ? '#fff' : rowDivColor}; color: #000">D${p.division || 10}</div></div>
                     <div class="ef-info-main"><div class="ef-name">${p.name}</div></div>
-                    <div class="ef-points-val">${(p.points || 0).toLocaleString()}</div>
+                    <div class="ef-points-val" style="color: ${rowDivColor.includes('gradient') ? '#fff' : rowDivColor}">${(p.points || 0).toLocaleString()}</div>
                 `;
                 container.appendChild(row);
             });
@@ -1023,13 +1071,98 @@
             document.getElementById(pId).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             nav.classList.add('active');
+            if(pId === 'profile-page') drawStamp();
             tg.HapticFeedback.selectionChanged();
         };
 
         window.scrollToMe = () => {
-            const me = document.querySelector('.ef-row.me');
-            if(me) me.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const me = document.getElementById('my-rank-row');
+            if(me) { 
+                me.scrollIntoView({ behavior: 'smooth', block: 'center' }); 
+            } else { 
+                tg.showAlert("Siz hali global reyting ro'yxatiga kirmadinigiz!"); 
+            }
         };
+
+        // --- PECHAT CHIZISH (CANVAS) ---
+        function drawStamp() {
+            const canvas = document.getElementById('stamp-canvas');
+            const ctx = canvas.getContext('2d');
+            const isWinner = (myCurrentData.division === 1);
+            const stampColor = isWinner ? "#f1c40f" : "#333";
+            const textColor = isWinner ? "#fff" : "#555";
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Tashqi doira
+            ctx.beginPath();
+            ctx.arc(150, 150, 140, 0, Math.PI * 2);
+            ctx.strokeStyle = stampColor;
+            ctx.lineWidth = 8;
+            ctx.stroke();
+
+            // Ichki dekorativ doira
+            ctx.beginPath();
+            ctx.arc(150, 150, 125, 0, Math.PI * 2);
+            ctx.setLineDash([10, 5]);
+            ctx.strokeStyle = stampColor;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Markazdagi Divizion matni
+            ctx.fillStyle = stampColor;
+            ctx.font = "900 80px Arial";
+            ctx.textAlign = "center";
+            ctx.fillText("D" + (myCurrentData.division || 10), 150, 160);
+
+            // Ism va Status (Aylana bo'ylab)
+            ctx.font = "bold 20px Arial";
+            ctx.fillStyle = textColor;
+            const statusText = isWinner ? "ELITE DIVISION MASTER" : "TIME LEAGUE PLAYER";
+            
+            // Yuqori yarim aylana matni
+            ctx.save();
+            ctx.translate(150, 150);
+            const nameToDraw = myName.toUpperCase();
+            for(let i=0; i<nameToDraw.length; i++) {
+                ctx.save();
+                ctx.rotate(-1 + (i * 0.15));
+                ctx.fillText(nameToDraw[i], 0, -100);
+                ctx.restore();
+            }
+            ctx.restore();
+
+            // Pastki yarim aylana matni
+            ctx.save();
+            ctx.translate(150, 150);
+            for(let i=0; i<statusText.length; i++) {
+                ctx.save();
+                ctx.rotate(2.5 - (i * 0.12));
+                ctx.fillText(statusText[i], 0, 110);
+                ctx.restore();
+            }
+            ctx.restore();
+
+            // Imtiyozlar matni
+            const infoArea = document.getElementById('winner-info-area');
+            if(isWinner) {
+                infoArea.innerHTML = `
+                    <div class="winner-notice">
+                        <h3 style="margin:0 0 10px 0; color:#f1c40f;">OLTIN PECHAT IMTIYOZLARI:</h3>
+                        <ul style="text-align:left; margin:0; padding-left:20px;">
+                            <li>Global reytingda alohida oltin effekt</li>
+                            <li>Har bir urinish uchun 2x ko'proq ball</li>
+                            <li>Mavsum oxirida eksklyuziv sovg'alar</li>
+                            <li>D1 Master maxsus nishoni</li>
+                        </ul>
+                    </div>
+                `;
+            } else {
+                infoArea.innerHTML = `<p style="color:#555; font-size:12px; text-align:center;">D1 divizioniga ko'tarilib "Oltin Pechat" va imtiyozlarga ega bo'ling!</p>`;
+            }
+        }
+
     </script>
 </body>
 </html>
