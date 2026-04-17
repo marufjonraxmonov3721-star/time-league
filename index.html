@@ -149,7 +149,6 @@
             transition: 0.5s;
         }
 
-        /* --- YANGILANGAN HEADER (Divizion va Mavsum alohida) --- */
         .header-column {
             display: flex;
             flex-direction: column;
@@ -221,7 +220,6 @@
             font-weight: bold;
         }
 
-        /* --- YANGILANGAN TIMER STYLE --- */
         .countdown-wrapper {
             background: #000;
             border-radius: 10px;
@@ -405,6 +403,29 @@
         .ef-name { font-weight: 700; font-size: 16px; color: #fff; }
         .ef-points-val { font-weight: 900; font-size: 18px; color: #f1c40f; font-family: monospace; }
         
+        /* --- PROFIL SAHIFASI STYLES --- */
+        .profile-card {
+            background: #0a0a0a; border-radius: 20px; padding: 25px;
+            text-align: center; border: 1px solid #1a1a1a;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .profile-avatar-large {
+            width: 100px; height: 100px; background: #000;
+            border-radius: 50%; margin: 0 auto 15px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 50px; border: 3px solid var(--accent-color);
+        }
+        .profile-name { font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 5px; }
+        .profile-id { font-size: 12px; color: #444; font-family: monospace; margin-bottom: 20px; }
+        
+        /* Canvas Pechat Style */
+        #stamp-canvas {
+            margin-top: 20px;
+            max-width: 100%;
+            height: auto;
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+        }
+
         .settings-container { background: #0a0a0a; border-radius: 15px; padding: 20px; border: 1px solid #1a1a1a; }
         .setting-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid #111; }
         .setting-label { font-size: 16px; font-weight: bold; color: #f1c40f; }
@@ -421,33 +442,11 @@
             background: #000; display: flex; justify-content: space-around;
             align-items: center; border-top: 1px solid #111; z-index: 2000;
         }
-        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; color: #333; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; color: #333; font-size: 11px; font-weight: bold; cursor: pointer; }
         .nav-item.active { color: var(--accent-color); }
-        .nav-icon { font-size: 22px; margin-bottom: 4px; }
+        .nav-icon { font-size: 20px; margin-bottom: 4px; }
 
         .ef-mini-btn { width: 100%; background: #000; border: 1px solid var(--accent-color); color: var(--accent-color); padding: 16px; border-radius: 12px; font-weight: bold; margin-top: 10px; }
-
-        /* --- NEW PROFILE PAGE STYLES --- */
-        #profile-card {
-            background: linear-gradient(145deg, #0a0a0a, #111);
-            border-radius: 20px;
-            padding: 30px;
-            text-align: center;
-            border: 1px solid #1a1a1a;
-            position: relative;
-            overflow: hidden;
-        }
-        #seal-canvas {
-            margin: 20px auto;
-            display: block;
-            width: 200px;
-            height: 200px;
-            filter: drop-shadow(0 0 10px rgba(241, 196, 15, 0.3));
-        }
-        .profile-name { font-size: 24px; font-weight: 900; color: #fff; margin-bottom: 5px; }
-        .profile-id { font-size: 12px; color: #444; margin-bottom: 20px; }
-        .seal-status-text { font-size: 14px; font-weight: bold; color: var(--accent-color); text-transform: uppercase; margin-top: 10px; }
-        .no-seal-text { color: #333; font-size: 13px; font-style: italic; }
 
     </style>
 </head>
@@ -492,13 +491,13 @@
                     <div class="countdown-wrapper">
                         <span class="countdown-label">Mavsum yakuniga:</span>
                         <div id="season-countdown">
-                            <div class="time-unit"><span class="time-value">0</span><span class="time-label">kun</span></div>
+                            <div class="time-unit"><span class="time-value">0</span><span class="time-label">k</span></div>
                             <span class="time-separator">:</span>
-                            <div class="time-unit"><span class="time-value">00</span><span class="time-label">soat</span></div>
+                            <div class="time-unit"><span class="time-value">00</span><span class="time-label">s</span></div>
                             <span class="time-separator">:</span>
-                            <div class="time-unit"><span class="time-value">00</span><span class="time-label">minut</span></div>
+                            <div class="time-unit"><span class="time-value">00</span><span class="time-label">m</span></div>
                             <span class="time-separator">:</span>
-                            <div class="time-unit"><span class="time-value">00</span><span class="time-label">sekund</span></div>
+                            <div class="time-unit"><span class="time-value">00</span><span class="time-label">s</span></div>
                         </div>
                     </div>
                 </div>
@@ -581,14 +580,14 @@
         <div class="ef-header">
             <span class="ef-main-title">PROFIL</span>
         </div>
-        <div id="profile-card">
-            <div class="profile-name" id="p-name">...</div>
-            <div class="profile-id" id="p-id">ID: ---</div>
+        <div class="profile-card">
+            <div class="profile-avatar-large">👤</div>
+            <div class="profile-name" id="prof-name">Ism</div>
+            <div class="profile-id" id="prof-id">ID: 000000</div>
             
-            <canvas id="seal-canvas" width="400" height="400"></canvas>
+            <canvas id="stamp-canvas" width="300" height="200"></canvas>
             
-            <div id="seal-status" class="seal-status-text"></div>
-            <div id="no-seal-desc" class="no-seal-text">Mavsum yakunida D1 ga chiqing va maxsus pechatni qo'lga kiriting!</div>
+            <p style="color: #555; font-size: 11px; margin-top: 15px; font-style: italic;">Ushbu muhr sizning joriy mavsumdagi natijangizni tasdiqlaydi.</p>
         </div>
     </div>
 
@@ -604,7 +603,6 @@
                     <span class="slider"></span>
                 </label>
             </div>
-            <p style="color: #333; font-size: 12px; margin-top: 20px;"></p>
         </div>
     </div>
 
@@ -647,7 +645,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCSzwEYIG54B2_ddgmA6QtkRp6a80s6gtM",
@@ -668,15 +666,17 @@
         const myId = user?.id || "guest_" + Math.random().toString(36).substring(7);
         const myName = (user?.first_name || "O'yinchi");
 
+        document.getElementById('prof-name').innerText = myName;
+        document.getElementById('prof-id').innerText = "ID: " + myId;
+
         let startTime, timerInterval, isRunning = false;
         let divSettings = {};
-        let myCurrentData = { points: 100, division: 10, isWarning: false, wins: 0, losses: 0, isRegistered: false, hasSeal: false };
+        let myCurrentData = { points: 100, division: 10, isWarning: false, wins: 0, losses: 0, isRegistered: false };
         let fullLeaderboard = [];
         let loadedResources = { settings: false, divisions: false, leaderboard: false, sounds: false };
         let gameSounds = { tick: null, click: null, win: null, lose: null, promo: null, relegate: null, jackpot: null };
         let isSoundEnabled = localStorage.getItem('soundEnabled') !== 'false';
         let countdownTimerId = null;
-        let adminSettings = { sealBonus: 0 };
 
         document.getElementById('sound-toggle').checked = isSoundEnabled;
 
@@ -699,19 +699,16 @@
             }
         }
 
-        onValue(ref(db, 'settings'), (snapshot) => {
+        onValue(ref(db, 'settings/sounds'), (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.val();
-                if(data.sounds) {
-                    if(data.sounds.tick) gameSounds.tick = new Audio(data.sounds.tick);
-                    if(data.sounds.click) gameSounds.click = new Audio(data.sounds.click);
-                    if(data.sounds.win) gameSounds.win = new Audio(data.sounds.win);
-                    if(data.sounds.lose) gameSounds.lose = new Audio(data.sounds.lose);
-                    if(data.sounds.promo) gameSounds.promo = new Audio(data.sounds.promo);
-                    if(data.sounds.relegate) gameSounds.relegate = new Audio(data.sounds.relegate);
-                    if(data.sounds.jackpot) gameSounds.jackpot = new Audio(data.sounds.jackpot);
-                }
-                if(data.bonus) adminSettings.sealBonus = parseInt(data.bonus) || 0;
+                if(data.tick) gameSounds.tick = new Audio(data.tick);
+                if(data.click) gameSounds.click = new Audio(data.click);
+                if(data.win) gameSounds.win = new Audio(data.win);
+                if(data.lose) gameSounds.lose = new Audio(data.lose);
+                if(data.promo) gameSounds.promo = new Audio(data.promo);
+                if(data.relegate) gameSounds.relegate = new Audio(data.relegate);
+                if(data.jackpot) gameSounds.jackpot = new Audio(data.jackpot);
             }
             loadedResources.sounds = true;
             checkAllLoaded();
@@ -807,29 +804,23 @@
 
         async function handleSeasonReset() {
             await update(ref(db, 'settings/season'), { status: "resetting" });
-            const snapshot = await get(ref(db, 'leaderboard'));
-            const allPlayers = snapshot.val();
-            if (allPlayers) {
-                const updates = {};
-                const nowStr = new Date().toLocaleString('uz-UZ');
-                Object.keys(allPlayers).forEach(uid => {
-                    const p = allPlayers[uid];
-                    // D1 LAGI O'YINCHILARGA PECHAT URISH
-                    if(p.division === 1) {
-                        updates[`leaderboard/${uid}/hasSeal`] = true;
-                        updates[`leaderboard/${uid}/sealDate`] = nowStr;
-                    }
-                    updates[`leaderboard/${uid}/points`] = 0;
-                    updates[`leaderboard/${uid}/division`] = 10;
-                    updates[`leaderboard/${uid}/wins`] = 0;
-                    updates[`leaderboard/${uid}/losses`] = 0;
-                    updates[`leaderboard/${uid}/isWarning`] = false;
-                });
-                await update(ref(db), updates);
-                await update(ref(db, 'settings/season'), { status: "active" });
-                tg.showAlert("Mavsum yakunlandi! D1 g'oliblariga pechat urildi va natijalar yangilandi.");
-                window.location.reload();
-            }
+            onValue(ref(db, 'leaderboard'), async (snapshot) => {
+                const allPlayers = snapshot.val();
+                if (allPlayers) {
+                    const updates = {};
+                    Object.keys(allPlayers).forEach(uid => {
+                        updates[`leaderboard/${uid}/points`] = 0;
+                        updates[`leaderboard/${uid}/division`] = 10;
+                        updates[`leaderboard/${uid}/wins`] = 0;
+                        updates[`leaderboard/${uid}/losses`] = 0;
+                        updates[`leaderboard/${uid}/isWarning`] = false;
+                    });
+                    await update(ref(db), updates);
+                    await update(ref(db, 'settings/season'), { status: "active" });
+                    tg.showAlert("Mavsum yakunlandi! Barcha natijalar qayta nolga tushirildi.");
+                    window.location.reload();
+                }
+            }, { onlyOnce: true });
         }
 
         onValue(ref(db, 'settings/divisions'), (snapshot) => {
@@ -842,18 +833,17 @@
         onValue(ref(db, 'leaderboard/' + myId), (snapshot) => {
             if (snapshot.exists()) {
                 myCurrentData = { ...snapshot.val(), isRegistered: true };
+                if (myCurrentData.wins === undefined) myCurrentData.wins = 0;
+                if (myCurrentData.losses === undefined) myCurrentData.losses = 0;
                 document.getElementById('user-div-icon').innerText = myCurrentData.division || 10;
                 document.getElementById('user-div-title').innerText = myCurrentData.division || 10;
                 document.getElementById('user-pts').innerText = (myCurrentData.points || 0).toLocaleString();
-                const total = (myCurrentData.wins || 0) + (myCurrentData.losses || 0);
+                const total = myCurrentData.wins + myCurrentData.losses;
                 const wr = total > 0 ? Math.round((myCurrentData.wins / total) * 100) : 0;
                 document.getElementById('user-win-rate').innerText = wr + "%";
-                document.getElementById('user-wl-stat').innerText = `${myCurrentData.wins || 0}/${myCurrentData.losses || 0}`;
+                document.getElementById('user-wl-stat').innerText = `${myCurrentData.wins}/${myCurrentData.losses}`;
                 updateGameUI();
-                renderProfile();
-            } else {
-                myCurrentData = { name: myName, points: 0, division: 10, wins: 0, losses: 0, isWarning: false, isRegistered: false, hasSeal: false };
-                renderProfile();
+                drawStamp(); // Profil yangilanishi
             }
             loadedResources.leaderboard = true;
             checkAllLoaded();
@@ -878,7 +868,8 @@
                 [timerBox, mainCard].forEach(el => {
                     el.className = el.className.replace(/effect-\w+/g, '').trim();
                     if(divEffect !== 'none') el.classList.add(divEffect);
-                    if(divColor.includes('gradient')) { el.style.borderImage = `${divColor} 1`; } else { el.style.borderImage = "none"; el.style.borderColor = divColor; }
+                    if(divColor.includes('gradient')) { el.style.borderImage = `${divColor} 1`; } 
+                    else { el.style.borderImage = "none"; el.style.borderColor = divColor; }
                 });
                 targetBox.style.borderColor = divColor.includes('gradient') ? 'rgba(255,255,255,0.2)' : divColor;
                 document.getElementById('target-label').style.color = divColor.includes('gradient') ? '#fff' : divColor;
@@ -899,7 +890,7 @@
             const btn = document.getElementById('actionBtn');
             const display = document.getElementById('display');
             let currentDiv = myCurrentData.division || 10;
-            const rules = divSettings[currentDiv] || { target: 10.0, nearLimit: 0.05, plusPoints: 30, minusPoints: 30, promotionPoints: 500, jackpotPoints: 100 };
+            const rules = divSettings[currentDiv] || { target: 10.0, nearLimit: 0.05, plusPoints: 30, minusPoints: 30 };
             if (!isRunning) {
                 isRunning = true;
                 startTime = Date.now();
@@ -921,42 +912,32 @@
                 const diffStr = diffVal.toFixed(3);
                 let pointChange = 0, newDivision = currentDiv, newPoints = myCurrentData.points || 0, newWarning = myCurrentData.isWarning || false;
                 let newWins = myCurrentData.wins || 0, newLosses = myCurrentData.losses || 0;
-
-                // ADMIN BONUS % (PECHAT UCHUN)
-                let bonusMultiplier = 1;
-                if(myCurrentData.hasSeal && adminSettings.sealBonus > 0) {
-                    bonusMultiplier = 1 + (adminSettings.sealBonus / 100);
-                }
-
                 if (diffStr === "0.000") {
                     newPoints = parseInt(rules.jackpotPoints || 100); 
                     newDivision = parseInt(rules.jackpotJumpDiv || (currentDiv > 1 ? currentDiv - 1 : 1));
                     newWarning = false; newWins++; soundToPlay = 'jackpot';
                     showResult(`🔥 JACKPOT! PERFECT 0.000!`, "#f1c40f");
                 } else if (diffVal <= rules.nearLimit) {
-                    pointChange = Math.round(parseInt(rules.plusPoints) * bonusMultiplier); 
+                    pointChange = parseInt(rules.plusPoints); 
                     newPoints += pointChange; newWarning = false; newWins++; soundToPlay = 'win';
-                    showResult(`✅ Zo‘r! +${pointChange} ball ${bonusMultiplier > 1 ? '(Bonus!)' : ''}`, "#2ecc71");
+                    showResult(`✅ Zo‘r! +${pointChange} ball`, "#2ecc71");
                 } else {
                     pointChange = -parseInt(rules.minusPoints); 
                     newPoints += pointChange; if (newPoints < 0) newPoints = 0;
                     newLosses++; soundToPlay = 'lose';
                     showResult(`❌ Noto'g'ri! ${pointChange} ball`, "#e74c3c");
                 }
-
                 if (diffStr !== "0.000" && newDivision > 1 && newPoints >= rules.promotionPoints) {
                     newDivision -= 1; newWarning = false; soundToPlay = 'promo';
                     tg.showAlert("🎉 Divizion " + newDivision + " ga ko'tarildingiz!");
                 }
                 if (newDivision < 10 && newPoints < (rules.relegationPoints || 0)) {
-                    if (newWarning) { newDivision += 1; newWarning = false; soundToPlay = 'relegate'; tg.showAlert("😔 Divizion pasaydi"); }
-                    else { newWarning = true; tg.showAlert("⚠️ Ogohlantirish! Yana mag'lubiyat tushib ketishga olib keladi"); }
+                    if (newWarning) { newDivision += 1; newWarning = false; soundToPlay = 'relegate'; tg.showAlert("😔 Divizioningiz tushdi"); } 
+                    else { newWarning = true; tg.showAlert("⚠️ Ogohlantirish! Keyingi safar divizion tushadi!"); }
                 }
                 playSound(soundToPlay);
                 update(ref(db, 'leaderboard/' + myId), { 
-                    name: myName, points: newPoints, division: newDivision, 
-                    bestDiff: diffStr, lastTime: finalTime.toFixed(3), 
-                    isWarning: newWarning, wins: newWins, losses: newLosses
+                    name: myName, points: newPoints, division: newDivision, wins: newWins, losses: newLosses, isWarning: newWarning, lastTime: finalTime.toFixed(3)
                 });
             }
         };
@@ -965,6 +946,59 @@
             const el = document.getElementById('last-result');
             el.innerText = txt; el.style.color = color;
             tg.HapticFeedback.notificationOccurred(color === "#e74c3c" ? 'error' : 'success');
+        }
+
+        /* --- CANVAS PECHAT FUNKSIYASI --- */
+        function drawStamp() {
+            const canvas = document.getElementById('stamp-canvas');
+            const ctx = canvas.getContext('2d');
+            const d = myCurrentData.division || 10;
+            const rules = (divSettings && divSettings[d]) ? divSettings[d] : { color: '#f1c40f' };
+            const stampColor = rules.color.includes('gradient') ? '#f1c40f' : rules.color;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Orqa fon bezak
+            ctx.save();
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate(-0.1); // Biroz qiyshaytiramiz "pechat" effektini berish uchun
+
+            // Tashqi doira
+            ctx.beginPath();
+            ctx.arc(0, 0, 80, 0, Math.PI * 2);
+            ctx.strokeStyle = stampColor;
+            ctx.lineWidth = 5;
+            ctx.stroke();
+
+            // Ichki doira
+            ctx.beginPath();
+            ctx.arc(0, 0, 70, 0, Math.PI * 2);
+            ctx.setLineDash([5, 5]);
+            ctx.stroke();
+
+            // Markazdagi matn (Divizion)
+            ctx.font = '900 40px Courier New';
+            ctx.fillStyle = stampColor;
+            ctx.textAlign = 'center';
+            ctx.fillText('D' + d, 0, 15);
+
+            // Atrofdagi matn
+            ctx.setLineDash([]);
+            ctx.font = '900 12px Arial';
+            ctx.textBaseline = 'middle';
+            const label = d <= 3 ? "TIME MASTER" : "CERTIFIED";
+            for (let i = 0; i < label.length; i++) {
+                ctx.save();
+                ctx.rotate(i * (Math.PI * 2 / label.length));
+                ctx.fillText(label[i], 0, -60);
+                ctx.restore();
+            }
+
+            // Stat matnlari (Pastda)
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText(myCurrentData.points + " PTS", 0, 110);
+            
+            ctx.restore();
         }
 
         onValue(ref(db, 'leaderboard'), (snapshot) => {
@@ -983,110 +1017,19 @@
             fullLeaderboard.forEach((p, i) => {
                 const row = document.createElement('div');
                 const rowRules = (divSettings && divSettings[p.division]) ? divSettings[p.division] : { color: '#f1c40f', effect: 'none' };
-                const rowDivColor = rowRules.color;
                 row.className = `ef-row ${String(p.id) === String(myId) ? 'me' : ''}`;
                 if(String(p.id) === String(myId)) row.id = "my-rank-row";
                 if(rowRules.effect !== 'none') row.classList.add(rowRules.effect);
-                if(rowDivColor.includes('gradient')) { row.style.borderImage = `${rowDivColor} 1`; } else { row.style.borderColor = rowDivColor; }
+                if(rowRules.color.includes('gradient')) row.style.borderImage = `${rowRules.color} 1`;
+                else row.style.borderColor = rowRules.color;
                 row.innerHTML = `
                     <div class="ef-rank-num">${i+1}</div>
-                    <div class="ef-avatar">${p.hasSeal ? '🏆' : '⏱️'}<div class="ef-div-tag" style="background:${rowDivColor.includes('gradient') ? '#fff' : rowDivColor}; color: #000">D${p.division || 10}</div></div>
-                    <div class="ef-info-main"><div class="ef-name">${p.name} ${p.hasSeal ? '✅' : ''}</div></div>
-                    <div class="ef-points-val" style="color: ${rowDivColor.includes('gradient') ? '#fff' : rowDivColor}">${(p.points || 0).toLocaleString()}</div>
+                    <div class="ef-avatar">⏱️<div class="ef-div-tag" style="background:${rowRules.color.includes('gradient') ? '#fff' : rowRules.color}">D${p.division || 10}</div></div>
+                    <div class="ef-info-main"><div class="ef-name">${p.name}</div></div>
+                    <div class="ef-points-val" style="color: ${rowRules.color.includes('gradient') ? '#fff' : rowRules.color}">${(p.points || 0).toLocaleString()}</div>
                 `;
                 container.appendChild(row);
             });
-        }
-
-        /* --- CANVAS SEAL DRAWING --- */
-        function drawSeal(hasSeal) {
-            const canvas = document.getElementById('seal-canvas');
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-
-            if(!hasSeal) {
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, 150, 0, Math.PI * 2);
-                ctx.setLineDash([10, 10]);
-                ctx.strokeStyle = "#222";
-                ctx.lineWidth = 5;
-                ctx.stroke();
-                ctx.fillStyle = "#222";
-                ctx.font = "bold 40px Arial";
-                ctx.textAlign = "center";
-                ctx.fillText("PECHAT YO'Q", centerX, centerY + 15);
-                return;
-            }
-
-            // Seal Body
-            ctx.setLineDash([]);
-            const grad = ctx.createLinearGradient(0, 0, 400, 400);
-            grad.addColorStop(0, "#f1c40f");
-            grad.addColorStop(0.5, "#fff7ad");
-            grad.addColorStop(1, "#9a7d0a");
-
-            // Outer ring
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 160, 0, Math.PI * 2);
-            ctx.strokeStyle = grad;
-            ctx.lineWidth = 15;
-            ctx.stroke();
-
-            // Inner fill
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, 145, 0, Math.PI * 2);
-            ctx.fillStyle = "rgba(241, 196, 15, 0.1)";
-            ctx.fill();
-
-            // Text Path
-            ctx.font = "bold 32px Georgia";
-            ctx.fillStyle = "#f1c40f";
-            ctx.textAlign = "center";
-            
-            // Curved text "TIME LEAGUE"
-            ctx.save();
-            ctx.translate(centerX, centerY);
-            const text = "TIME LEAGUE CHAMPION";
-            for (let i = 0; i < text.length; i++) {
-                ctx.save();
-                ctx.rotate(-1.2 + i * 0.12);
-                ctx.fillText(text[i], 0, -110);
-                ctx.restore();
-            }
-            ctx.restore();
-
-            // Center Trophy
-            ctx.font = "100px Arial";
-            ctx.fillText("🏆", centerX, centerY + 35);
-            
-            // Seal Date
-            if(myCurrentData.sealDate) {
-                ctx.font = "bold 18px Arial";
-                ctx.fillStyle = "#fff";
-                ctx.fillText(myCurrentData.sealDate.split(',')[0], centerX, centerY + 80);
-            }
-        }
-
-        function renderProfile() {
-            document.getElementById('p-name').innerText = myCurrentData.name || myName;
-            document.getElementById('p-id').innerText = "ID: " + myId;
-            const status = document.getElementById('seal-status');
-            const desc = document.getElementById('no-seal-desc');
-            
-            if(myCurrentData.hasSeal) {
-                status.innerText = "Sizda D1 Pechati bor! ✅";
-                status.style.color = "#f1c40f";
-                desc.innerText = `Sizga har bir o'yinda +${adminSettings.sealBonus}% bonus beriladi!`;
-                drawSeal(true);
-            } else {
-                status.innerText = "Pechat mavjud emas";
-                status.style.color = "#333";
-                desc.innerText = "Mavsum yakunida D1 ga chiqing va maxsus pechatni qo'lga kiritib, bonuslarga ega bo'ling!";
-                drawSeal(false);
-            }
         }
 
         window.showPage = (pId, nav) => {
@@ -1094,9 +1037,15 @@
             document.getElementById(pId).classList.add('active');
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             nav.classList.add('active');
+            if(pId === 'profile-page') drawStamp();
             tg.HapticFeedback.selectionChanged();
-            if(pId === 'profile-page') renderProfile();
         };
 
         window.scrollToMe = () => {
-            const me = document.getElementById
+            const me = document.getElementById('my-rank-row');
+            if(me) me.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            else tg.showAlert("Reytingda yo'qsiz!");
+        };
+    </script>
+</body>
+</html>
