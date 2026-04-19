@@ -38,6 +38,9 @@
             line-height: 1.5;
             overflow: hidden;
             letter-spacing: -0.02em;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         /* Header */
@@ -47,9 +50,7 @@
             padding: 18px;
             text-align: center;
             border-bottom: 1px solid var(--border-color);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            flex-shrink: 0;
         }
 
         .header h1 {
@@ -70,6 +71,7 @@
             border-radius: 12px;
             border: 1px solid var(--border-color);
             gap: 4px;
+            flex-shrink: 0;
         }
 
         .nav-btn {
@@ -96,6 +98,7 @@
             gap: 10px;
             padding: 0 15px 15px;
             justify-content: center;
+            flex-shrink: 0;
         }
 
         .tool-btn {
@@ -122,10 +125,12 @@
             padding: 10px 20px;
             max-width: 600px;
             margin: 0 auto;
-            height: calc(100vh - 280px);
+            flex-grow: 1;
+            overflow-y: auto; /* Kartochka katta bo'lsa skroll bo'lishi uchun */
+            width: 100%;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
+            padding-bottom: 100px; /* Navigatsiya tugmalari uchun joy */
         }
 
         /* Card */
@@ -137,6 +142,7 @@
             width: 100%;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            margin-bottom: 20px;
         }
 
         @keyframes slideUp {
@@ -166,8 +172,6 @@
             font-weight: 500;
             line-height: 1.6;
             margin-bottom: 20px;
-            max-height: 220px;
-            overflow-y: auto;
             color: #eeeeee;
         }
 
@@ -177,7 +181,7 @@
             margin-bottom: 20px;
             border: 1px solid var(--border-color);
             display: none;
-            max-height: 200px;
+            max-height: 250px;
             object-fit: contain;
         }
 
@@ -245,13 +249,15 @@
         /* Navigation Controls */
         .navigation {
             position: fixed;
-            bottom: 30px;
+            bottom: 0;
             left: 0;
             width: 100%;
             display: flex;
             justify-content: space-between;
-            padding: 0 25px;
+            padding: 15px 25px 30px;
             gap: 20px;
+            background: linear-gradient(to top, black 70%, transparent);
+            z-index: 100;
         }
 
         .nav-control {
@@ -283,6 +289,7 @@
             padding: 50px;
             color: var(--hint-color);
             font-weight: 500;
+            width: 100%;
         }
 
         /* Custom Scrollbar */
@@ -454,6 +461,8 @@
             </div>
         `;
         app.appendChild(card);
+        // Savol o'zgarganda skrollni tepaga qaytarish
+        document.querySelector('.container').scrollTop = 0;
         updateNavButtons();
     }
 
@@ -487,6 +496,10 @@
             content.style.display = 'block';
             btn.innerText = 'Yashirish';
             tg.HapticFeedback.notificationOccurred('success');
+            // Javob ochilganda avtomatik skroll qilish
+            setTimeout(() => {
+                content.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
         }
     }
 
