@@ -82,10 +82,11 @@
         /* Yodlash rejimi paneli */
         .study-tools {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             padding: 10px 15px;
             background: #080808;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            overflow-x: auto;
         }
 
         .tool-btn {
@@ -93,7 +94,7 @@
             background: #1a1a1a;
             border: 1px solid #333;
             color: #fff;
-            padding: 8px;
+            padding: 8px 12px;
             border-radius: 8px;
             font-size: 11px;
             cursor: pointer;
@@ -103,6 +104,7 @@
         .tool-btn.active-filter {
             border-color: var(--accent-color);
             background: rgba(0, 136, 204, 0.2);
+            color: var(--accent-color);
         }
 
         /* Konteyner */
@@ -192,10 +194,10 @@
 
         .tag-btn {
             flex: 1;
-            padding: 8px;
+            padding: 10px;
             border-radius: 8px;
             border: 1px solid #333;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: bold;
             background: #000;
             color: #fff;
@@ -252,15 +254,16 @@
     <h1>📚 Imtihon Bazasi</h1>
 </div>
 
-<div class="nav-tabs">
-    <button class="nav-btn active" onclick="changeTab(this, 'fizika_savollari')">Fizika</button>
-    <button class="nav-btn" onclick="changeTab(this, 'Issiqlik_texnikasi')">Issiqlik texnikasi</button>
+<div class="nav-tabs" id="nav-tabs">
+    <button class="nav-btn active" data-path="fizika_savollari" onclick="changeTab(this, 'fizika_savollari')">Fizika</button>
+    <button class="nav-btn" data-path="Issiqlik_texnikasi" onclick="changeTab(this, 'Issiqlik_texnikasi')">Issiqlik texnikasi</button>
 </div>
 
 <div class="study-tools">
     <button class="tool-btn" onclick="shuffleQuestions()">🔀 Aralash</button>
-    <button class="tool-btn" id="filterQiyin" onclick="toggleFilter('qiyin')">🔥 Faqat Qiyin</button>
-    <button class="tool-btn" onclick="resetLearned()">🔄 Reset</button>
+    <button class="tool-btn" id="filterAll" onclick="toggleFilter('all')">👁 Hammasi</button>
+    <button class="tool-btn" id="filterOson" onclick="toggleFilter('oson')">😊 Osonlar</button>
+    <button class="tool-btn" id="filterQiyin" onclick="toggleFilter('qiyin')">🔥 Qiyinlar</button>
 </div>
 
 <div class="container" id="app">
@@ -293,20 +296,22 @@
     let allQuestions = [];
     let filteredQuestions = [];
     let currentIndex = 0;
-    let currentFilter = 'all'; // all, qiyin
+    let currentFilter = 'all'; 
 
-    // Savol holatlarini saqlash (localStorage)
-    let questionStates = JSON.parse(localStorage.getItem('exam_states')) || {};
+    let questionStates = JSON.parse(localStorage.getItem('exam_states_v2')) || {};
 
     function saveStates() {
-        localStorage.setItem('exam_states', JSON.stringify(questionStates));
+        localStorage.setItem('exam_states_v2', JSON.stringify(questionStates));
     }
 
     function changeTab(btn, path) {
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        
+        // Tab o'zgarganda filtrlarni reset qilish
         currentFilter = 'all';
-        document.getElementById('filterQiyin').classList.remove('active-filter');
+        updateFilterUI();
+        
         loadQuestions(path);
         tg.HapticFeedback.impactOccurred('light');
     }
@@ -327,6 +332,7 @@
             allQuestions = Object.keys(data).map(key => {
                 const item = data[key];
                 const numericId = item.id || parseInt(key.replace(/\D/g, '')) || 0;
+                // Fanni ajratish uchun pathni kalitga qo'shamiz
                 const uniqueKey = path + '_' + numericId;
                 return { ...item, displayId: numericId, uniqueKey: uniqueKey };
             }).sort((a, b) => a.displayId - b.displayId);
@@ -336,26 +342,29 @@
         });
     }
 
+    function updateFilterUI() {
+        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active-filter'));
+        if (currentFilter === 'all') document.getElementById('filterAll').classList.add('active-filter');
+        if (currentFilter === 'oson') document.getElementById('filterOson').classList.add('active-filter');
+        if (currentFilter === 'qiyin') document.getElementById('filterQiyin').classList.add('active-filter');
+    }
+
     function applyFilter() {
         if (currentFilter === 'qiyin') {
             filteredQuestions = allQuestions.filter(q => questionStates[q.uniqueKey] === 'qiyin');
+        } else if (currentFilter === 'oson') {
+            filteredQuestions = allQuestions.filter(q => questionStates[q.uniqueKey] === 'oson');
         } else {
             filteredQuestions = [...allQuestions];
         }
 
         currentIndex = 0;
         renderCurrent();
+        updateFilterUI();
     }
 
     function toggleFilter(filter) {
-        const btn = document.getElementById('filterQiyin');
-        if (currentFilter === filter) {
-            currentFilter = 'all';
-            btn.classList.remove('active-filter');
-        } else {
-            currentFilter = filter;
-            btn.classList.add('active-filter');
-        }
+        currentFilter = filter;
         applyFilter();
         tg.HapticFeedback.impactOccurred('medium');
     }
@@ -364,6 +373,7 @@
         const q = filteredQuestions[currentIndex];
         if (!q) return;
 
+        // Agar o'sha tag bo'lsa - o'chirish, bo'lmasa - o'rnatish
         if (questionStates[q.uniqueKey] === type) {
             delete questionStates[q.uniqueKey];
         } else {
@@ -380,7 +390,7 @@
         app.innerHTML = '';
 
         if (filteredQuestions.length === 0) {
-            app.innerHTML = '<div class="loader">Bu bo\'limda savollar yo\'q</div>';
+            app.innerHTML = `<div class="loader">Bu bo'limda "${currentFilter}" deb belgilangan savollar hali yo'q.<br><br>Avval "Hammasi" rejimidan savollarni saralab oling.</div>`;
             updateNavButtons();
             return;
         }
@@ -449,15 +459,17 @@
     }
 
     function resetLearned() {
-        if(confirm("Barcha belgilangan (Oson/Qiyin) statuslarni o'chirib tashlaysizmi?")) {
+        if(confirm("Barcha belgilangan statuslarni o'chirib tashlaysizmi?")) {
             questionStates = {};
             saveStates();
-            renderCurrent();
+            applyFilter();
             tg.HapticFeedback.notificationOccurred('warning');
         }
     }
 
+    // Birinchi yuklash
     loadQuestions('fizika_savollari');
+    updateFilterUI();
 </script>
 </body>
 </html>
