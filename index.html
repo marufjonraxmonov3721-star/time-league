@@ -350,6 +350,16 @@
             color: #000;
         }
 
+        .exam-btn {
+            background: var(--accent-color);
+            border: none;
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
         /* Canvas Table Styles */
         #examCanvas {
             background: #1a0f00; /* Wood color */
@@ -366,6 +376,29 @@
             color: var(--hint-color);
             width: 100%;
         }
+
+        /* Fixed Details Bug */
+        details.exam-ans-details {
+            margin-top: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 5px;
+        }
+        details.exam-ans-details summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: #0088cc;
+            padding: 5px;
+            outline: none;
+        }
+        details.exam-ans-details .ans-container {
+            color: #333 !important;
+            padding: 10px;
+            border-top: 1px solid #eee;
+        }
+        details.exam-ans-details .ans-header { color: #000 !important; }
+        details.exam-ans-details .ans-formula { background: #f9f9f9; border-color: #ccc; color: #006600; }
     </style>
 </head>
 <body>
@@ -420,6 +453,7 @@
     let currentPath = 'fizika_savollari';
     let isExamMode = false;
     let examQuestions = [];
+    let selectedExamPath = '';
 
     let questionStates = JSON.parse(localStorage.getItem('exam_states_v3')) || {};
 
@@ -592,8 +626,8 @@
             <div class="card" style="text-align:center">
                 <h2 style="color:var(--accent-color)">Fan yo'nalishini tanlang</h2>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
-                    <button class="exam-btn exam-check-btn" onclick="initExamTable('fizika_savollari', 70)">Fizika (70 savol)</button>
-                    <button class="exam-btn exam-check-btn" onclick="initExamTable('Issiqlik_texnikasi', 90)">Issiqlik (90 savol)</button>
+                    <button class="exam-btn" onclick="initExamTable('fizika_savollari', 70)">Fizika (70 savol)</button>
+                    <button class="exam-btn" onclick="initExamTable('Issiqlik_texnikasi', 90)">Issiqlik (90 savol)</button>
                 </div>
                 <canvas id="examCanvas"></canvas>
             </div>
@@ -610,7 +644,6 @@
         const biletCount = Math.floor(count / 3);
         ticketPositions = [];
         
-        // Stolni tozalash
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         const cols = 5;
@@ -635,7 +668,8 @@
             ctx.fillRect(-w/2, -h/2, w, h);
             ctx.fillStyle = "#000";
             ctx.font = "bold 10px sans-serif";
-            ctx.fillText(i+1, -5, 5);
+            ctx.textAlign = "center";
+            ctx.fillText(i+1, 0, 5);
             ctx.restore();
         }
 
@@ -691,7 +725,7 @@
                 <textarea class="exam-input" id="ans2" placeholder="3-savol javobini kiriting..."></textarea>
 
                 <div style="margin-top:30px;">
-                    <button class="exam-btn exam-check-btn" style="width:100%" onclick="evaluateBilet()">Tekshirish va Ball olish</button>
+                    <button class="exam-btn" style="width:100%" onclick="evaluateBilet()">Tekshirish va Ball olish</button>
                 </div>
             </div>
             <div id="examFinalResult" style="display:none"></div>
@@ -708,10 +742,10 @@
             
             if(userAns.length < 5) {
                 detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1}:</b> 0 ball. Javob yozilmagan yoki juda qisqa.</div>`;
+                detailsHtml += `<details class="exam-ans-details"><summary>Asl javobni ko'rish</summary>${formatAnswer(originalAns)}</details>`;
                 continue;
             }
 
-            // Kuchli tekshirish algoritmi
             const uWords = userAns.toLowerCase().split(/\s+/);
             const oWords = originalAns.toLowerCase().split(/\s+/);
             let match = 0;
@@ -731,7 +765,7 @@
                     <small style="color:blue">Xatolar tahlili:</small> 
                     ${matchPerc < 50 ? 'Kalit so\'zlar yetishmayapti. ' : 'Yaxshi. '}
                     ${userAns.length < originalAns.length/2 ? 'Javob to\'liq emas.' : 'Matn hajmi yetarli.'}
-                    <details style="margin-top:5px"><summary>Asl javobni ko'rish</summary>${formatAnswer(originalAns)}</details>
+                    <details class="exam-ans-details"><summary>Asl javobni ko'rish</summary>${formatAnswer(originalAns)}</details>
                 </div>`;
         }
 
@@ -740,7 +774,7 @@
             <div style="text-align:center; margin-top:20px;">
                 <h1 style="color:${passed ? 'var(--success-color)' : 'var(--danger-color)'}">${totalScore.toFixed(1)} BALL</h1>
                 <h3>${passed ? 'TABRIKLAYMIZ! IMTIHONDAN O\'TDINGIZ.' : 'YIQILDINGIZ! QAYTA TAYYORLANING.'}</h3>
-                <button class="exam-btn exam-next-btn" style="width:100%" onclick="startExamTab(document.querySelector('.nav-btn:last-child'))">Tugallash</button>
+                <button class="exam-btn" style="width:100%" onclick="startExamTab(document.querySelector('.nav-btn:last-child'))">Tugallash</button>
             </div>
         </div>`;
 
