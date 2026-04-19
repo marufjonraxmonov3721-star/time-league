@@ -9,56 +9,67 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     
     <style>
-        /* Tim qora (OLED) dizayn */
+        /* Modern Minimalist OLED Design */
         :root {
             --bg-color: #000000;
-            --secondary-bg: #121212;
+            --secondary-bg: #0a0a0a;
+            --card-bg: #111111;
             --text-color: #ffffff;
-            --hint-color: #aaaaaa;
-            --accent-color: #0088cc; /* Telegram ko'k rangi */
-            --success-color: #2ecc71;
-            --danger-color: #e74c3c;
-            --card-border: #222222;
+            --hint-color: #888888;
+            --accent-color: #0088cc;
+            --success-color: #00c853;
+            --danger-color: #ff3d00;
+            --border-color: #1a1a1a;
+            --glass-bg: rgba(20, 20, 20, 0.8);
         }
 
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
+            outline: none;
         }
 
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 0;
-            line-height: 1.6;
-            overflow: hidden; /* Sahifa skroll bo'lmasligi uchun */
+            line-height: 1.5;
+            overflow: hidden;
+            letter-spacing: -0.02em;
         }
 
         /* Header */
         .header {
-            background-color: var(--secondary-bg);
-            padding: 15px;
+            background-color: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            padding: 18px;
             text-align: center;
-            border-bottom: 1px solid var(--card-border);
+            border-bottom: 1px solid var(--border-color);
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
         .header h1 {
-            font-size: 18px;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
             margin: 0;
-            color: var(--accent-color);
+            font-weight: 700;
+            color: var(--text-color);
         }
 
-        /* Fan tanlash tugmalari */
+        /* Nav Tabs */
         .nav-tabs {
             display: flex;
             background: var(--secondary-bg);
-            padding: 5px;
-            gap: 5px;
+            padding: 6px;
+            margin: 12px 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            gap: 4px;
         }
 
         .nav-btn {
@@ -67,191 +78,223 @@
             border: none;
             color: var(--hint-color);
             padding: 10px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             border-radius: 8px;
-            transition: 0.3s;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .nav-btn.active {
-            background: var(--bg-color);
+            background: #1a1a1a;
             color: var(--accent-color);
-            box-shadow: 0 0 10px rgba(0,136,204,0.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
         }
 
-        /* Yodlash rejimi paneli */
+        /* Study Tools */
         .study-tools {
             display: flex;
-            gap: 8px;
-            padding: 10px 15px;
-            background: #080808;
-            flex-wrap: nowrap;
-            overflow-x: auto;
+            gap: 10px;
+            padding: 0 15px 15px;
+            justify-content: center;
         }
 
         .tool-btn {
             flex: 1;
-            background: #1a1a1a;
-            border: 1px solid #333;
-            color: #fff;
-            padding: 8px 12px;
-            border-radius: 8px;
+            background: var(--secondary-bg);
+            border: 1px solid var(--border-color);
+            color: var(--hint-color);
+            padding: 10px 0;
+            border-radius: 10px;
             font-size: 11px;
+            font-weight: 600;
             cursor: pointer;
-            white-space: nowrap;
+            transition: 0.2s;
         }
 
         .tool-btn.active-filter {
             border-color: var(--accent-color);
-            background: rgba(0, 136, 204, 0.2);
             color: var(--accent-color);
+            background: rgba(0, 136, 204, 0.05);
         }
 
-        /* Konteyner */
+        /* Main Container */
         .container {
-            padding: 15px;
+            padding: 10px 20px;
             max-width: 600px;
             margin: 0 auto;
-            height: calc(100vh - 220px);
+            height: calc(100vh - 280px);
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        /* Savol kartochkasi */
+        /* Card */
         .card {
-            background-color: var(--secondary-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 15px;
-            padding: 18px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 24px;
             width: 100%;
-            animation: fadeIn 0.3s ease-in-out;
-            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .counter {
+            font-size: 11px;
+            color: var(--hint-color);
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: block;
+            opacity: 0.6;
         }
 
         .q-id {
             color: var(--accent-color);
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 8px;
+            font-weight: 800;
+            font-size: 13px;
+            margin-bottom: 10px;
             display: block;
         }
 
         .q-text {
-            font-size: 16px;
+            font-size: 17px;
             font-weight: 500;
-            margin-bottom: 15px;
-            max-height: 200px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            max-height: 220px;
             overflow-y: auto;
+            color: #eeeeee;
         }
 
         .q-image {
             width: 100%;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
             display: none;
-            max-height: 250px;
+            max-height: 200px;
             object-fit: contain;
         }
 
-        /* Javob tugmasi va qutisi */
+        /* Buttons */
         .show-ans-btn {
             width: 100%;
-            background: #1a1a1a;
-            border: 1px solid var(--accent-color);
-            color: var(--accent-color);
-            padding: 12px;
-            border-radius: 10px;
+            background: transparent;
+            border: 1px solid #333;
+            color: var(--text-color);
+            padding: 14px;
+            border-radius: 12px;
             font-weight: 600;
+            font-size: 14px;
             cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .show-ans-btn:active {
+            background: #111;
+            transform: scale(0.98);
         }
 
         .answer-content {
             display: none;
             margin-top: 15px;
-            padding: 12px;
-            background: rgba(46, 204, 113, 0.1);
-            border-left: 3px solid var(--success-color);
-            border-radius: 5px;
+            padding: 16px;
+            background: #0d1a12;
+            border-radius: 12px;
             font-size: 15px;
-            color: #d1d1d1;
-            max-height: 150px;
-            overflow-y: auto;
+            color: #b0b0b0;
+            border-left: 4px solid var(--success-color);
         }
 
-        /* Oson/Qiyin tugmalari */
+        /* Tag Actions */
         .tag-actions {
             display: flex;
-            gap: 10px;
-            margin-top: 15px;
+            gap: 12px;
+            margin-top: 20px;
         }
 
         .tag-btn {
             flex: 1;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #333;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #222;
             font-size: 13px;
-            font-weight: bold;
-            background: #000;
+            font-weight: 700;
+            background: #050505;
             color: #fff;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        .tag-btn.oson.active { background: var(--success-color); border-color: var(--success-color); }
-        .tag-btn.qiyin.active { background: var(--danger-color); border-color: var(--danger-color); }
+        .tag-btn.oson.active { 
+            background: var(--success-color); 
+            border-color: var(--success-color); 
+            box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
+        }
+        
+        .tag-btn.qiyin.active { 
+            background: var(--danger-color); 
+            border-color: var(--danger-color);
+            box-shadow: 0 4px 15px rgba(255, 61, 0, 0.3);
+        }
 
-        /* Navigatsiya tugmalari */
+        /* Navigation Controls */
         .navigation {
             position: fixed;
-            bottom: 20px;
+            bottom: 30px;
             left: 0;
             width: 100%;
             display: flex;
             justify-content: space-between;
-            padding: 0 20px;
-            gap: 15px;
+            padding: 0 25px;
+            gap: 20px;
         }
 
         .nav-control {
             flex: 1;
-            padding: 15px;
-            border-radius: 12px;
+            padding: 16px;
+            border-radius: 16px;
             border: none;
             background: var(--accent-color);
             color: white;
-            font-weight: bold;
-            font-size: 16px;
+            font-weight: 800;
+            font-size: 18px;
+            box-shadow: 0 8px 20px rgba(0, 136, 204, 0.3);
+            transition: all 0.2s;
+        }
+
+        .nav-control:active {
+            transform: translateY(2px);
+            box-shadow: 0 4px 10px rgba(0, 136, 204, 0.2);
         }
 
         .nav-control:disabled {
-            background: #222;
-            color: #555;
-        }
-
-        .counter {
-            text-align: center;
-            font-size: 12px;
-            color: var(--hint-color);
-            margin-bottom: 10px;
+            background: #1a1a1a;
+            color: #444;
+            box-shadow: none;
         }
 
         .loader {
             text-align: center;
             padding: 50px;
             color: var(--hint-color);
+            font-weight: 500;
         }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h1>📚 Imtihon Bazasi</h1>
+    <h1>Exam Prep Pro</h1>
 </div>
 
 <div class="nav-tabs" id="nav-tabs">
@@ -260,7 +303,6 @@
 </div>
 
 <div class="study-tools">
-    <button class="tool-btn" onclick="shuffleQuestions()">🔀 Aralash</button>
     <button class="tool-btn" id="filterAll" onclick="toggleFilter('all')">👁 Hammasi</button>
     <button class="tool-btn" id="filterOson" onclick="toggleFilter('oson')">😊 Osonlar</button>
     <button class="tool-btn" id="filterQiyin" onclick="toggleFilter('qiyin')">🔥 Qiyinlar</button>
@@ -308,7 +350,6 @@
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         
-        // Tab o'zgarganda filtrlarni reset qilish
         currentFilter = 'all';
         updateFilterUI();
         
@@ -332,7 +373,6 @@
             allQuestions = Object.keys(data).map(key => {
                 const item = data[key];
                 const numericId = item.id || parseInt(key.replace(/\D/g, '')) || 0;
-                // Fanni ajratish uchun pathni kalitga qo'shamiz
                 const uniqueKey = path + '_' + numericId;
                 return { ...item, displayId: numericId, uniqueKey: uniqueKey };
             }).sort((a, b) => a.displayId - b.displayId);
@@ -373,7 +413,6 @@
         const q = filteredQuestions[currentIndex];
         if (!q) return;
 
-        // Agar o'sha tag bo'lsa - o'chirish, bo'lmasa - o'rnatish
         if (questionStates[q.uniqueKey] === type) {
             delete questionStates[q.uniqueKey];
         } else {
@@ -390,7 +429,7 @@
         app.innerHTML = '';
 
         if (filteredQuestions.length === 0) {
-            app.innerHTML = `<div class="loader">Bu bo'limda "${currentFilter}" deb belgilangan savollar hali yo'q.<br><br>Avval "Hammasi" rejimidan savollarni saralab oling.</div>`;
+            app.innerHTML = `<div class="loader" style="font-size:13px; padding:20px;">Bu ro'yxat bo'sh.<br><br>Avval "Hammasi" rejimidan savollarni saralab oling.</div>`;
             updateNavButtons();
             return;
         }
@@ -403,15 +442,15 @@
         const hasImg = q.image && q.image.length > 20;
         
         card.innerHTML = `
-            <div class="counter">${currentIndex + 1} / ${filteredQuestions.length}</div>
-            <span class="q-id">ID: ${q.displayId}</span>
+            <span class="counter">${currentIndex + 1} / ${filteredQuestions.length}</span>
+            <span class="q-id">#ID ${q.displayId}</span>
             <div class="q-text">${q.savol || "Matn yo'q"}</div>
             ${hasImg ? `<img src="${q.image}" class="q-image" style="display:block">` : ''}
             <button class="show-ans-btn" onclick="toggleAns(this)">Javobni ko'rsatish</button>
             <div class="answer-content">${q.javob || "Javob yo'q"}</div>
             <div class="tag-actions">
-                <button class="tag-btn oson ${state === 'oson' ? 'active' : ''}" onclick="setTag('oson')">😊 Oson</button>
-                <button class="tag-btn qiyin ${state === 'qiyin' ? 'active' : ''}" onclick="setTag('qiyin')">🔥 Qiyin</button>
+                <button class="tag-btn oson ${state === 'oson' ? 'active' : ''}" onclick="setTag('oson')">😊 OSON</button>
+                <button class="tag-btn qiyin ${state === 'qiyin' ? 'active' : ''}" onclick="setTag('qiyin')">🔥 QIYIN</button>
             </div>
         `;
         app.appendChild(card);
@@ -451,25 +490,8 @@
         }
     }
 
-    function shuffleQuestions() {
-        filteredQuestions.sort(() => Math.random() - 0.5);
-        currentIndex = 0;
-        renderCurrent();
-        tg.HapticFeedback.impactOccurred('medium');
-    }
-
-    function resetLearned() {
-        if(confirm("Barcha belgilangan statuslarni o'chirib tashlaysizmi?")) {
-            questionStates = {};
-            saveStates();
-            applyFilter();
-            tg.HapticFeedback.notificationOccurred('warning');
-        }
-    }
-
     // Birinchi yuklash
     loadQuestions('fizika_savollari');
-    updateFilterUI();
 </script>
 </body>
 </html>
