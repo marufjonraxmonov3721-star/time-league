@@ -230,16 +230,36 @@
             object-fit: contain;
         }
 
-        .answer-content {
-            display: block;
-            margin-top: 15px;
-            padding: 15px;
-            background: #0d1a12;
+        /* Reveal Button Styles */
+        .reveal-btn {
+            width: 100%;
+            padding: 12px;
+            background: none;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
             border-radius: 12px;
             font-size: 14px;
-            color: #d1d1d1;
+            font-weight: 600;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .answer-content {
+            display: none; /* Hidden by default */
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0, 200, 83, 0.08);
+            border-radius: 12px;
+            font-size: 14px;
+            color: #e0e0e0;
             border-left: 4px solid var(--success-color);
             word-wrap: break-word;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         /* Tag Actions */
@@ -370,7 +390,6 @@
             matrix.appendChild(div);
         });
 
-        // Scroll matrix to active item
         const activeItem = matrix.children[currentIndex];
         if (activeItem) {
             activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -439,6 +458,19 @@
         if(btn) btn.classList.add('active-filter');
     }
 
+    function toggleAnswer() {
+        const ans = document.getElementById('ansContent');
+        const btn = document.getElementById('revealBtn');
+        if (ans.style.display === 'block') {
+            ans.style.display = 'none';
+            btn.innerText = 'Javobni ko\'rsatish';
+        } else {
+            ans.style.display = 'block';
+            btn.innerText = 'Yashirish';
+            tg.HapticFeedback.impactOccurred('light');
+        }
+    }
+
     function setTag(type) {
         const q = filteredQuestions[currentIndex];
         if (!q) return;
@@ -484,7 +516,12 @@
             <span class="q-id">#SAVOL ${currentIndex + 1} / ${filteredQuestions.length} (ID: ${q.displayId})</span>
             <div class="q-text">${q.savol || "Matn yo'q"}</div>
             ${hasImg ? `<img src="${q.image}" class="q-image" style="display:block">` : ''}
-            <div class="answer-content"><b>Javob:</b> ${q.javob || "Javob yo'q"}</div>
+            
+            <button class="reveal-btn" id="revealBtn" onclick="toggleAnswer()">Javobni ko'rsatish</button>
+            <div class="answer-content" id="ansContent">
+                ${q.javob || "Javob yo'q"}
+            </div>
+
             <div class="tag-actions">
                 <button class="tag-btn oson ${state === 'oson' ? 'active' : ''}" onclick="setTag('oson')">YODLADIM</button>
                 <button class="tag-btn qiyin ${state === 'qiyin' ? 'active' : ''}" onclick="setTag('qiyin')">YODLAMADIM</button>
