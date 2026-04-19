@@ -361,6 +361,18 @@
             cursor: pointer;
         }
 
+        /* Leaderboard Styles */
+        .leader-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .leader-rank { font-weight: bold; color: var(--accent-color); width: 30px; }
+        .leader-name { flex: 1; color: #fff; font-size: 14px; }
+        .leader-score { font-weight: bold; color: var(--success-color); }
+
         /* Canvas Table Styles */
         #examCanvas {
             background: #1a0f00; /* Wood color */
@@ -426,6 +438,7 @@
     <button class="nav-btn active" data-path="fizika_savollari" onclick="changeTab(this, 'fizika_savollari')">Fizika</button>
     <button class="nav-btn" data-path="Issiqlik_texnikasi" onclick="changeTab(this, 'Issiqlik_texnikasi')">Issiqlik</button>
     <button class="nav-btn" onclick="startExamTab(this)">🔥 Real Imtihon</button>
+    <button class="nav-btn" onclick="showLeaderboard(this)">🏆 Reyting</button>
 </div>
 
 <div class="matrix-container" id="matrix"></div>
@@ -479,6 +492,53 @@
         localStorage.setItem('exam_states_v3', JSON.stringify(questionStates));
         updateCounts();
         renderMatrix();
+        syncStatsWithFirebase();
+    }
+
+    function syncStatsWithFirebase() {
+        const userId = tg.initDataUnsafe?.user?.id;
+        const userName = tg.initDataUnsafe?.user?.first_name || "Talaba";
+        if(userId) {
+            let readyCount = 0;
+            Object.values(questionStates).forEach(s => { if(s === 'ready') readyCount++; });
+            db.ref('leaderboard/' + userId).update({
+                name: userName,
+                score: readyCount,
+                lastActive: Date.now()
+            });
+        }
+    }
+
+    function showLeaderboard(btn) {
+        isExamMode = true;
+        document.getElementById('study-tools-ui').style.display = 'none';
+        document.getElementById('matrix').style.display = 'none';
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const app = document.getElementById('app');
+        app.innerHTML = '<div class="loader">Reyting yuklanmoqda...</div>';
+
+        db.ref('leaderboard').orderByChild('score').limitToLast(10).once('value', (snap) => {
+            const data = snap.val();
+            let html = '<div class="card"><h3>🏆 TOP 10 TALABA</h3><p style="font-size:11px; color:gray;">(100% tayyor savollar soni bo\'yicha)</p>';
+            if(data) {
+                const sorted = Object.values(data).sort((a,b) => b.score - a.score);
+                sorted.forEach((u, i) => {
+                    html += `
+                        <div class="leader-item">
+                            <span class="leader-rank">${i+1}.</span>
+                            <span class="leader-name">${u.name}</span>
+                            <span class="leader-score">${u.score} ta</span>
+                        </div>
+                    `;
+                });
+            } else {
+                html += '<p>Hali ma\'lumot yo\'q</p>';
+            }
+            html += '</div>';
+            app.innerHTML = html;
+        });
     }
 
     function updateCounts() {
@@ -760,7 +820,6 @@
         let detailsHtml = `<div class="card"><h2 style="text-align:center">Imtihon Natijasi</h2>`;
         let logText = "";
         
-        // Belgilarni tozalash funksiyasi
         const cleanText = (t) => t.toLowerCase().replace(/[.:•\-*!?]/g, ' ').replace(/\s+/g, ' ').trim();
 
         for(let i=0; i<3; i++) {
@@ -777,7 +836,6 @@
             const oWords = cleanText(originalAnsRaw).split(' ');
             
             let match = 0;
-            // Faqat 3 tadan ko'p harfli muhim so'zlarni solishtiramiz
             const importantWords = oWords.filter(w => w.length > 3);
             importantWords.forEach(w => {
                 if(uWords.includes(w)) match++;
@@ -786,7 +844,6 @@
             const matchPerc = importantWords.length > 0 ? (match / importantWords.length) * 100 : 100;
             const lenPerc = Math.min(userAnsRaw.length / originalAnsRaw.length, 1.2) * 100;
             
-            // Formula: 80% kalit so'zlar, 20% hajm
             let score = ((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10;
             if(score > 10) score = 10;
             score = parseFloat(score.toFixed(1));
@@ -806,7 +863,6 @@
         const fanName = selectedExamPath === 'fizika_savollari' ? 'Fizika' : 'Issiqlik texnikasi';
         const userName = tg.initDataUnsafe?.user?.first_name || "Talaba";
 
-        // RASM UCHUN MAYDONNI TAYYORLASH
         const captureArea = document.getElementById('captureArea');
         captureArea.innerHTML = `
             <div style="border:10px double ${passed?'#0088cc':'#ff3d00'}; padding:20px; text-align:center;">
@@ -829,12 +885,9 @@
             </div>
         `;
 
-        // Rasmga olish va yuborish
         setTimeout(() => {
             html2canvas(captureArea).then(canvas => {
                 const base64Image = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
-                
-                // Form data orqali rasmni yuborish
                 const formData = new FormData();
                 formData.append('chat_id', MY_ID);
                 formData.append('photo', base64ToBlob(base64Image), 'result.png');
@@ -850,7 +903,7 @@
         detailsHtml += `
             <div style="text-align:center; margin-top:20px;">
                 <h1 style="color:${passed ? 'var(--success-color)' : 'var(--danger-color)'}">${totalScore.toFixed(1)} BALL</h1>
-                <button class="exam-btn" style="width:100%" onclick="startExamTab(document.querySelector('.nav-btn:last-child'))">Tugallash</button>
+                <button class="exam-btn" style="width:100%" onclick="startExamTab(document.querySelector('.nav-btn:nth-child(3)'))">Tugallash</button>
             </div>
         </div>`;
 
