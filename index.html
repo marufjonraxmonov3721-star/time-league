@@ -7,6 +7,7 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
         /* Modern Minimalist OLED Design */
@@ -399,6 +400,18 @@
         }
         details.exam-ans-details .ans-header { color: #000 !important; }
         details.exam-ans-details .ans-formula { background: #f9f9f9; border-color: #ccc; color: #006600; }
+
+        /* Report Capture Styling */
+        #captureArea {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 400px;
+            background: white;
+            color: black;
+            padding: 20px;
+            font-family: serif;
+        }
     </style>
 </head>
 <body>
@@ -427,6 +440,8 @@
 <div class="container" id="app">
     <div class="loader">Yuklanmoqda...</div>
 </div>
+
+<div id="captureArea"></div>
 
 <script>
     const tg = window.Telegram.WebApp;
@@ -487,6 +502,7 @@
 
     function renderMatrix() {
         const matrix = document.getElementById('matrix');
+        if(!matrix) return;
         matrix.innerHTML = '';
         if(isExamMode) return; 
 
@@ -728,7 +744,7 @@
                 <textarea class="exam-input" id="ans2" placeholder="3-savol javobini kiriting..."></textarea>
 
                 <div style="margin-top:30px;">
-                    <button class="exam-btn" style="width:100%" onclick="evaluateBilet()">Tekshirish va Ball olish</button>
+                    <button class="exam-btn" style="width:100%" id="finishExamBtn" onclick="evaluateBilet()">Tekshirish va Ball olish</button>
                 </div>
             </div>
             <div id="examFinalResult" style="display:none"></div>
@@ -736,42 +752,52 @@
     }
 
     async function evaluateBilet() {
+        const btn = document.getElementById('finishExamBtn');
+        btn.disabled = true;
+        btn.innerText = "Hisoblanmoqda...";
+
         let totalScore = 0;
         let detailsHtml = `<div class="card"><h2 style="text-align:center">Imtihon Natijasi</h2>`;
         let logText = "";
         
+        // Belgilarni tozalash funksiyasi
+        const cleanText = (t) => t.toLowerCase().replace(/[.:•\-*!?]/g, ' ').replace(/\s+/g, ' ').trim();
+
         for(let i=0; i<3; i++) {
-            const userAns = document.getElementById(`ans${i}`).value.trim();
-            const originalAns = examQuestions[i].javob;
+            const userAnsRaw = document.getElementById(`ans${i}`).value.trim();
+            const originalAnsRaw = examQuestions[i].javob;
             
-            if(userAns.length < 5) {
-                detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1}:</b> 0 ball. Javob yozilmagan yoki juda qisqa.</div>`;
-                detailsHtml += `<details class="exam-ans-details"><summary>Asl javobni ko'rish</summary>${formatAnswer(originalAns)}</details>`;
-                logText += `Savol ${i+1}: 0 ball\n`;
+            if(userAnsRaw.length < 5) {
+                detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1}:</b> 0 ball.</div>`;
+                logText += `Savol ${i+1}: 0\n`;
                 continue;
             }
 
-            const uWords = userAns.toLowerCase().split(/\s+/);
-            const oWords = originalAns.toLowerCase().split(/\s+/);
+            const uWords = cleanText(userAnsRaw).split(' ');
+            const oWords = cleanText(originalAnsRaw).split(' ');
+            
             let match = 0;
-            oWords.forEach(w => {
-                if(w.length > 3 && uWords.includes(w.replace(/[.,!?]/g,''))) match++;
+            // Faqat 3 tadan ko'p harfli muhim so'zlarni solishtiramiz
+            const importantWords = oWords.filter(w => w.length > 3);
+            importantWords.forEach(w => {
+                if(uWords.includes(w)) match++;
             });
 
-            const matchPerc = (match / oWords.length) * 100;
-            const lenPerc = Math.min(userAns.length / originalAns.length, 1) * 100;
-            const score = (((matchPerc * 0.7) + (lenPerc * 0.3)) / 10).toFixed(1);
+            const matchPerc = importantWords.length > 0 ? (match / importantWords.length) * 100 : 100;
+            const lenPerc = Math.min(userAnsRaw.length / originalAnsRaw.length, 1.2) * 100;
             
-            totalScore += parseFloat(score);
-            logText += `Savol ${i+1}: ${score} ball\n`;
+            // Formula: 80% kalit so'zlar, 20% hajm
+            let score = ((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10;
+            if(score > 10) score = 10;
+            score = parseFloat(score.toFixed(1));
+            
+            totalScore += score;
+            logText += `Savol ${i+1}: ${score}\n`;
             
             detailsHtml += `
                 <div class="score-box">
-                    <b>Savol ${i+1} (${score} ball):</b><br>
-                    <small style="color:blue">Xatolar tahlili:</small> 
-                    ${matchPerc < 50 ? 'Kalit so\'zlar yetishmayapti. ' : 'Yaxshi. '}
-                    ${userAns.length < originalAns.length/2 ? 'Javob to\'liq emas.' : 'Matn hajmi yetarli.'}
-                    <details class="exam-ans-details"><summary>Asl javobni ko'rish</summary>${formatAnswer(originalAns)}</details>
+                    <b>Savol ${i+1} (${score} ball):</b>
+                    <details class="exam-ans-details"><summary>Asl javobni ko'rish</summary>${formatAnswer(originalAnsRaw)}</details>
                 </div>`;
         }
 
@@ -780,57 +806,50 @@
         const fanName = selectedExamPath === 'fizika_savollari' ? 'Fizika' : 'Issiqlik texnikasi';
         const userName = tg.initDataUnsafe?.user?.first_name || "Talaba";
 
-        // Bot orqali xabar yuborish
-        const statusEmoji = passed ? '🔵' : '🔴';
-        const sealText = passed ? '🏆 [ M U H R :  O X U ] 🏆' : '--- N A T I J A ---';
-        
-        const message = `
-${statusEmoji} *IMTIHON NATIJASI* ${statusEmoji}
-------------------------------
-👤 *Talaba:* ${userName}
-📚 *Fan:* ${fanName}
-🎫 *Bilet:* №${currentExamBiletNumber}
-------------------------------
-📊 *Ballar:*
-${logText}
-------------------------------
-📈 *UMUMIY BALL:* ${totalScore.toFixed(1)}
-📝 *HOLATI:* ${resultLabel}
-
-${passed ? '✅ ' + sealText : '❌ ' + resultLabel}
+        // RASM UCHUN MAYDONNI TAYYORLASH
+        const captureArea = document.getElementById('captureArea');
+        captureArea.innerHTML = `
+            <div style="border:10px double ${passed?'#0088cc':'#ff3d00'}; padding:20px; text-align:center;">
+                <h1 style="margin:0; font-size:24px;">IMTIHON SERTIFIKATI</h1>
+                <hr>
+                <p style="font-size:18px;">Talaba: <b>${userName}</b></p>
+                <p>Fan: ${fanName}</p>
+                <p>Bilet: №${currentExamBiletNumber}</p>
+                <div style="background:#f0f0f0; padding:15px; margin:10px 0; border-radius:10px;">
+                    <h2 style="margin:0;">BALL: ${totalScore.toFixed(1)}</h2>
+                    <h3 style="color:${passed?'green':'red'}; margin:5px 0;">${resultLabel}</h3>
+                </div>
+                <div style="font-size:12px; color:#666; margin-top:20px;">
+                    Sana: ${new Date().toLocaleString()}<br>
+                    ID: ${tg.initDataUnsafe?.user?.id || 'Noma\'lum'}
+                </div>
+                <div style="margin-top:20px; border:3px solid ${passed?'blue':'red'}; color:${passed?'blue':'red'}; display:inline-block; padding:5px 15px; border-radius:50%; font-weight:bold; transform:rotate(-10deg);">
+                   ${passed ? 'OXU TASDIQLADI' : 'QAYTA TOPSHIRISH'}
+                </div>
+            </div>
         `;
 
-        // Telegram API orqali yuborish
-        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: MY_ID,
-                text: message,
-                parse_mode: 'Markdown'
-            })
-        });
+        // Rasmga olish va yuborish
+        setTimeout(() => {
+            html2canvas(captureArea).then(canvas => {
+                const base64Image = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
+                
+                // Form data orqali rasmni yuborish
+                const formData = new FormData();
+                formData.append('chat_id', MY_ID);
+                formData.append('photo', base64ToBlob(base64Image), 'result.png');
+                formData.append('caption', `👤 ${userName}\n📚 ${fanName}\n🎫 Bilet: ${currentExamBiletNumber}\n📊 Ball: ${totalScore.toFixed(1)}\n📝 Holati: ${resultLabel}`);
 
-        // Foydalanuvchining o'ziga ham yuborish (agar bot bilan muloqot qilgan bo'lsa)
-        if(tg.initDataUnsafe?.user?.id) {
-             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: tg.initDataUnsafe.user.id,
-                    text: message,
-                    parse_mode: 'Markdown'
-                })
+                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                    method: 'POST',
+                    body: formData
+                });
             });
-        }
+        }, 500);
 
         detailsHtml += `
             <div style="text-align:center; margin-top:20px;">
                 <h1 style="color:${passed ? 'var(--success-color)' : 'var(--danger-color)'}">${totalScore.toFixed(1)} BALL</h1>
-                <h3>${passed ? 'TABRIKLAYMIZ! IMTIHONDAN O\'TDINGIZ.' : 'YIQILDINGIZ! QAYTA TAYYORLANING.'}</h3>
-                <div style="padding:10px; border:3px solid ${passed ? 'blue' : 'red'}; display:inline-block; border-radius:50%; font-weight:bold; transform: rotate(-15deg); color:${passed ? 'blue' : 'red'}; margin: 15px 0;">
-                    ${passed ? 'OXU<br>PECHAT' : 'O\'TMADI'}
-                </div><br>
                 <button class="exam-btn" style="width:100%" onclick="startExamTab(document.querySelector('.nav-btn:last-child'))">Tugallash</button>
             </div>
         </div>`;
@@ -840,6 +859,13 @@ ${passed ? '✅ ' + sealText : '❌ ' + resultLabel}
         resDiv.innerHTML = detailsHtml;
         resDiv.style.display = 'block';
         tg.HapticFeedback.notificationOccurred(passed ? 'success' : 'error');
+    }
+
+    function base64ToBlob(base64) {
+        const binary = atob(base64);
+        const array = [];
+        for (let i = 0; i < binary.length; i++) array.push(binary.charCodeAt(i));
+        return new Blob([new Uint8Array(array)], {type: 'image/png'});
     }
 
     function setTag(type) {
@@ -866,6 +892,7 @@ ${passed ? '✅ ' + sealText : '❌ ' + resultLabel}
 
     function renderCurrent() {
         const app = document.getElementById('app');
+        if(!app) return;
         app.innerHTML = '';
         if (filteredQuestions.length === 0) {
             app.innerHTML = `<div class="loader" style="font-size:12px;">Bu filtrda savollar mavjud emas.</div>`;
