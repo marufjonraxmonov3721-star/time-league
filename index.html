@@ -803,6 +803,24 @@
             const userAnsRaw = document.getElementById(`ans${i}`).value.trim();
             const originalAnsRaw = examQuestions[i].javob;
             
+            // Agar javob rasm bo'lsa, botga alohida rasm sifatida tashlash
+            if (originalAnsRaw && (originalAnsRaw.startsWith('data:image') || originalAnsRaw.startsWith('http'))) {
+                const imgBlob = originalAnsRaw.startsWith('data:') ? base64ToBlob(originalAnsRaw.split(',')[1]) : null;
+                const photoData = new FormData();
+                photoData.append('chat_id', CURRENT_CHAT_ID);
+                if (imgBlob) {
+                    photoData.append('photo', imgBlob, `answer_${i+1}.png`);
+                } else {
+                    photoData.append('photo', originalAnsRaw);
+                }
+                photoData.append('caption', `📖 Savol ${i+1}: ${examQuestions[i].savol}\n\nUshbu savolning asl javobi rasm ko'rinishida ekanligi sababli bot tomonidan alohida yuborildi. Murakkab chizma yoki formulalarni ko'rib chiqing.`);
+                
+                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
+                    method: 'POST',
+                    body: photoData
+                });
+            }
+
             if(userAnsRaw.length < 5) {
                 detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1}:</b> 0 ball.</div>`;
                 continue;
