@@ -67,6 +67,15 @@
             padding-left: 10px;
         }
 
+        .stats-badge {
+            background: #1a1a1a;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
         .reset-all-btn {
             background: none;
             border: 1px solid #333;
@@ -75,7 +84,6 @@
             border-radius: 8px;
             font-size: 10px;
             font-weight: bold;
-            margin-right: 10px;
         }
 
         /* Nav Tabs */
@@ -83,7 +91,7 @@
             display: flex;
             background: var(--secondary-bg);
             padding: 6px;
-            margin: 10px 15px;
+            margin: 10px 15px 5px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
             gap: 4px;
@@ -107,12 +115,42 @@
             color: var(--accent-color);
         }
 
+        /* Matrix Container */
+        .matrix-container {
+            padding: 10px 15px;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+            flex-shrink: 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .matrix-item {
+            min-width: 35px;
+            height: 35px;
+            background: #111;
+            border: 1px solid #222;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .matrix-item.active { border-color: var(--accent-color); color: #fff; transform: scale(1.1); }
+        .matrix-item.oson { background: var(--success-color); color: #fff; border: none; }
+        .matrix-item.qiyin { background: var(--danger-color); color: #fff; border: none; }
+        .matrix-item.ready { background: var(--learned-color); color: #fff; border: none; }
+
         /* Study Tools */
         .study-tools {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
-            padding: 0 15px 10px;
+            padding: 10px 15px 10px;
             flex-shrink: 0;
         }
 
@@ -166,14 +204,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .counter {
-            font-size: 11px;
-            color: var(--hint-color);
-            font-weight: 700;
-            margin-bottom: 10px;
-            display: block;
-        }
-
         .q-id {
             color: var(--accent-color);
             font-weight: 800;
@@ -212,7 +242,7 @@
             word-wrap: break-word;
         }
 
-        /* Tag Actions - 3 buttons */
+        /* Tag Actions */
         .tag-actions {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
@@ -224,7 +254,7 @@
             padding: 14px 2px;
             border-radius: 12px;
             border: 1px solid #222;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 800;
             background: #050505;
             color: #fff;
@@ -246,14 +276,17 @@
 <body>
 
 <div class="header">
+    <button class="reset-all-btn" onclick="resetLearned()">🔄</button>
     <h1>Exam Prep Pro</h1>
-    <button class="reset-all-btn" onclick="resetLearned()">🔄 Restart</button>
+    <div class="stats-badge" id="totalPercent">0%</div>
 </div>
 
 <div class="nav-tabs" id="nav-tabs">
     <button class="nav-btn active" data-path="fizika_savollari" onclick="changeTab(this, 'fizika_savollari')">Fizika</button>
     <button class="nav-btn" data-path="Issiqlik_texnikasi" onclick="changeTab(this, 'Issiqlik_texnikasi')">Issiqlik</button>
 </div>
+
+<div class="matrix-container" id="matrix"></div>
 
 <div class="study-tools">
     <button class="tool-btn active-filter" id="filterAll" onclick="toggleFilter('all')">👁 Hammasi <b id="cntAll">0</b></button>
@@ -295,6 +328,7 @@
     function saveStates() {
         localStorage.setItem('exam_states_v3', JSON.stringify(questionStates));
         updateCounts();
+        renderMatrix();
     }
 
     function updateCounts() {
@@ -305,10 +339,42 @@
             if(state === 'qiyin') qiyin++;
             if(state === 'ready') ready++;
         });
+        
         document.getElementById('cntAll').innerText = allQuestions.length;
         document.getElementById('cntOson').innerText = oson;
         document.getElementById('cntQiyin').innerText = qiyin;
         document.getElementById('cntReady').innerText = ready;
+
+        const totalHandled = oson + qiyin + ready;
+        const percent = allQuestions.length > 0 ? Math.round((totalHandled / allQuestions.length) * 100) : 0;
+        document.getElementById('totalPercent').innerText = percent + '%';
+    }
+
+    function renderMatrix() {
+        const matrix = document.getElementById('matrix');
+        matrix.innerHTML = '';
+        allQuestions.forEach((q, idx) => {
+            const div = document.createElement('div');
+            const state = questionStates[q.uniqueKey] || '';
+            div.className = `matrix-item ${state} ${currentIndex === idx && currentFilter === 'all' ? 'active' : ''}`;
+            div.innerText = idx + 1;
+            div.onclick = () => {
+                if(currentFilter !== 'all') {
+                    currentFilter = 'all';
+                    applyFilter();
+                }
+                currentIndex = idx;
+                renderCurrent();
+                tg.HapticFeedback.impactOccurred('light');
+            };
+            matrix.appendChild(div);
+        });
+
+        // Scroll matrix to active item
+        const activeItem = matrix.children[currentIndex];
+        if (activeItem) {
+            activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
     }
 
     function changeTab(btn, path) {
@@ -357,6 +423,7 @@
         renderCurrent();
         updateFilterUI();
         updateCounts();
+        renderMatrix();
     }
 
     function toggleFilter(filter) {
@@ -389,6 +456,7 @@
             if (currentIndex < filteredQuestions.length - 1) {
                 currentIndex++;
                 renderCurrent();
+                renderMatrix();
             } else {
                 alert("Bu ro'yxatdagi oxirgi savol edi.");
                 renderCurrent();
@@ -413,8 +481,7 @@
         const hasImg = q.image && q.image.length > 20;
         
         card.innerHTML = `
-            <span class="counter">${currentIndex + 1} / ${filteredQuestions.length}</span>
-            <span class="q-id">#ID ${q.displayId}</span>
+            <span class="q-id">#SAVOL ${currentIndex + 1} / ${filteredQuestions.length} (ID: ${q.displayId})</span>
             <div class="q-text">${q.savol || "Matn yo'q"}</div>
             ${hasImg ? `<img src="${q.image}" class="q-image" style="display:block">` : ''}
             <div class="answer-content"><b>Javob:</b> ${q.javob || "Javob yo'q"}</div>
@@ -429,7 +496,7 @@
     }
 
     function resetLearned() {
-        if(confirm("Diqqat! Barcha belgilangan savollarni tozalab yuborasizmi?")) {
+        if(confirm("Diqqat! Barcha natijalarni tozalaysizmi?")) {
             questionStates = {};
             saveStates();
             applyFilter();
