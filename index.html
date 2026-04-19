@@ -309,25 +309,46 @@
         /* Real Exam Styles */
         .exam-input {
             width: 100%;
-            background: #050505;
-            border: 1px solid #333;
-            border-radius: 12px;
-            color: #fff;
-            padding: 15px;
-            font-family: inherit;
-            font-size: 15px;
-            min-height: 120px;
-            margin-top: 15px;
+            background: #fdfdfd;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            color: #000;
+            padding: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            min-height: 80px;
+            margin-top: 10px;
             resize: none;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
         }
-        .exam-input:focus { border-color: var(--accent-color); }
-        .diff-text { white-space: pre-wrap; line-height: 1.6; }
-        .diff-red { color: var(--danger-color); text-decoration: line-through; }
-        .diff-green { color: var(--success-color); font-weight: bold; }
-        .exam-nav { display: flex; gap: 10px; margin-top: 20px; }
-        .exam-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
-        .exam-check-btn { background: var(--accent-color); color: #fff; }
-        .exam-next-btn { background: #333; color: #fff; }
+        .exam-input:focus { border-color: var(--accent-color); outline: none; }
+        
+        .real-bilet {
+            background: #fff;
+            color: #000;
+            padding: 30px;
+            border-radius: 2px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            position: relative;
+        }
+        .bilet-header {
+            text-align: center;
+            border-bottom: 2px double #000;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+        .bilet-savol-title { font-weight: bold; margin-top: 15px; display: block; }
+        
+        .score-box {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 5px solid var(--accent-color);
+            margin-top: 10px;
+            color: #000;
+        }
 
         /* Canvas Table Styles */
         #examCanvas {
@@ -335,15 +356,8 @@
             border-radius: 15px;
             box-shadow: inset 0 0 50px #000;
             width: 100%;
-            height: 350px;
+            height: 380px;
             cursor: pointer;
-        }
-        .score-display {
-            font-size: 24px;
-            font-weight: bold;
-            color: var(--accent-color);
-            text-align: center;
-            margin: 10px 0;
         }
 
         .loader {
@@ -406,7 +420,6 @@
     let currentPath = 'fizika_savollari';
     let isExamMode = false;
     let examQuestions = [];
-    let examScores = [0, 0, 0];
 
     let questionStates = JSON.parse(localStorage.getItem('exam_states_v3')) || {};
 
@@ -563,8 +576,9 @@
         return html;
     }
 
-    // --- REAL EXAM WITH CANVAS ---
+    // --- REAL EXAM SYSTEM ---
     let ticketPositions = [];
+    let currentExamBiletNumber = 0;
 
     function startExamTab(btn) {
         isExamMode = true;
@@ -576,48 +590,53 @@
         const app = document.getElementById('app');
         app.innerHTML = `
             <div class="card" style="text-align:center">
-                <h2 style="color:var(--accent-color)">Stol ustidan bilet tanlang</h2>
-                <canvas id="examCanvas"></canvas>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px;">
-                    <button class="exam-btn exam-check-btn" onclick="initExamTable('fizika_savollari')">Fizika Savollari</button>
-                    <button class="exam-btn exam-check-btn" onclick="initExamTable('Issiqlik_texnikasi')">Issiqlik Savollari</button>
+                <h2 style="color:var(--accent-color)">Fan yo'nalishini tanlang</h2>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+                    <button class="exam-btn exam-check-btn" onclick="initExamTable('fizika_savollari', 70)">Fizika (70 savol)</button>
+                    <button class="exam-btn exam-check-btn" onclick="initExamTable('Issiqlik_texnikasi', 90)">Issiqlik (90 savol)</button>
                 </div>
+                <canvas id="examCanvas"></canvas>
             </div>
         `;
-        setTimeout(() => drawTable(), 100);
     }
 
-    function drawTable() {
+    function initExamTable(path, count) {
         const canvas = document.getElementById('examCanvas');
-        if(!canvas) return;
         const ctx = canvas.getContext('2d');
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
-
+        
+        selectedExamPath = path;
+        const biletCount = Math.floor(count / 3);
         ticketPositions = [];
-        const rows = 3;
-        const cols = 4;
-        const w = 60, h = 40;
+        
+        // Stolni tozalash
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        for(let r=0; r<rows; r++) {
-            for(let c=0; c<cols; c++) {
-                const x = (canvas.width/(cols+1)) * (c+1) - w/2;
-                const y = (canvas.height/(rows+1)) * (r+1) - h/2;
-                const angle = (Math.random() - 0.5) * 0.5;
-                ticketPositions.push({x, y, w, h, angle, id: (r*cols+c+1)});
+        const cols = 5;
+        const rows = Math.ceil(biletCount / cols);
+        const w = 45, h = 30;
 
-                ctx.save();
-                ctx.translate(x+w/2, y+h/2);
-                ctx.rotate(angle);
-                ctx.fillStyle = "#fff";
-                ctx.shadowBlur = 5;
-                ctx.shadowColor = "#000";
-                ctx.fillRect(-w/2, -h/2, w, h);
-                ctx.fillStyle = "#000";
-                ctx.font = "bold 12px sans-serif";
-                ctx.fillText(r*cols+c+1, -5, 5);
-                ctx.restore();
-            }
+        for(let i=0; i<biletCount; i++) {
+            const r = Math.floor(i / cols);
+            const c = i % cols;
+            const x = (canvas.width/(cols+1)) * (c+1) - w/2;
+            const y = (canvas.height/(rows+1)) * (r+1) - h/2;
+            const angle = (Math.random() - 0.5) * 0.4;
+            
+            ticketPositions.push({x, y, w, h, id: i+1});
+
+            ctx.save();
+            ctx.translate(x+w/2, y+h/2);
+            ctx.rotate(angle);
+            ctx.fillStyle = "#fff";
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = "#000";
+            ctx.fillRect(-w/2, -h/2, w, h);
+            ctx.fillStyle = "#000";
+            ctx.font = "bold 10px sans-serif";
+            ctx.fillText(i+1, -5, 5);
+            ctx.restore();
         }
 
         canvas.onclick = (e) => {
@@ -627,117 +646,109 @@
             
             ticketPositions.forEach(p => {
                 if(mx > p.x && mx < p.x + p.w && my > p.y && my < p.y + p.h) {
-                    tg.HapticFeedback.impactOccurred('medium');
-                    prepareExamFromPath();
+                    currentExamBiletNumber = p.id;
+                    tg.HapticFeedback.impactOccurred('heavy');
+                    generateBiletContent(selectedExamPath);
                 }
             });
         };
     }
 
-    let selectedExamPath = 'fizika_savollari';
-    function initExamTable(path) {
-        selectedExamPath = path;
-        drawTable();
-        tg.HapticFeedback.notificationOccurred('success');
-    }
-
-    function prepareExamFromPath() {
-        db.ref(selectedExamPath).once('value', (snap) => {
+    function generateBiletContent(path) {
+        db.ref(path).once('value', (snap) => {
             const data = snap.val();
-            if(!data) return;
             const items = Object.values(data);
             examQuestions = [];
             let tempArr = [...items];
+            
             for(let i=0; i<3; i++) {
-                if(tempArr.length == 0) break;
                 const rIdx = Math.floor(Math.random() * tempArr.length);
                 examQuestions.push(tempArr.splice(rIdx, 1)[0]);
             }
-            currentIndex = 0;
-            examScores = [0,0,0];
-            renderExamQuestion();
+            renderPaperBilet();
         });
     }
 
-    function renderExamQuestion() {
-        const q = examQuestions[currentIndex];
+    function renderPaperBilet() {
         const app = document.getElementById('app');
         app.innerHTML = `
-            <div class="card">
-                <span class="q-id">BILET SAVOLI ${currentIndex + 1} / 3</span>
-                <div class="q-text">${q.savol}</div>
-                <textarea class="exam-input" id="userInput" placeholder="Javobni to'liq yozma shaklda kiriting..."></textarea>
-                <div id="examResult" style="margin-top:20px; display:none"></div>
+            <div class="real-bilet" id="biletPaper">
+                <div class="bilet-header">
+                    <h3>IMTIHON BILETI №${currentExamBiletNumber}</h3>
+                    <small>Fan: ${selectedExamPath === 'fizika_savollari' ? 'Fizika' : 'Issiqlik texnikasi'}</small>
+                </div>
                 
-                <div class="exam-nav">
-                    <button class="exam-btn exam-check-btn" id="checkBtn" onclick="calculateScore()">Tekshirish va Ball olish</button>
-                    <button class="exam-btn exam-next-btn" style="display:none" id="nextExamBtn" onclick="nextExam()">Keyingi savol</button>
+                <span class="bilet-savol-title">1-SAVOL:</span>
+                <p>${examQuestions[0].savol}</p>
+                <textarea class="exam-input" id="ans0" placeholder="1-savol javobini kiriting..."></textarea>
+                
+                <span class="bilet-savol-title">2-SAVOL:</span>
+                <p>${examQuestions[1].savol}</p>
+                <textarea class="exam-input" id="ans1" placeholder="2-savol javobini kiriting..."></textarea>
+                
+                <span class="bilet-savol-title">3-SAVOL:</span>
+                <p>${examQuestions[2].savol}</p>
+                <textarea class="exam-input" id="ans2" placeholder="3-savol javobini kiriting..."></textarea>
+
+                <div style="margin-top:30px;">
+                    <button class="exam-btn exam-check-btn" style="width:100%" onclick="evaluateBilet()">Tekshirish va Ball olish</button>
                 </div>
             </div>
+            <div id="examFinalResult" style="display:none"></div>
         `;
     }
 
-    function calculateScore() {
-        const userText = document.getElementById('userInput').value.trim();
-        const originalText = examQuestions[currentIndex].javob;
-        const resultDiv = document.getElementById('examResult');
+    function evaluateBilet() {
+        let totalScore = 0;
+        let detailsHtml = `<div class="card"><h2 style="text-align:center">Imtihon Natijasi</h2>`;
         
-        if(userText.length < 5) { alert("Javob juda qisqa!"); return; }
-
-        // Ballni foizda hisoblash (Kalit so'zlar va matn o'xshashligi)
-        const userWords = userText.toLowerCase().split(/\s+/);
-        const originalWords = originalText.toLowerCase().split(/\s+/);
-        
-        let matchCount = 0;
-        originalWords.forEach(word => {
-            if(word.length > 3 && userWords.includes(word.replace(/[.,]/g,''))) matchCount++;
-        });
-
-        const wordMatchPercent = (matchCount / originalWords.length) * 100;
-        const lengthRatio = Math.min(userText.length / originalText.length, 1) * 100;
-        const finalPercent = (wordMatchPercent * 0.7) + (lengthRatio * 0.3);
-        
-        const score = (finalPercent / 10).toFixed(1);
-        examScores[currentIndex] = parseFloat(score);
-
-        resultDiv.style.display = 'block';
-        document.getElementById('checkBtn').style.display = 'none';
-        document.getElementById('nextExamBtn').style.display = 'block';
-
-        let diffHtml = `<div class="score-display">${score} ball / 10.0</div>`;
-        diffHtml += `<div class="ans-header">Taqqoslash:</div><div class="diff-text">`;
-
-        originalWords.forEach((word, idx) => {
-            if(userWords.includes(word.replace(/[.,]/g,''))) {
-                diffHtml += `<span>${word} </span>`;
-            } else {
-                diffHtml += `<span class="diff-red">${word}</span> `;
-            }
-        });
-
-        diffHtml += `</div><div class="ans-summary"><b>Asl javob:</b><br>${formatAnswer(originalText)}</div>`;
-        resultDiv.innerHTML = diffHtml;
-        tg.HapticFeedback.notificationOccurred('warning');
-    }
-
-    function nextExam() {
-        if(currentIndex < examQuestions.length - 1) {
-            currentIndex++;
-            renderExamQuestion();
-        } else {
-            const total = examScores.reduce((a, b) => a + b, 0).toFixed(1);
-            const status = total >= 18 ? "<span style='color:var(--success-color)'>O'TDI</span>" : "<span style='color:var(--danger-color)'>YIQILDI (Kamida 18 ball kerak)</span>";
+        for(let i=0; i<3; i++) {
+            const userAns = document.getElementById(`ans${i}`).value.trim();
+            const originalAns = examQuestions[i].javob;
             
-            const app = document.getElementById('app');
-            app.innerHTML = `
-                <div class="card" style="text-align:center">
-                    <h1 style="font-size:40px">${total}</h1>
-                    <p>Umumiy to'plangan ball (30 dan)</p>
-                    <div style="font-size:20px; font-weight:bold; margin:20px 0;">Natija: ${status}</div>
-                    <button class="save-btn" style="background:var(--accent-color); color:#fff; border:none; padding:15px; border-radius:10px; width:100%; font-weight:bold" onclick="startExamTab(document.querySelector('.nav-btn:last-child'))">Qayta topshirish</button>
-                </div>
-            `;
+            if(userAns.length < 5) {
+                detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1}:</b> 0 ball. Javob yozilmagan yoki juda qisqa.</div>`;
+                continue;
+            }
+
+            // Kuchli tekshirish algoritmi
+            const uWords = userAns.toLowerCase().split(/\s+/);
+            const oWords = originalAns.toLowerCase().split(/\s+/);
+            let match = 0;
+            oWords.forEach(w => {
+                if(w.length > 3 && uWords.includes(w.replace(/[.,!?]/g,''))) match++;
+            });
+
+            const matchPerc = (match / oWords.length) * 100;
+            const lenPerc = Math.min(userAns.length / originalAns.length, 1) * 100;
+            const score = (((matchPerc * 0.7) + (lenPerc * 0.3)) / 10).toFixed(1);
+            
+            totalScore += parseFloat(score);
+            
+            detailsHtml += `
+                <div class="score-box">
+                    <b>Savol ${i+1} (${score} ball):</b><br>
+                    <small style="color:blue">Xatolar tahlili:</small> 
+                    ${matchPerc < 50 ? 'Kalit so\'zlar yetishmayapti. ' : 'Yaxshi. '}
+                    ${userAns.length < originalAns.length/2 ? 'Javob to\'liq emas.' : 'Matn hajmi yetarli.'}
+                    <details style="margin-top:5px"><summary>Asl javobni ko'rish</summary>${formatAnswer(originalAns)}</details>
+                </div>`;
         }
+
+        const passed = totalScore >= 18;
+        detailsHtml += `
+            <div style="text-align:center; margin-top:20px;">
+                <h1 style="color:${passed ? 'var(--success-color)' : 'var(--danger-color)'}">${totalScore.toFixed(1)} BALL</h1>
+                <h3>${passed ? 'TABRIKLAYMIZ! IMTIHONDAN O\'TDINGIZ.' : 'YIQILDINGIZ! QAYTA TAYYORLANING.'}</h3>
+                <button class="exam-btn exam-next-btn" style="width:100%" onclick="startExamTab(document.querySelector('.nav-btn:last-child'))">Tugallash</button>
+            </div>
+        </div>`;
+
+        document.getElementById('biletPaper').style.display = 'none';
+        const resDiv = document.getElementById('examFinalResult');
+        resDiv.innerHTML = detailsHtml;
+        resDiv.style.display = 'block';
+        tg.HapticFeedback.notificationOccurred(passed ? 'success' : 'error');
     }
 
     function setTag(type) {
