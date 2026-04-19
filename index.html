@@ -8,6 +8,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     
     <style>
         /* Modern Minimalist OLED Design */
@@ -361,18 +364,6 @@
             cursor: pointer;
         }
 
-        /* Leaderboard Styles */
-        .leader-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        .leader-rank { font-weight: bold; color: var(--accent-color); width: 30px; }
-        .leader-name { flex: 1; color: #fff; font-size: 14px; }
-        .leader-score { font-weight: bold; color: var(--success-color); }
-
         /* Canvas Table Styles */
         #examCanvas {
             background: #1a0f00; /* Wood color */
@@ -424,6 +415,28 @@
             padding: 20px;
             font-family: serif;
         }
+        
+        /* Export Section Styles */
+        .export-card {
+            text-align: center;
+            padding: 20px;
+        }
+        .export-btn {
+            background: #2c3e50;
+            color: white;
+            border: 1px solid #34495e;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 10px 0;
+            width: 100%;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .export-btn.pdf { background: #e74c3c; }
+        .export-btn.docx { background: #2980b9; }
     </style>
 </head>
 <body>
@@ -437,8 +450,8 @@
 <div class="nav-tabs" id="nav-tabs">
     <button class="nav-btn active" data-path="fizika_savollari" onclick="changeTab(this, 'fizika_savollari')">Fizika</button>
     <button class="nav-btn" data-path="Issiqlik_texnikasi" onclick="changeTab(this, 'Issiqlik_texnikasi')">Issiqlik</button>
-    <button class="nav-btn" onclick="startExamTab(this)">🔥 Real Imtihon</button>
-    <button class="nav-btn" onclick="showLeaderboard(this)">🏆 Reyting</button>
+    <button class="nav-btn" onclick="startExamTab(this)">🔥 Imtihon</button>
+    <button class="nav-btn" onclick="showExportTab(this)">📤 Export</button>
 </div>
 
 <div class="matrix-container" id="matrix"></div>
@@ -492,53 +505,6 @@
         localStorage.setItem('exam_states_v3', JSON.stringify(questionStates));
         updateCounts();
         renderMatrix();
-        syncStatsWithFirebase();
-    }
-
-    function syncStatsWithFirebase() {
-        const userId = tg.initDataUnsafe?.user?.id;
-        const userName = tg.initDataUnsafe?.user?.first_name || "Talaba";
-        if(userId) {
-            let readyCount = 0;
-            Object.values(questionStates).forEach(s => { if(s === 'ready') readyCount++; });
-            db.ref('leaderboard/' + userId).update({
-                name: userName,
-                score: readyCount,
-                lastActive: Date.now()
-            });
-        }
-    }
-
-    function showLeaderboard(btn) {
-        isExamMode = true;
-        document.getElementById('study-tools-ui').style.display = 'none';
-        document.getElementById('matrix').style.display = 'none';
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        const app = document.getElementById('app');
-        app.innerHTML = '<div class="loader">Reyting yuklanmoqda...</div>';
-
-        db.ref('leaderboard').orderByChild('score').limitToLast(10).once('value', (snap) => {
-            const data = snap.val();
-            let html = '<div class="card"><h3>🏆 TOP 10 TALABA</h3><p style="font-size:11px; color:gray;">(100% tayyor savollar soni bo\'yicha)</p>';
-            if(data) {
-                const sorted = Object.values(data).sort((a,b) => b.score - a.score);
-                sorted.forEach((u, i) => {
-                    html += `
-                        <div class="leader-item">
-                            <span class="leader-rank">${i+1}.</span>
-                            <span class="leader-name">${u.name}</span>
-                            <span class="leader-score">${u.score} ta</span>
-                        </div>
-                    `;
-                });
-            } else {
-                html += '<p>Hali ma\'lumot yo\'q</p>';
-            }
-            html += '</div>';
-            app.innerHTML = html;
-        });
     }
 
     function updateCounts() {
@@ -550,10 +516,15 @@
             if(state === 'ready') ready++;
         });
         
-        document.getElementById('cntAll').innerText = allQuestions.length;
-        document.getElementById('cntOson').innerText = oson;
-        document.getElementById('cntQiyin').innerText = qiyin;
-        document.getElementById('cntReady').innerText = ready;
+        const cntAllEl = document.getElementById('cntAll');
+        const cntOsonEl = document.getElementById('cntOson');
+        const cntQiyinEl = document.getElementById('cntQiyin');
+        const cntReadyEl = document.getElementById('cntReady');
+        
+        if(cntAllEl) cntAllEl.innerText = allQuestions.length;
+        if(cntOsonEl) cntOsonEl.innerText = oson;
+        if(cntQiyinEl) cntQiyinEl.innerText = qiyin;
+        if(cntReadyEl) cntReadyEl.innerText = ready;
 
         const totalHandled = oson + qiyin + ready;
         const percent = allQuestions.length > 0 ? Math.round((totalHandled / allQuestions.length) * 100) : 0;
@@ -562,7 +533,7 @@
 
     function renderMatrix() {
         const matrix = document.getElementById('matrix');
-        if(!matrix) return;
+        if(!matrix || matrix.style.display === 'none') return;
         matrix.innerHTML = '';
         if(isExamMode) return; 
 
@@ -818,7 +789,6 @@
 
         let totalScore = 0;
         let detailsHtml = `<div class="card"><h2 style="text-align:center">Imtihon Natijasi</h2>`;
-        let logText = "";
         
         const cleanText = (t) => t.toLowerCase().replace(/[.:•\-*!?]/g, ' ').replace(/\s+/g, ' ').trim();
 
@@ -828,7 +798,6 @@
             
             if(userAnsRaw.length < 5) {
                 detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1}:</b> 0 ball.</div>`;
-                logText += `Savol ${i+1}: 0\n`;
                 continue;
             }
 
@@ -849,7 +818,6 @@
             score = parseFloat(score.toFixed(1));
             
             totalScore += score;
-            logText += `Savol ${i+1}: ${score}\n`;
             
             detailsHtml += `
                 <div class="score-box">
@@ -879,9 +847,6 @@
                     Sana: ${new Date().toLocaleString()}<br>
                     ID: ${tg.initDataUnsafe?.user?.id || 'Noma\'lum'}
                 </div>
-                <div style="margin-top:20px; border:3px solid ${passed?'blue':'red'}; color:${passed?'blue':'red'}; display:inline-block; padding:5px 15px; border-radius:50%; font-weight:bold; transform:rotate(-10deg);">
-                   ${passed ? 'OXU TASDIQLADI' : 'QAYTA TOPSHIRISH'}
-                </div>
             </div>
         `;
 
@@ -903,7 +868,7 @@
         detailsHtml += `
             <div style="text-align:center; margin-top:20px;">
                 <h1 style="color:${passed ? 'var(--success-color)' : 'var(--danger-color)'}">${totalScore.toFixed(1)} BALL</h1>
-                <button class="exam-btn" style="width:100%" onclick="startExamTab(document.querySelector('.nav-btn:nth-child(3)'))">Tugallash</button>
+                <button class="exam-btn" style="width:100%" onclick="startExamTab(document.querySelector('.nav-btn:last-child'))">Tugallash</button>
             </div>
         </div>`;
 
@@ -919,6 +884,97 @@
         const array = [];
         for (let i = 0; i < binary.length; i++) array.push(binary.charCodeAt(i));
         return new Blob([new Uint8Array(array)], {type: 'image/png'});
+    }
+
+    // --- EXPORT SYSTEM ---
+    function showExportTab(btn) {
+        isExamMode = true; 
+        document.getElementById('study-tools-ui').style.display = 'none';
+        document.getElementById('matrix').style.display = 'none';
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        const app = document.getElementById('app');
+        app.innerHTML = `
+            <div class="card export-card">
+                <h2 style="color:var(--accent-color)">Barcha savollarni yuklash</h2>
+                <p style="font-size:12px; color:var(--hint-color)">Bazadagi barcha savollar va javoblarni tanlangan formatda yuklab oling.</p>
+                
+                <div style="margin-top:20px;">
+                    <h3 style="font-size:14px; text-align:left;">Fizika fanidan:</h3>
+                    <button class="export-btn pdf" onclick="exportData('fizika_savollari', 'pdf')">📄 PDF Yuklash</button>
+                    <button class="export-btn docx" onclick="exportData('fizika_savollari', 'docx')">📝 DOCX Yuklash</button>
+                </div>
+
+                <div style="margin-top:20px; border-top:1px solid #222; padding-top:15px;">
+                    <h3 style="font-size:14px; text-align:left;">Issiqlik texnikasidan:</h3>
+                    <button class="export-btn pdf" onclick="exportData('Issiqlik_texnikasi', 'pdf')">📄 PDF Yuklash</button>
+                    <button class="export-btn docx" onclick="exportData('Issiqlik_texnikasi', 'docx')">📝 DOCX Yuklash</button>
+                </div>
+            </div>
+        `;
+    }
+
+    async function exportData(path, format) {
+        tg.MainButton.showProgress();
+        tg.MainButton.setText("Fayl tayyorlanmoqda...");
+        tg.MainButton.show();
+
+        const snap = await db.ref(path).once('value');
+        const data = snap.val();
+        if(!data) {
+            alert("Ma'lumot topilmadi");
+            tg.MainButton.hide();
+            return;
+        }
+
+        const items = Object.values(data).sort((a,b) => (a.id || 0) - (b.id || 0));
+        const title = path === 'fizika_savollari' ? "Fizika Fanidan Savollar" : "Issiqlik Texnikasi Savollari";
+
+        if(format === 'pdf') {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let y = 20;
+
+            doc.setFontSize(16);
+            doc.text(title, 105, y, { align: 'center' });
+            y += 15;
+
+            items.forEach((item, index) => {
+                if(y > 270) { doc.addPage(); y = 20; }
+                doc.setFontSize(12);
+                doc.setFont(undefined, 'bold');
+                const qLines = doc.splitTextToSize(`${index + 1}. ${item.savol}`, 180);
+                doc.text(qLines, 15, y);
+                y += (qLines.length * 7);
+
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(10);
+                const aLines = doc.splitTextToSize(`Javob: ${item.javob}`, 170);
+                doc.text(aLines, 20, y);
+                y += (aLines.length * 5) + 10;
+            });
+
+            doc.save(`${path}.pdf`);
+        } else {
+            const doc = new docx.Document({
+                sections: [{
+                    children: [
+                        new docx.Paragraph({ text: title, heading: docx.HeadingLevel.HEADING_1, alignment: docx.AlignmentType.CENTER }),
+                        ...items.flatMap((item, index) => [
+                            new docx.Paragraph({ children: [new docx.TextRun({ text: `${index+1}. ${item.savol}`, bold: true })], spacing: { before: 400 } }),
+                            new docx.Paragraph({ text: `Javob: ${item.javob}`, spacing: { before: 200 } })
+                        ])
+                    ]
+                }]
+            });
+
+            const blob = await docx.Packer.toBlob(doc);
+            saveAs(blob, `${path}.docx`);
+        }
+
+        tg.MainButton.hide();
+        tg.HapticFeedback.notificationOccurred('success');
     }
 
     function setTag(type) {
@@ -937,7 +993,6 @@
                 renderCurrent();
                 renderMatrix();
             } else {
-                alert("Bu ro'yxatdagi oxirgi savol edi.");
                 renderCurrent();
             }
         }, 300);
