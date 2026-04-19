@@ -77,6 +77,25 @@
             box-shadow: 0 0 10px rgba(0,136,204,0.2);
         }
 
+        /* Yodlash rejimi paneli */
+        .study-tools {
+            display: flex;
+            gap: 10px;
+            padding: 10px 15px;
+            background: #080808;
+        }
+
+        .tool-btn {
+            flex: 1;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
         /* Konteyner */
         .container {
             padding: 15px;
@@ -92,6 +111,7 @@
             padding: 18px;
             margin-bottom: 20px;
             animation: slideUp 0.4s ease-out;
+            position: relative;
         }
 
         @keyframes slideUp {
@@ -133,6 +153,17 @@
             cursor: pointer;
         }
 
+        .learned-btn {
+            margin-top: 10px;
+            width: 100%;
+            background: transparent;
+            border: 1px solid #222;
+            color: #555;
+            padding: 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
         .answer-content {
             display: none;
             margin-top: 15px;
@@ -162,6 +193,11 @@
     <button class="nav-btn" onclick="changeTab(this, 'Issiqlik_texnikasi')">Issiqlik texnikasi</button>
 </div>
 
+<div class="study-tools">
+    <button class="tool-btn" onclick="shuffleQuestions()">🔀 Aralashtirish</button>
+    <button class="tool-btn" onclick="resetLearned()">🔄 Hammasini qaytarish</button>
+</div>
+
 <div class="container" id="app">
     <div class="loader">Yuklanmoqda...</div>
 </div>
@@ -180,11 +216,14 @@
         projectId: "songlyrics-a5df9",
         storageBucket: "songlyrics-a5df9.firebasestorage.app",
         messagingSenderId: "322622967401",
-        appId: "1:322622967401:web:24569afce697e18edc9cf8"
+        appId: "1:322622967401:web:24569afce697e18edc9cf8",
+        measurementId: "G-7DJQEVW067"
     };
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    let allQuestions = [];
 
     // Fan almashtirish
     function changeTab(btn, path) {
@@ -207,8 +246,8 @@
                 return;
             }
 
-            const list = Object.keys(data).map(k => ({...data[k]})).sort((a,b) => a.id - b.id);
-            render(list);
+            allQuestions = Object.keys(data).map(k => ({...data[k]})).sort((a,b) => a.id - b.id);
+            render(allQuestions);
         });
     }
 
@@ -229,6 +268,7 @@
                 ${hasImg ? `<img src="${q.image}" class="q-image" style="display:block">` : ''}
                 <button class="show-ans-btn" onclick="toggleAns(this)">Javobni ko'rsatish</button>
                 <div class="answer-content">${q.javob || "Javob rasmda ko'rsatilgan."}</div>
+                <button class="learned-btn" onclick="markAsLearned(this)">✅ Yodladim (Yashirish)</button>
             `;
             app.appendChild(card);
         });
@@ -244,6 +284,29 @@
             btn.innerText = 'Yashirish';
             tg.HapticFeedback.notificationOccurred('success');
         }
+    }
+
+    // YODLASH REJIMI FUNKSIYALARI
+    function shuffleQuestions() {
+        allQuestions.sort(() => Math.random() - 0.5);
+        render(allQuestions);
+        tg.HapticFeedback.impactOccurred('medium');
+    }
+
+    function markAsLearned(btn) {
+        const card = btn.parentElement;
+        card.style.transition = "0.3s";
+        card.style.opacity = "0";
+        card.style.transform = "translateX(100px)";
+        setTimeout(() => {
+            card.style.display = "none";
+        }, 300);
+        tg.HapticFeedback.impactOccurred('light');
+    }
+
+    function resetLearned() {
+        render(allQuestions);
+        tg.HapticFeedback.notificationOccurred('warning');
     }
 
     // Birinchi yuklash
