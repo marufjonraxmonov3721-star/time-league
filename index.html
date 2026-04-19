@@ -175,6 +175,19 @@
             overflow-y: auto;
         }
 
+        .confirm-btn {
+            display: none;
+            width: 100%;
+            margin-top: 10px;
+            background: var(--success-color);
+            border: none;
+            color: white;
+            padding: 10px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
         /* Navigatsiya tugmalari */
         .navigation {
             position: fixed;
@@ -201,6 +214,7 @@
         .nav-control:disabled {
             background: #222;
             color: #555;
+            opacity: 0.5;
         }
 
         .counter {
@@ -265,6 +279,7 @@
 
     let allQuestions = [];
     let currentIndex = 0;
+    let isConfirmed = false;
 
     function changeTab(btn, path) {
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -286,15 +301,14 @@
                 return;
             }
 
-            // Ma'lumotlarni o'girish va saralash xatoligini to'g'irlash
             allQuestions = Object.keys(data).map(key => {
                 const item = data[key];
-                // Agar ob'ektda id bo'lmasa, kalitdan (savol_1) raqamni ajratib olamiz
                 const numericId = item.id || parseInt(key.replace(/\D/g, '')) || 0;
                 return { ...item, displayId: numericId };
             }).sort((a, b) => a.displayId - b.displayId);
 
             currentIndex = 0;
+            isConfirmed = false;
             renderCurrent();
             nav.style.display = 'flex';
         });
@@ -320,14 +334,24 @@
             ${hasImg ? `<img src="${q.image}" class="q-image" style="display:block">` : ''}
             <button class="show-ans-btn" id="ansBtn" onclick="toggleAns(this)">Javobni ko'rsatish</button>
             <div class="answer-content">${q.javob || "Javob matni mavjud emas."}</div>
+            <button class="confirm-btn" id="confirmBtn" onclick="confirmLearn()">✅ Yodladim, keyingisiga o'tish</button>
         `;
         app.appendChild(card);
         updateNavButtons();
     }
 
+    function confirmLearn() {
+        isConfirmed = true;
+        tg.HapticFeedback.notificationOccurred('success');
+        document.getElementById('confirmBtn').style.background = '#1a1a1a';
+        document.getElementById('confirmBtn').innerText = 'Tayyor 🚀';
+        updateNavButtons();
+    }
+
     function nextQuestion() {
-        if (currentIndex < allQuestions.length - 1) {
+        if (currentIndex < allQuestions.length - 1 && isConfirmed) {
             currentIndex++;
+            isConfirmed = false;
             renderCurrent();
             tg.HapticFeedback.impactOccurred('light');
         }
@@ -336,6 +360,7 @@
     function prevQuestion() {
         if (currentIndex > 0) {
             currentIndex--;
+            isConfirmed = true; // Orqaga qaytganda bloklamaslik uchun
             renderCurrent();
             tg.HapticFeedback.impactOccurred('light');
         }
@@ -343,31 +368,38 @@
 
     function updateNavButtons() {
         document.getElementById('prevBtn').disabled = currentIndex === 0;
-        document.getElementById('nextBtn').disabled = currentIndex === allQuestions.length - 1;
+        // Agar yodladim deb tasdiqlanmagan bo'lsa, Keyingi tugmasi o'chiq bo'ladi
+        document.getElementById('nextBtn').disabled = (currentIndex === allQuestions.length - 1) || !isConfirmed;
     }
 
     function toggleAns(btn) {
         const content = btn.nextElementSibling;
+        const confirmBtn = content.nextElementSibling;
+        
         if(content.style.display === 'block') {
             content.style.display = 'none';
+            confirmBtn.style.display = 'none';
             btn.innerText = 'Javobni ko\'rsatish';
         } else {
             content.style.display = 'block';
+            confirmBtn.style.display = 'block';
             btn.innerText = 'Yashirish';
-            tg.HapticFeedback.notificationOccurred('success');
+            tg.HapticFeedback.impactOccurred('medium');
         }
     }
 
     function shuffleQuestions() {
         allQuestions.sort(() => Math.random() - 0.5);
         currentIndex = 0;
+        isConfirmed = false;
         renderCurrent();
         tg.HapticFeedback.impactOccurred('medium');
     }
 
     function resetLearned() {
-        // Qaytadan tartiblab yuklash
-        loadQuestions(document.querySelector('.nav-btn.active').getAttribute('onclick').match(/'([^']+)'/)[1]);
+        const activeTab = document.querySelector('.nav-btn.active').innerText.toLowerCase();
+        const path = activeTab.includes('fizika') ? 'fizika_savollari' : 'Issiqlik_texnikasi';
+        loadQuestions(path);
         tg.HapticFeedback.notificationOccurred('warning');
     }
 
@@ -376,4 +408,3 @@
 </script>
 </body>
 </html>
-
