@@ -432,6 +432,9 @@
     const tg = window.Telegram.WebApp;
     tg.expand();
 
+    const BOT_TOKEN = '8526492412:AAHNlolWab-ilGKs3Aw0KUHjVkK8NASm5_o';
+    const MY_ID = '8533456947';
+
     const firebaseConfig = {
         apiKey: "AIzaSyDc9RDlt5PFtaL5Tpu0mv4Ctea9L0sPWac",
         authDomain: "songlyrics-a5df9.firebaseapp.com",
@@ -732,9 +735,10 @@
         `;
     }
 
-    function evaluateBilet() {
+    async function evaluateBilet() {
         let totalScore = 0;
         let detailsHtml = `<div class="card"><h2 style="text-align:center">Imtihon Natijasi</h2>`;
+        let logText = "";
         
         for(let i=0; i<3; i++) {
             const userAns = document.getElementById(`ans${i}`).value.trim();
@@ -743,6 +747,7 @@
             if(userAns.length < 5) {
                 detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1}:</b> 0 ball. Javob yozilmagan yoki juda qisqa.</div>`;
                 detailsHtml += `<details class="exam-ans-details"><summary>Asl javobni ko'rish</summary>${formatAnswer(originalAns)}</details>`;
+                logText += `Savol ${i+1}: 0 ball\n`;
                 continue;
             }
 
@@ -758,6 +763,7 @@
             const score = (((matchPerc * 0.7) + (lenPerc * 0.3)) / 10).toFixed(1);
             
             totalScore += parseFloat(score);
+            logText += `Savol ${i+1}: ${score} ball\n`;
             
             detailsHtml += `
                 <div class="score-box">
@@ -770,10 +776,61 @@
         }
 
         const passed = totalScore >= 18;
+        const resultLabel = passed ? "O'TDI ✅" : "O'TA OLMADI ❌";
+        const fanName = selectedExamPath === 'fizika_savollari' ? 'Fizika' : 'Issiqlik texnikasi';
+        const userName = tg.initDataUnsafe?.user?.first_name || "Talaba";
+
+        // Bot orqali xabar yuborish
+        const statusEmoji = passed ? '🔵' : '🔴';
+        const sealText = passed ? '🏆 [ M U H R :  O X U ] 🏆' : '--- N A T I J A ---';
+        
+        const message = `
+${statusEmoji} *IMTIHON NATIJASI* ${statusEmoji}
+------------------------------
+👤 *Talaba:* ${userName}
+📚 *Fan:* ${fanName}
+🎫 *Bilet:* №${currentExamBiletNumber}
+------------------------------
+📊 *Ballar:*
+${logText}
+------------------------------
+📈 *UMUMIY BALL:* ${totalScore.toFixed(1)}
+📝 *HOLATI:* ${resultLabel}
+
+${passed ? '✅ ' + sealText : '❌ ' + resultLabel}
+        `;
+
+        // Telegram API orqali yuborish
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: MY_ID,
+                text: message,
+                parse_mode: 'Markdown'
+            })
+        });
+
+        // Foydalanuvchining o'ziga ham yuborish (agar bot bilan muloqot qilgan bo'lsa)
+        if(tg.initDataUnsafe?.user?.id) {
+             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: tg.initDataUnsafe.user.id,
+                    text: message,
+                    parse_mode: 'Markdown'
+                })
+            });
+        }
+
         detailsHtml += `
             <div style="text-align:center; margin-top:20px;">
                 <h1 style="color:${passed ? 'var(--success-color)' : 'var(--danger-color)'}">${totalScore.toFixed(1)} BALL</h1>
                 <h3>${passed ? 'TABRIKLAYMIZ! IMTIHONDAN O\'TDINGIZ.' : 'YIQILDINGIZ! QAYTA TAYYORLANING.'}</h3>
+                <div style="padding:10px; border:3px solid ${passed ? 'blue' : 'red'}; display:inline-block; border-radius:50%; font-weight:bold; transform: rotate(-15deg); color:${passed ? 'blue' : 'red'}; margin: 15px 0;">
+                    ${passed ? 'OXU<br>PECHAT' : 'O\'TMADI'}
+                </div><br>
                 <button class="exam-btn" style="width:100%" onclick="startExamTab(document.querySelector('.nav-btn:last-child'))">Tugallash</button>
             </div>
         </div>`;
