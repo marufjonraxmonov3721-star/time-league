@@ -96,6 +96,7 @@
             border: 1px solid var(--border-color);
             gap: 4px;
             flex-shrink: 0;
+            overflow-x: auto;
         }
 
         .nav-btn {
@@ -104,10 +105,11 @@
             border: none;
             color: var(--hint-color);
             padding: 10px;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 600;
             border-radius: 8px;
             transition: all 0.25s ease;
+            white-space: nowrap;
         }
 
         .nav-btn.active {
@@ -304,6 +306,29 @@
         .tag-btn.qiyin.active { background: var(--danger-color); border-color: var(--danger-color); }
         .tag-btn.ready.active { background: var(--learned-color); border-color: var(--learned-color); }
 
+        /* Real Exam Styles */
+        .exam-input {
+            width: 100%;
+            background: #050505;
+            border: 1px solid #333;
+            border-radius: 12px;
+            color: #fff;
+            padding: 15px;
+            font-family: inherit;
+            font-size: 15px;
+            min-height: 120px;
+            margin-top: 15px;
+            resize: none;
+        }
+        .exam-input:focus { border-color: var(--accent-color); }
+        .diff-text { white-space: pre-wrap; line-height: 1.6; }
+        .diff-red { color: var(--danger-color); text-decoration: line-through; }
+        .diff-green { color: var(--success-color); font-weight: bold; }
+        .exam-nav { display: flex; gap: 10px; margin-top: 20px; }
+        .exam-btn { flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; }
+        .exam-check-btn { background: var(--accent-color); color: #fff; }
+        .exam-next-btn { background: #333; color: #fff; }
+
         .loader {
             text-align: center;
             padding: 50px;
@@ -323,11 +348,12 @@
 <div class="nav-tabs" id="nav-tabs">
     <button class="nav-btn active" data-path="fizika_savollari" onclick="changeTab(this, 'fizika_savollari')">Fizika</button>
     <button class="nav-btn" data-path="Issiqlik_texnikasi" onclick="changeTab(this, 'Issiqlik_texnikasi')">Issiqlik</button>
+    <button class="nav-btn" onclick="startExamTab(this)">🔥 Real Imtihon</button>
 </div>
 
 <div class="matrix-container" id="matrix"></div>
 
-<div class="study-tools">
+<div class="study-tools" id="study-tools-ui">
     <button class="tool-btn active-filter" id="filterAll" onclick="toggleFilter('all')">👁 Hammasi <b id="cntAll">0</b></button>
     <button class="tool-btn" id="filterOson" onclick="toggleFilter('oson')">✅ Yodladim <b id="cntOson">0</b></button>
     <button class="tool-btn" id="filterQiyin" onclick="toggleFilter('qiyin')">❌ Yodlamadim <b id="cntQiyin">0</b></button>
@@ -361,6 +387,8 @@
     let currentIndex = 0;
     let currentFilter = 'all'; 
     let currentPath = 'fizika_savollari';
+    let isExamMode = false;
+    let examQuestions = [];
 
     let questionStates = JSON.parse(localStorage.getItem('exam_states_v3')) || {};
 
@@ -392,6 +420,8 @@
     function renderMatrix() {
         const matrix = document.getElementById('matrix');
         matrix.innerHTML = '';
+        if(isExamMode) return; // Imtihonda matrix ko'rsatilmaydi
+
         allQuestions.forEach((q, idx) => {
             const div = document.createElement('div');
             const state = questionStates[q.uniqueKey] || '';
@@ -416,6 +446,9 @@
     }
 
     function changeTab(btn, path) {
+        isExamMode = false;
+        document.getElementById('study-tools-ui').style.display = 'grid';
+        document.getElementById('matrix').style.display = 'flex';
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentPath = path;
@@ -489,28 +522,23 @@
             let trimmedLine = line.trim();
             if (!trimmedLine) return;
 
-            // Header detection (Ends with colon :)
             if (trimmedLine.endsWith(':')) {
                 if (inList) { html += '</ul>'; inList = false; }
                 html += `<span class="ans-header">${trimmedLine}</span>`;
             } 
-            // Formula detection (Contains = and letters)
             else if (trimmedLine.includes('=') && (trimmedLine.match(/[A-Z]/) || trimmedLine.includes('∆'))) {
                 if (inList) { html += '</ul>'; inList = false; }
                 html += `<div class="ans-formula">${trimmedLine}</div>`;
             }
-            // List detection (Starts with *, -, or number like 1.)
             else if (trimmedLine.startsWith('*') || trimmedLine.startsWith('-') || /^\d+\./.test(trimmedLine)) {
                 if (!inList) { html += '<ul class="ans-list">'; inList = true; }
                 let cleanLine = trimmedLine.replace(/^[*-\d.]+\s*/, '');
                 html += `<li>${cleanLine}</li>`;
             }
-            // Summary/Conclusion
             else if (trimmedLine.toLowerCase().includes('xulosa')) {
                 if (inList) { html += '</ul>'; inList = false; }
                 html += `<div class="ans-summary"><b>Xulosa:</b> ${trimmedLine.replace(/.*xulosa:?/i, '').trim()}</div>`;
             }
-            // Regular paragraph
             else {
                 if (inList) { html += '</ul>'; inList = false; }
                 html += `<p>${trimmedLine}</p>`;
@@ -520,6 +548,101 @@
         if (inList) html += '</ul>';
         html += '</div>';
         return html;
+    }
+
+    // Real Exam Functions
+    function startExamTab(btn) {
+        isExamMode = true;
+        document.getElementById('study-tools-ui').style.display = 'none';
+        document.getElementById('matrix').style.display = 'none';
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        const app = document.getElementById('app');
+        app.innerHTML = `
+            <div class="card" style="text-align:center">
+                <h2 style="color:var(--accent-color)">Real Imtihon</h2>
+                <p>3 ta tasodifiy savol tushadi. Javoblarni yozib o'zingizni sinab ko'ring.</p>
+                <div style="display:grid; gap:10px; margin-top:20px;">
+                    <button class="exam-btn exam-check-btn" onclick="prepareExam('fizika_savollari')">Fizika fani bo'yicha</button>
+                    <button class="exam-btn exam-check-btn" onclick="prepareExam('Issiqlik_texnikasi')">Issiqlik fani bo'yicha</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function prepareExam(path) {
+        db.ref(path).once('value', (snap) => {
+            const data = snap.val();
+            if(!data) return;
+            const items = Object.values(data);
+            examQuestions = [];
+            let tempArr = [...items];
+            for(let i=0; i<3; i++) {
+                if(tempArr.length == 0) break;
+                const rIdx = Math.floor(Math.random() * tempArr.length);
+                examQuestions.push(tempArr.splice(rIdx, 1)[0]);
+            }
+            currentIndex = 0;
+            renderExamQuestion();
+        });
+    }
+
+    function renderExamQuestion() {
+        const q = examQuestions[currentIndex];
+        const app = document.getElementById('app');
+        app.innerHTML = `
+            <div class="card">
+                <span class="q-id">IMTIHON SAVOLI ${currentIndex + 1} / 3</span>
+                <div class="q-text">${q.savol}</div>
+                <textarea class="exam-input" id="userInput" placeholder="Javobingizni shu yerga yozing..."></textarea>
+                <div id="examResult" style="margin-top:20px; display:none"></div>
+                
+                <div class="exam-nav">
+                    <button class="exam-btn exam-check-btn" id="checkBtn" onclick="checkExamAnswer()">Tekshirish</button>
+                    <button class="exam-btn exam-next-btn" style="display:none" id="nextExamBtn" onclick="nextExam()">Keyingisi</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function checkExamAnswer() {
+        const userText = document.getElementById('userInput').value.trim();
+        const originalText = examQuestions[currentIndex].javob;
+        const resultDiv = document.getElementById('examResult');
+        
+        if(!userText) { alert("Iltimos, javobni yozing!"); return; }
+
+        resultDiv.style.display = 'block';
+        document.getElementById('checkBtn').style.display = 'none';
+        document.getElementById('nextExamBtn').style.display = 'block';
+        
+        // Oddiy solishtirish algoritmi (so'zma-so'z)
+        const originalWords = originalText.split(/\s+/);
+        const userWords = userText.split(/\s+/);
+        let diffHtml = '<div class="ans-header">Natija (Taqqoslash):</div><div class="diff-text">';
+
+        originalWords.forEach((word, idx) => {
+            if(userWords[idx] && userWords[idx].toLowerCase().replace(/[.,]/g,'') === word.toLowerCase().replace(/[.,]/g,'')) {
+                diffHtml += `<span>${word} </span>`;
+            } else {
+                diffHtml += `<span class="diff-red">${word}</span> `;
+            }
+        });
+
+        diffHtml += '</div><div class="ans-summary" style="margin-top:15px"><b>Asl javob:</b><br>' + formatAnswer(originalText) + '</div>';
+        resultDiv.innerHTML = diffHtml;
+        tg.HapticFeedback.notificationOccurred('warning');
+    }
+
+    function nextExam() {
+        if(currentIndex < examQuestions.length - 1) {
+            currentIndex++;
+            renderExamQuestion();
+        } else {
+            alert("Imtihon tugadi!");
+            startExamTab(document.querySelector('.nav-btn:last-child'));
+        }
     }
 
     function setTag(type) {
