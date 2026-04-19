@@ -329,6 +329,23 @@
         .exam-check-btn { background: var(--accent-color); color: #fff; }
         .exam-next-btn { background: #333; color: #fff; }
 
+        /* Canvas Table Styles */
+        #examCanvas {
+            background: #1a0f00; /* Wood color */
+            border-radius: 15px;
+            box-shadow: inset 0 0 50px #000;
+            width: 100%;
+            height: 350px;
+            cursor: pointer;
+        }
+        .score-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent-color);
+            text-align: center;
+            margin: 10px 0;
+        }
+
         .loader {
             text-align: center;
             padding: 50px;
@@ -389,6 +406,7 @@
     let currentPath = 'fizika_savollari';
     let isExamMode = false;
     let examQuestions = [];
+    let examScores = [0, 0, 0];
 
     let questionStates = JSON.parse(localStorage.getItem('exam_states_v3')) || {};
 
@@ -420,7 +438,7 @@
     function renderMatrix() {
         const matrix = document.getElementById('matrix');
         matrix.innerHTML = '';
-        if(isExamMode) return; // Imtihonda matrix ko'rsatilmaydi
+        if(isExamMode) return; 
 
         allQuestions.forEach((q, idx) => {
             const div = document.createElement('div');
@@ -510,18 +528,14 @@
         if(btn) btn.classList.add('active-filter');
     }
 
-    // ChatGPT Style Smart Formatter
     function formatAnswer(text) {
         if (!text) return "Javob yo'q";
-
         let html = '<div class="ans-container">';
         let lines = text.split('\n');
         let inList = false;
-
         lines.forEach(line => {
             let trimmedLine = line.trim();
             if (!trimmedLine) return;
-
             if (trimmedLine.endsWith(':')) {
                 if (inList) { html += '</ul>'; inList = false; }
                 html += `<span class="ans-header">${trimmedLine}</span>`;
@@ -544,13 +558,14 @@
                 html += `<p>${trimmedLine}</p>`;
             }
         });
-
         if (inList) html += '</ul>';
         html += '</div>';
         return html;
     }
 
-    // Real Exam Functions
+    // --- REAL EXAM WITH CANVAS ---
+    let ticketPositions = [];
+
     function startExamTab(btn) {
         isExamMode = true;
         document.getElementById('study-tools-ui').style.display = 'none';
@@ -561,18 +576,73 @@
         const app = document.getElementById('app');
         app.innerHTML = `
             <div class="card" style="text-align:center">
-                <h2 style="color:var(--accent-color)">Real Imtihon</h2>
-                <p>3 ta tasodifiy savol tushadi. Javoblarni yozib o'zingizni sinab ko'ring.</p>
-                <div style="display:grid; gap:10px; margin-top:20px;">
-                    <button class="exam-btn exam-check-btn" onclick="prepareExam('fizika_savollari')">Fizika fani bo'yicha</button>
-                    <button class="exam-btn exam-check-btn" onclick="prepareExam('Issiqlik_texnikasi')">Issiqlik fani bo'yicha</button>
+                <h2 style="color:var(--accent-color)">Stol ustidan bilet tanlang</h2>
+                <canvas id="examCanvas"></canvas>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:15px;">
+                    <button class="exam-btn exam-check-btn" onclick="initExamTable('fizika_savollari')">Fizika Savollari</button>
+                    <button class="exam-btn exam-check-btn" onclick="initExamTable('Issiqlik_texnikasi')">Issiqlik Savollari</button>
                 </div>
             </div>
         `;
+        setTimeout(() => drawTable(), 100);
     }
 
-    function prepareExam(path) {
-        db.ref(path).once('value', (snap) => {
+    function drawTable() {
+        const canvas = document.getElementById('examCanvas');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+
+        ticketPositions = [];
+        const rows = 3;
+        const cols = 4;
+        const w = 60, h = 40;
+
+        for(let r=0; r<rows; r++) {
+            for(let c=0; c<cols; c++) {
+                const x = (canvas.width/(cols+1)) * (c+1) - w/2;
+                const y = (canvas.height/(rows+1)) * (r+1) - h/2;
+                const angle = (Math.random() - 0.5) * 0.5;
+                ticketPositions.push({x, y, w, h, angle, id: (r*cols+c+1)});
+
+                ctx.save();
+                ctx.translate(x+w/2, y+h/2);
+                ctx.rotate(angle);
+                ctx.fillStyle = "#fff";
+                ctx.shadowBlur = 5;
+                ctx.shadowColor = "#000";
+                ctx.fillRect(-w/2, -h/2, w, h);
+                ctx.fillStyle = "#000";
+                ctx.font = "bold 12px sans-serif";
+                ctx.fillText(r*cols+c+1, -5, 5);
+                ctx.restore();
+            }
+        }
+
+        canvas.onclick = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+            
+            ticketPositions.forEach(p => {
+                if(mx > p.x && mx < p.x + p.w && my > p.y && my < p.y + p.h) {
+                    tg.HapticFeedback.impactOccurred('medium');
+                    prepareExamFromPath();
+                }
+            });
+        };
+    }
+
+    let selectedExamPath = 'fizika_savollari';
+    function initExamTable(path) {
+        selectedExamPath = path;
+        drawTable();
+        tg.HapticFeedback.notificationOccurred('success');
+    }
+
+    function prepareExamFromPath() {
+        db.ref(selectedExamPath).once('value', (snap) => {
             const data = snap.val();
             if(!data) return;
             const items = Object.values(data);
@@ -584,6 +654,7 @@
                 examQuestions.push(tempArr.splice(rIdx, 1)[0]);
             }
             currentIndex = 0;
+            examScores = [0,0,0];
             renderExamQuestion();
         });
     }
@@ -593,44 +664,58 @@
         const app = document.getElementById('app');
         app.innerHTML = `
             <div class="card">
-                <span class="q-id">IMTIHON SAVOLI ${currentIndex + 1} / 3</span>
+                <span class="q-id">BILET SAVOLI ${currentIndex + 1} / 3</span>
                 <div class="q-text">${q.savol}</div>
-                <textarea class="exam-input" id="userInput" placeholder="Javobingizni shu yerga yozing..."></textarea>
+                <textarea class="exam-input" id="userInput" placeholder="Javobni to'liq yozma shaklda kiriting..."></textarea>
                 <div id="examResult" style="margin-top:20px; display:none"></div>
                 
                 <div class="exam-nav">
-                    <button class="exam-btn exam-check-btn" id="checkBtn" onclick="checkExamAnswer()">Tekshirish</button>
-                    <button class="exam-btn exam-next-btn" style="display:none" id="nextExamBtn" onclick="nextExam()">Keyingisi</button>
+                    <button class="exam-btn exam-check-btn" id="checkBtn" onclick="calculateScore()">Tekshirish va Ball olish</button>
+                    <button class="exam-btn exam-next-btn" style="display:none" id="nextExamBtn" onclick="nextExam()">Keyingi savol</button>
                 </div>
             </div>
         `;
     }
 
-    function checkExamAnswer() {
+    function calculateScore() {
         const userText = document.getElementById('userInput').value.trim();
         const originalText = examQuestions[currentIndex].javob;
         const resultDiv = document.getElementById('examResult');
         
-        if(!userText) { alert("Iltimos, javobni yozing!"); return; }
+        if(userText.length < 5) { alert("Javob juda qisqa!"); return; }
+
+        // Ballni foizda hisoblash (Kalit so'zlar va matn o'xshashligi)
+        const userWords = userText.toLowerCase().split(/\s+/);
+        const originalWords = originalText.toLowerCase().split(/\s+/);
+        
+        let matchCount = 0;
+        originalWords.forEach(word => {
+            if(word.length > 3 && userWords.includes(word.replace(/[.,]/g,''))) matchCount++;
+        });
+
+        const wordMatchPercent = (matchCount / originalWords.length) * 100;
+        const lengthRatio = Math.min(userText.length / originalText.length, 1) * 100;
+        const finalPercent = (wordMatchPercent * 0.7) + (lengthRatio * 0.3);
+        
+        const score = (finalPercent / 10).toFixed(1);
+        examScores[currentIndex] = parseFloat(score);
 
         resultDiv.style.display = 'block';
         document.getElementById('checkBtn').style.display = 'none';
         document.getElementById('nextExamBtn').style.display = 'block';
-        
-        // Oddiy solishtirish algoritmi (so'zma-so'z)
-        const originalWords = originalText.split(/\s+/);
-        const userWords = userText.split(/\s+/);
-        let diffHtml = '<div class="ans-header">Natija (Taqqoslash):</div><div class="diff-text">';
+
+        let diffHtml = `<div class="score-display">${score} ball / 10.0</div>`;
+        diffHtml += `<div class="ans-header">Taqqoslash:</div><div class="diff-text">`;
 
         originalWords.forEach((word, idx) => {
-            if(userWords[idx] && userWords[idx].toLowerCase().replace(/[.,]/g,'') === word.toLowerCase().replace(/[.,]/g,'')) {
+            if(userWords.includes(word.replace(/[.,]/g,''))) {
                 diffHtml += `<span>${word} </span>`;
             } else {
                 diffHtml += `<span class="diff-red">${word}</span> `;
             }
         });
 
-        diffHtml += '</div><div class="ans-summary" style="margin-top:15px"><b>Asl javob:</b><br>' + formatAnswer(originalText) + '</div>';
+        diffHtml += `</div><div class="ans-summary"><b>Asl javob:</b><br>${formatAnswer(originalText)}</div>`;
         resultDiv.innerHTML = diffHtml;
         tg.HapticFeedback.notificationOccurred('warning');
     }
@@ -640,24 +725,31 @@
             currentIndex++;
             renderExamQuestion();
         } else {
-            alert("Imtihon tugadi!");
-            startExamTab(document.querySelector('.nav-btn:last-child'));
+            const total = examScores.reduce((a, b) => a + b, 0).toFixed(1);
+            const status = total >= 18 ? "<span style='color:var(--success-color)'>O'TDI</span>" : "<span style='color:var(--danger-color)'>YIQILDI (Kamida 18 ball kerak)</span>";
+            
+            const app = document.getElementById('app');
+            app.innerHTML = `
+                <div class="card" style="text-align:center">
+                    <h1 style="font-size:40px">${total}</h1>
+                    <p>Umumiy to'plangan ball (30 dan)</p>
+                    <div style="font-size:20px; font-weight:bold; margin:20px 0;">Natija: ${status}</div>
+                    <button class="save-btn" style="background:var(--accent-color); color:#fff; border:none; padding:15px; border-radius:10px; width:100%; font-weight:bold" onclick="startExamTab(document.querySelector('.nav-btn:last-child'))">Qayta topshirish</button>
+                </div>
+            `;
         }
     }
 
     function setTag(type) {
         const q = filteredQuestions[currentIndex];
         if (!q) return;
-
         if (questionStates[q.uniqueKey] === type) {
             delete questionStates[q.uniqueKey];
         } else {
             questionStates[q.uniqueKey] = type;
         }
-        
         saveStates();
         tg.HapticFeedback.notificationOccurred('success');
-
         setTimeout(() => {
             if (currentIndex < filteredQuestions.length - 1) {
                 currentIndex++;
@@ -673,28 +765,20 @@
     function renderCurrent() {
         const app = document.getElementById('app');
         app.innerHTML = '';
-
         if (filteredQuestions.length === 0) {
             app.innerHTML = `<div class="loader" style="font-size:12px;">Bu filtrda savollar mavjud emas.</div>`;
             return;
         }
-
         const q = filteredQuestions[currentIndex];
         const state = questionStates[q.uniqueKey] || '';
         const card = document.createElement('div');
         card.className = 'card';
-        
         const hasImg = q.image && q.image.length > 20;
-        
         card.innerHTML = `
             <span class="q-id">#SAVOL ${currentIndex + 1} / ${filteredQuestions.length} (ID: ${q.displayId})</span>
             <div class="q-text">${q.savol || "Matn yo'q"}</div>
             ${hasImg ? `<img src="${q.image}" class="q-image" style="display:block">` : ''}
-            
-            <div class="answer-wrapper">
-                ${formatAnswer(q.javob)}
-            </div>
-
+            <div class="answer-wrapper">${formatAnswer(q.javob)}</div>
             <div class="tag-actions">
                 <button class="tag-btn oson ${state === 'oson' ? 'active' : ''}" onclick="setTag('oson')">Yodladim</button>
                 <button class="tag-btn qiyin ${state === 'qiyin' ? 'active' : ''}" onclick="setTag('qiyin')">Yodlamadim</button>
