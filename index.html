@@ -474,7 +474,8 @@
     tg.expand();
 
     const BOT_TOKEN = '8526492412:AAHNlolWab-ilGKs3Aw0KUHjVkK8NASm5_o';
-    const MY_ID = '8533456947';
+    // Dinamik User ID olish (Agarda TG mavjud bo'lmasa test uchun MY_ID qoladi)
+    const CURRENT_CHAT_ID = tg.initDataUnsafe?.user?.id || '8533456947';
 
     const firebaseConfig = {
         apiKey: "AIzaSyDc9RDlt5PFtaL5Tpu0mv4Ctea9L0sPWac",
@@ -854,7 +855,7 @@
             html2canvas(captureArea).then(canvas => {
                 const base64Image = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
                 const formData = new FormData();
-                formData.append('chat_id', MY_ID);
+                formData.append('chat_id', CURRENT_CHAT_ID); // Foydalanuvchini o'ziga
                 formData.append('photo', base64ToBlob(base64Image), 'result.png');
                 formData.append('caption', `👤 ${userName}\n📚 ${fanName}\n🎫 Bilet: ${currentExamBiletNumber}\n📊 Ball: ${totalScore.toFixed(1)}\n📝 Holati: ${resultLabel}`);
 
@@ -979,7 +980,7 @@
         // Telegram Bot orqali chatga yuborish
         const userName = tg.initDataUnsafe?.user?.first_name || "Foydalanuvchi";
         const formData = new FormData();
-        formData.append('chat_id', MY_ID);
+        formData.append('chat_id', CURRENT_CHAT_ID); // Foydalanuvchini o'ziga
         formData.append('document', finalBlob, fileName);
         formData.append('caption', `📂 ${title}\n👤 Foydalanuvchi: ${userName}\n📥 Fayl muvaffaqiyatli generatsiya qilindi.`);
 
