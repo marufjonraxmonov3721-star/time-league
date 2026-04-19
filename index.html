@@ -171,6 +171,8 @@
             border-radius: 5px;
             font-size: 15px;
             color: #d1d1d1;
+            max-height: 150px;
+            overflow-y: auto;
         }
 
         /* Navigatsiya tugmalari */
@@ -284,7 +286,14 @@
                 return;
             }
 
-            allQuestions = Object.keys(data).map(k => ({...data[k]})).sort((a,b) => a.id - b.id);
+            // Ma'lumotlarni o'girish va saralash xatoligini to'g'irlash
+            allQuestions = Object.keys(data).map(key => {
+                const item = data[key];
+                // Agar ob'ektda id bo'lmasa, kalitdan (savol_1) raqamni ajratib olamiz
+                const numericId = item.id || parseInt(key.replace(/\D/g, '')) || 0;
+                return { ...item, displayId: numericId };
+            }).sort((a, b) => a.displayId - b.displayId);
+
             currentIndex = 0;
             renderCurrent();
             nav.style.display = 'flex';
@@ -302,14 +311,15 @@
         card.className = 'card';
         
         const hasImg = q.image && q.image.length > 20;
+        const displayId = q.displayId || (currentIndex + 1);
         
         card.innerHTML = `
             <div class="counter">${currentIndex + 1} / ${allQuestions.length}</div>
-            <span class="q-id">ID: ${q.id}</span>
-            <div class="q-text">${q.savol}</div>
+            <span class="q-id">ID: ${displayId}</span>
+            <div class="q-text">${q.savol || "Savol matni mavjud emas"}</div>
             ${hasImg ? `<img src="${q.image}" class="q-image" style="display:block">` : ''}
             <button class="show-ans-btn" id="ansBtn" onclick="toggleAns(this)">Javobni ko'rsatish</button>
-            <div class="answer-content">${q.javob || "Javob rasmda ko'rsatilgan."}</div>
+            <div class="answer-content">${q.javob || "Javob matni mavjud emas."}</div>
         `;
         app.appendChild(card);
         updateNavButtons();
@@ -356,8 +366,8 @@
     }
 
     function resetLearned() {
-        currentIndex = 0;
-        renderCurrent();
+        // Qaytadan tartiblab yuklash
+        loadQuestions(document.querySelector('.nav-btn.active').getAttribute('onclick').match(/'([^']+)'/)[1]);
         tg.HapticFeedback.notificationOccurred('warning');
     }
 
@@ -366,3 +376,4 @@
 </script>
 </body>
 </html>
+
