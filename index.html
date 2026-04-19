@@ -32,6 +32,7 @@
             margin: 0;
             padding: 0;
             line-height: 1.6;
+            overflow: hidden; /* Sahifa skroll bo'lmasligi uchun */
         }
 
         /* Header */
@@ -101,6 +102,10 @@
             padding: 15px;
             max-width: 600px;
             margin: 0 auto;
+            height: calc(100vh - 180px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         /* Savol kartochkasi */
@@ -109,14 +114,14 @@
             border: 1px solid var(--card-border);
             border-radius: 15px;
             padding: 18px;
-            margin-bottom: 20px;
-            animation: slideUp 0.4s ease-out;
+            width: 100%;
+            animation: fadeIn 0.3s ease-in-out;
             position: relative;
         }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         .q-id {
@@ -131,6 +136,8 @@
             font-size: 16px;
             font-weight: 500;
             margin-bottom: 15px;
+            max-height: 200px;
+            overflow-y: auto;
         }
 
         .q-image {
@@ -139,6 +146,8 @@
             margin-bottom: 15px;
             border: 1px solid var(--card-border);
             display: none;
+            max-height: 250px;
+            object-fit: contain;
         }
 
         /* Javob tugmasi va qutisi */
@@ -153,17 +162,6 @@
             cursor: pointer;
         }
 
-        .learned-btn {
-            margin-top: 10px;
-            width: 100%;
-            background: transparent;
-            border: 1px solid #222;
-            color: #555;
-            padding: 8px;
-            border-radius: 10px;
-            font-size: 12px;
-        }
-
         .answer-content {
             display: none;
             margin-top: 15px;
@@ -173,6 +171,41 @@
             border-radius: 5px;
             font-size: 15px;
             color: #d1d1d1;
+        }
+
+        /* Navigatsiya tugmalari */
+        .navigation {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            gap: 15px;
+        }
+
+        .nav-control {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            border: none;
+            background: var(--accent-color);
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .nav-control:disabled {
+            background: #222;
+            color: #555;
+        }
+
+        .counter {
+            text-align: center;
+            font-size: 12px;
+            color: var(--hint-color);
+            margin-bottom: 10px;
         }
 
         .loader {
@@ -195,17 +228,22 @@
 
 <div class="study-tools">
     <button class="tool-btn" onclick="shuffleQuestions()">🔀 Aralashtirish</button>
-    <button class="tool-btn" onclick="resetLearned()">🔄 Hammasini qaytarish</button>
+    <button class="tool-btn" onclick="resetLearned()">🔄 Boshidan boshlash</button>
 </div>
 
 <div class="container" id="app">
     <div class="loader">Yuklanmoqda...</div>
 </div>
 
+<div class="navigation" id="nav-controls" style="display: none;">
+    <button class="nav-control" id="prevBtn" onclick="prevQuestion()">⬅️ Oldingi</button>
+    <button class="nav-control" id="nextBtn" onclick="nextQuestion()">Keyingi ➡️</button>
+</div>
+
 <script>
     // Telegram Web App init
     const tg = window.Telegram.WebApp;
-    tg.expand(); // Ilovani to'liq ekranga ochish
+    tg.expand();
     tg.MainButton.hide();
 
     // Firebase Config
@@ -224,20 +262,20 @@
     const db = firebase.database();
 
     let allQuestions = [];
+    let currentIndex = 0;
 
-    // Fan almashtirish
     function changeTab(btn, path) {
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         loadQuestions(path);
-        // Telefon vibratsiyasi (Haptic Feedback)
         tg.HapticFeedback.impactOccurred('light');
     }
 
-    // Ma'lumotlarni yuklash
     function loadQuestions(path) {
         const app = document.getElementById('app');
+        const nav = document.getElementById('nav-controls');
         app.innerHTML = '<div class="loader">Savollar yuklanmoqda...</div>';
+        nav.style.display = 'none';
 
         db.ref(path).once('value', (snap) => {
             const data = snap.val();
@@ -247,31 +285,55 @@
             }
 
             allQuestions = Object.keys(data).map(k => ({...data[k]})).sort((a,b) => a.id - b.id);
-            render(allQuestions);
+            currentIndex = 0;
+            renderCurrent();
+            nav.style.display = 'flex';
         });
     }
 
-    // Ekranga chiqarish
-    function render(questions) {
+    function renderCurrent() {
         const app = document.getElementById('app');
         app.innerHTML = '';
 
-        questions.forEach((q) => {
-            const card = document.createElement('div');
-            card.className = 'card';
-            
-            const hasImg = q.image && q.image.length > 20;
-            
-            card.innerHTML = `
-                <span class="q-id">ID: ${q.id}</span>
-                <div class="q-text">${q.savol}</div>
-                ${hasImg ? `<img src="${q.image}" class="q-image" style="display:block">` : ''}
-                <button class="show-ans-btn" onclick="toggleAns(this)">Javobni ko'rsatish</button>
-                <div class="answer-content">${q.javob || "Javob rasmda ko'rsatilgan."}</div>
-                <button class="learned-btn" onclick="markAsLearned(this)">✅ Yodladim (Yashirish)</button>
-            `;
-            app.appendChild(card);
-        });
+        if (allQuestions.length === 0) return;
+
+        const q = allQuestions[currentIndex];
+        const card = document.createElement('div');
+        card.className = 'card';
+        
+        const hasImg = q.image && q.image.length > 20;
+        
+        card.innerHTML = `
+            <div class="counter">${currentIndex + 1} / ${allQuestions.length}</div>
+            <span class="q-id">ID: ${q.id}</span>
+            <div class="q-text">${q.savol}</div>
+            ${hasImg ? `<img src="${q.image}" class="q-image" style="display:block">` : ''}
+            <button class="show-ans-btn" id="ansBtn" onclick="toggleAns(this)">Javobni ko'rsatish</button>
+            <div class="answer-content">${q.javob || "Javob rasmda ko'rsatilgan."}</div>
+        `;
+        app.appendChild(card);
+        updateNavButtons();
+    }
+
+    function nextQuestion() {
+        if (currentIndex < allQuestions.length - 1) {
+            currentIndex++;
+            renderCurrent();
+            tg.HapticFeedback.impactOccurred('light');
+        }
+    }
+
+    function prevQuestion() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            renderCurrent();
+            tg.HapticFeedback.impactOccurred('light');
+        }
+    }
+
+    function updateNavButtons() {
+        document.getElementById('prevBtn').disabled = currentIndex === 0;
+        document.getElementById('nextBtn').disabled = currentIndex === allQuestions.length - 1;
     }
 
     function toggleAns(btn) {
@@ -286,26 +348,16 @@
         }
     }
 
-    // YODLASH REJIMI FUNKSIYALARI
     function shuffleQuestions() {
         allQuestions.sort(() => Math.random() - 0.5);
-        render(allQuestions);
+        currentIndex = 0;
+        renderCurrent();
         tg.HapticFeedback.impactOccurred('medium');
     }
 
-    function markAsLearned(btn) {
-        const card = btn.parentElement;
-        card.style.transition = "0.3s";
-        card.style.opacity = "0";
-        card.style.transform = "translateX(100px)";
-        setTimeout(() => {
-            card.style.display = "none";
-        }, 300);
-        tg.HapticFeedback.impactOccurred('light');
-    }
-
     function resetLearned() {
-        render(allQuestions);
+        currentIndex = 0;
+        renderCurrent();
         tg.HapticFeedback.notificationOccurred('warning');
     }
 
