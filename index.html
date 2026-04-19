@@ -17,6 +17,7 @@
             --hint-color: #aaaaaa;
             --accent-color: #0088cc; /* Telegram ko'k rangi */
             --success-color: #2ecc71;
+            --danger-color: #e74c3c;
             --card-border: #222222;
         }
 
@@ -84,6 +85,7 @@
             gap: 10px;
             padding: 10px 15px;
             background: #080808;
+            flex-wrap: wrap;
         }
 
         .tool-btn {
@@ -93,8 +95,14 @@
             color: #fff;
             padding: 8px;
             border-radius: 8px;
-            font-size: 12px;
+            font-size: 11px;
             cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .tool-btn.active-filter {
+            border-color: var(--accent-color);
+            background: rgba(0, 136, 204, 0.2);
         }
 
         /* Konteyner */
@@ -102,7 +110,7 @@
             padding: 15px;
             max-width: 600px;
             margin: 0 auto;
-            height: calc(100vh - 180px);
+            height: calc(100vh - 220px);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -175,6 +183,27 @@
             overflow-y: auto;
         }
 
+        /* Oson/Qiyin tugmalari */
+        .tag-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .tag-btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            font-size: 12px;
+            font-weight: bold;
+            background: #000;
+            color: #fff;
+        }
+
+        .tag-btn.oson.active { background: var(--success-color); border-color: var(--success-color); }
+        .tag-btn.qiyin.active { background: var(--danger-color); border-color: var(--danger-color); }
+
         /* Navigatsiya tugmalari */
         .navigation {
             position: fixed;
@@ -229,8 +258,9 @@
 </div>
 
 <div class="study-tools">
-    <button class="tool-btn" onclick="shuffleQuestions()">🔀 Aralashtirish</button>
-    <button class="tool-btn" onclick="resetLearned()">🔄 Boshidan boshlash</button>
+    <button class="tool-btn" onclick="shuffleQuestions()">🔀 Aralash</button>
+    <button class="tool-btn" id="filterQiyin" onclick="toggleFilter('qiyin')">🔥 Faqat Qiyin</button>
+    <button class="tool-btn" onclick="resetLearned()">🔄 Reset</button>
 </div>
 
 <div class="container" id="app">
@@ -238,17 +268,14 @@
 </div>
 
 <div class="navigation" id="nav-controls" style="display: none;">
-    <button class="nav-control" id="prevBtn" onclick="prevQuestion()">⬅️ Oldingi</button>
-    <button class="nav-control" id="nextBtn" onclick="nextQuestion()">Keyingi ➡️</button>
+    <button class="nav-control" id="prevBtn" onclick="prevQuestion()">⬅️</button>
+    <button class="nav-control" id="nextBtn" onclick="nextQuestion()">➡️</button>
 </div>
 
 <script>
-    // Telegram Web App init
     const tg = window.Telegram.WebApp;
     tg.expand();
-    tg.MainButton.hide();
 
-    // Firebase Config
     const firebaseConfig = {
         apiKey: "AIzaSyDc9RDlt5PFtaL5Tpu0mv4Ctea9L0sPWac",
         authDomain: "songlyrics-a5df9.firebaseapp.com",
@@ -264,11 +291,22 @@
     const db = firebase.database();
 
     let allQuestions = [];
+    let filteredQuestions = [];
     let currentIndex = 0;
+    let currentFilter = 'all'; // all, qiyin
+
+    // Savol holatlarini saqlash (localStorage)
+    let questionStates = JSON.parse(localStorage.getItem('exam_states')) || {};
+
+    function saveStates() {
+        localStorage.setItem('exam_states', JSON.stringify(questionStates));
+    }
 
     function changeTab(btn, path) {
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        currentFilter = 'all';
+        document.getElementById('filterQiyin').classList.remove('active-filter');
         loadQuestions(path);
         tg.HapticFeedback.impactOccurred('light');
     }
@@ -289,42 +327,89 @@
             allQuestions = Object.keys(data).map(key => {
                 const item = data[key];
                 const numericId = item.id || parseInt(key.replace(/\D/g, '')) || 0;
-                return { ...item, displayId: numericId };
+                const uniqueKey = path + '_' + numericId;
+                return { ...item, displayId: numericId, uniqueKey: uniqueKey };
             }).sort((a, b) => a.displayId - b.displayId);
 
-            currentIndex = 0;
-            renderCurrent();
+            applyFilter();
             nav.style.display = 'flex';
         });
+    }
+
+    function applyFilter() {
+        if (currentFilter === 'qiyin') {
+            filteredQuestions = allQuestions.filter(q => questionStates[q.uniqueKey] === 'qiyin');
+        } else {
+            filteredQuestions = [...allQuestions];
+        }
+
+        currentIndex = 0;
+        renderCurrent();
+    }
+
+    function toggleFilter(filter) {
+        const btn = document.getElementById('filterQiyin');
+        if (currentFilter === filter) {
+            currentFilter = 'all';
+            btn.classList.remove('active-filter');
+        } else {
+            currentFilter = filter;
+            btn.classList.add('active-filter');
+        }
+        applyFilter();
+        tg.HapticFeedback.impactOccurred('medium');
+    }
+
+    function setTag(type) {
+        const q = filteredQuestions[currentIndex];
+        if (!q) return;
+
+        if (questionStates[q.uniqueKey] === type) {
+            delete questionStates[q.uniqueKey];
+        } else {
+            questionStates[q.uniqueKey] = type;
+        }
+        
+        saveStates();
+        renderCurrent();
+        tg.HapticFeedback.notificationOccurred('success');
     }
 
     function renderCurrent() {
         const app = document.getElementById('app');
         app.innerHTML = '';
 
-        if (allQuestions.length === 0) return;
+        if (filteredQuestions.length === 0) {
+            app.innerHTML = '<div class="loader">Bu bo\'limda savollar yo\'q</div>';
+            updateNavButtons();
+            return;
+        }
 
-        const q = allQuestions[currentIndex];
+        const q = filteredQuestions[currentIndex];
+        const state = questionStates[q.uniqueKey] || '';
         const card = document.createElement('div');
         card.className = 'card';
         
         const hasImg = q.image && q.image.length > 20;
-        const displayId = q.displayId || (currentIndex + 1);
         
         card.innerHTML = `
-            <div class="counter">${currentIndex + 1} / ${allQuestions.length}</div>
-            <span class="q-id">ID: ${displayId}</span>
-            <div class="q-text">${q.savol || "Savol matni mavjud emas"}</div>
+            <div class="counter">${currentIndex + 1} / ${filteredQuestions.length}</div>
+            <span class="q-id">ID: ${q.displayId}</span>
+            <div class="q-text">${q.savol || "Matn yo'q"}</div>
             ${hasImg ? `<img src="${q.image}" class="q-image" style="display:block">` : ''}
-            <button class="show-ans-btn" id="ansBtn" onclick="toggleAns(this)">Javobni ko'rsatish</button>
-            <div class="answer-content">${q.javob || "Javob matni mavjud emas."}</div>
+            <button class="show-ans-btn" onclick="toggleAns(this)">Javobni ko'rsatish</button>
+            <div class="answer-content">${q.javob || "Javob yo'q"}</div>
+            <div class="tag-actions">
+                <button class="tag-btn oson ${state === 'oson' ? 'active' : ''}" onclick="setTag('oson')">😊 Oson</button>
+                <button class="tag-btn qiyin ${state === 'qiyin' ? 'active' : ''}" onclick="setTag('qiyin')">🔥 Qiyin</button>
+            </div>
         `;
         app.appendChild(card);
         updateNavButtons();
     }
 
     function nextQuestion() {
-        if (currentIndex < allQuestions.length - 1) {
+        if (currentIndex < filteredQuestions.length - 1) {
             currentIndex++;
             renderCurrent();
             tg.HapticFeedback.impactOccurred('light');
@@ -340,8 +425,8 @@
     }
 
     function updateNavButtons() {
-        document.getElementById('prevBtn').disabled = currentIndex === 0;
-        document.getElementById('nextBtn').disabled = currentIndex === allQuestions.length - 1;
+        document.getElementById('prevBtn').disabled = currentIndex === 0 || filteredQuestions.length === 0;
+        document.getElementById('nextBtn').disabled = currentIndex === filteredQuestions.length - 1 || filteredQuestions.length === 0;
     }
 
     function toggleAns(btn) {
@@ -357,20 +442,21 @@
     }
 
     function shuffleQuestions() {
-        allQuestions.sort(() => Math.random() - 0.5);
+        filteredQuestions.sort(() => Math.random() - 0.5);
         currentIndex = 0;
         renderCurrent();
         tg.HapticFeedback.impactOccurred('medium');
     }
 
     function resetLearned() {
-        const activeTabBtn = document.querySelector('.nav-btn.active');
-        const path = activeTabBtn.getAttribute('onclick').match(/'([^']+)'/)[1];
-        loadQuestions(path);
-        tg.HapticFeedback.notificationOccurred('warning');
+        if(confirm("Barcha belgilangan (Oson/Qiyin) statuslarni o'chirib tashlaysizmi?")) {
+            questionStates = {};
+            saveStates();
+            renderCurrent();
+            tg.HapticFeedback.notificationOccurred('warning');
+        }
     }
 
-    // Birinchi yuklash
     loadQuestions('fizika_savollari');
 </script>
 </body>
