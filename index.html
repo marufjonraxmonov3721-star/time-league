@@ -19,6 +19,7 @@
             --accent-color: #0088cc;
             --success-color: #00c853;
             --danger-color: #ff3d00;
+            --learned-color: #9b59b6;
             --border-color: #1a1a1a;
             --glass-bg: rgba(20, 20, 20, 0.8);
         }
@@ -47,19 +48,34 @@
         .header {
             background-color: var(--glass-bg);
             backdrop-filter: blur(10px);
-            padding: 18px;
+            padding: 15px;
             text-align: center;
             border-bottom: 1px solid var(--border-color);
             flex-shrink: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .header h1 {
-            font-size: 16px;
+            font-size: 14px;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 1px;
             margin: 0;
             font-weight: 700;
             color: var(--text-color);
+            padding-left: 10px;
+        }
+
+        .reset-all-btn {
+            background: none;
+            border: 1px solid #333;
+            color: #ff4444;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-right: 10px;
         }
 
         /* Nav Tabs */
@@ -67,7 +83,7 @@
             display: flex;
             background: var(--secondary-bg);
             padding: 6px;
-            margin: 12px 15px;
+            margin: 10px 15px;
             border-radius: 12px;
             border: 1px solid var(--border-color);
             gap: 4px;
@@ -80,39 +96,39 @@
             border: none;
             color: var(--hint-color);
             padding: 10px;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             border-radius: 8px;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.25s ease;
         }
 
         .nav-btn.active {
             background: #1a1a1a;
             color: var(--accent-color);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
         }
 
         /* Study Tools */
         .study-tools {
-            display: flex;
-            gap: 10px;
-            padding: 0 15px 15px;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 0 15px 10px;
             flex-shrink: 0;
         }
 
         .tool-btn {
-            flex: 1;
             background: var(--secondary-bg);
             border: 1px solid var(--border-color);
             color: var(--hint-color);
-            padding: 10px 0;
+            padding: 8px 5px;
             border-radius: 10px;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 600;
             cursor: pointer;
-            transition: 0.2s;
+            text-align: center;
         }
+
+        .tool-btn b { color: #fff; margin-left: 3px; }
 
         .tool-btn.active-filter {
             border-color: var(--accent-color);
@@ -122,15 +138,15 @@
 
         /* Main Container */
         .container {
-            padding: 10px 20px;
+            padding: 5px 20px;
             max-width: 600px;
             margin: 0 auto;
             flex-grow: 1;
-            overflow-y: auto; /* Kartochka katta bo'lsa skroll bo'lishi uchun */
+            overflow-y: auto;
             width: 100%;
             display: flex;
             flex-direction: column;
-            padding-bottom: 100px; /* Navigatsiya tugmalari uchun joy */
+            padding-bottom: 110px;
         }
 
         /* Card */
@@ -138,15 +154,15 @@
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 20px;
-            padding: 24px;
+            padding: 20px;
             width: 100%;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            animation: slideUp 0.4s ease;
             margin-bottom: 20px;
         }
 
         @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -154,34 +170,33 @@
             font-size: 11px;
             color: var(--hint-color);
             font-weight: 700;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             display: block;
-            opacity: 0.6;
         }
 
         .q-id {
             color: var(--accent-color);
             font-weight: 800;
-            font-size: 13px;
-            margin-bottom: 10px;
+            font-size: 12px;
+            margin-bottom: 8px;
             display: block;
         }
 
         .q-text {
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 500;
-            line-height: 1.6;
-            margin-bottom: 20px;
+            line-height: 1.5;
+            margin-bottom: 15px;
             color: #eeeeee;
         }
 
         .q-image {
             width: 100%;
             border-radius: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             border: 1px solid var(--border-color);
             display: none;
-            max-height: 250px;
+            max-height: 220px;
             object-fit: contain;
         }
 
@@ -191,60 +206,45 @@
             background: transparent;
             border: 1px solid #333;
             color: var(--text-color);
-            padding: 14px;
+            padding: 12px;
             border-radius: 12px;
             font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .show-ans-btn:active {
-            background: #111;
-            transform: scale(0.98);
+            font-size: 13px;
         }
 
         .answer-content {
             display: none;
             margin-top: 15px;
-            padding: 16px;
+            padding: 15px;
             background: #0d1a12;
             border-radius: 12px;
-            font-size: 15px;
+            font-size: 14px;
             color: #b0b0b0;
             border-left: 4px solid var(--success-color);
         }
 
-        /* Tag Actions */
+        /* Tag Actions - 3 buttons */
         .tag-actions {
-            display: flex;
-            gap: 12px;
-            margin-top: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-top: 15px;
         }
 
         .tag-btn {
-            flex: 1;
-            padding: 12px;
-            border-radius: 12px;
+            padding: 10px 2px;
+            border-radius: 10px;
             border: 1px solid #222;
-            font-size: 13px;
-            font-weight: 700;
+            font-size: 10px;
+            font-weight: 800;
             background: #050505;
             color: #fff;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: 0.2s;
         }
 
-        .tag-btn.oson.active { 
-            background: var(--success-color); 
-            border-color: var(--success-color); 
-            box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
-        }
-        
-        .tag-btn.qiyin.active { 
-            background: var(--danger-color); 
-            border-color: var(--danger-color);
-            box-shadow: 0 4px 15px rgba(255, 61, 0, 0.3);
-        }
+        .tag-btn.oson.active { background: var(--success-color); border-color: var(--success-color); }
+        .tag-btn.qiyin.active { background: var(--danger-color); border-color: var(--danger-color); }
+        .tag-btn.ready.active { background: var(--learned-color); border-color: var(--learned-color); }
 
         /* Navigation Controls */
         .navigation {
@@ -254,65 +254,53 @@
             width: 100%;
             display: flex;
             justify-content: space-between;
-            padding: 15px 25px 30px;
+            padding: 10px 25px 25px;
             gap: 20px;
-            background: linear-gradient(to top, black 70%, transparent);
+            background: linear-gradient(to top, black 80%, transparent);
             z-index: 100;
         }
 
         .nav-control {
             flex: 1;
-            padding: 16px;
+            padding: 15px;
             border-radius: 16px;
             border: none;
             background: var(--accent-color);
             color: white;
             font-weight: 800;
             font-size: 18px;
-            box-shadow: 0 8px 20px rgba(0, 136, 204, 0.3);
-            transition: all 0.2s;
-        }
-
-        .nav-control:active {
-            transform: translateY(2px);
-            box-shadow: 0 4px 10px rgba(0, 136, 204, 0.2);
         }
 
         .nav-control:disabled {
             background: #1a1a1a;
             color: #444;
-            box-shadow: none;
         }
 
         .loader {
             text-align: center;
             padding: 50px;
             color: var(--hint-color);
-            font-weight: 500;
             width: 100%;
         }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
     </style>
 </head>
 <body>
 
 <div class="header">
     <h1>Exam Prep Pro</h1>
+    <button class="reset-all-btn" onclick="resetLearned()">🔄 Restart</button>
 </div>
 
 <div class="nav-tabs" id="nav-tabs">
     <button class="nav-btn active" data-path="fizika_savollari" onclick="changeTab(this, 'fizika_savollari')">Fizika</button>
-    <button class="nav-btn" data-path="Issiqlik_texnikasi" onclick="changeTab(this, 'Issiqlik_texnikasi')">Issiqlik texnikasi</button>
+    <button class="nav-btn" data-path="Issiqlik_texnikasi" onclick="changeTab(this, 'Issiqlik_texnikasi')">Issiqlik</button>
 </div>
 
 <div class="study-tools">
-    <button class="tool-btn" id="filterAll" onclick="toggleFilter('all')">👁 Hammasi</button>
-    <button class="tool-btn" id="filterOson" onclick="toggleFilter('oson')">😊 Osonlar</button>
-    <button class="tool-btn" id="filterQiyin" onclick="toggleFilter('qiyin')">🔥 Qiyinlar</button>
+    <button class="tool-btn active-filter" id="filterAll" onclick="toggleFilter('all')">👁 Hammasi <b id="cntAll">0</b></button>
+    <button class="tool-btn" id="filterOson" onclick="toggleFilter('oson')">😊 Osonlar <b id="cntOson">0</b></button>
+    <button class="tool-btn" id="filterQiyin" onclick="toggleFilter('qiyin')">🔥 Qiyinlar <b id="cntQiyin">0</b></button>
+    <button class="tool-btn" id="filterReady" onclick="toggleFilter('ready')">✅ Tayyor <b id="cntReady">0</b></button>
 </div>
 
 <div class="container" id="app">
@@ -346,20 +334,34 @@
     let filteredQuestions = [];
     let currentIndex = 0;
     let currentFilter = 'all'; 
+    let currentPath = 'fizika_savollari';
 
-    let questionStates = JSON.parse(localStorage.getItem('exam_states_v2')) || {};
+    let questionStates = JSON.parse(localStorage.getItem('exam_states_v3')) || {};
 
     function saveStates() {
-        localStorage.setItem('exam_states_v2', JSON.stringify(questionStates));
+        localStorage.setItem('exam_states_v3', JSON.stringify(questionStates));
+        updateCounts();
+    }
+
+    function updateCounts() {
+        let oson = 0, qiyin = 0, ready = 0;
+        allQuestions.forEach(q => {
+            const state = questionStates[q.uniqueKey];
+            if(state === 'oson') oson++;
+            if(state === 'qiyin') qiyin++;
+            if(state === 'ready') ready++;
+        });
+        document.getElementById('cntAll').innerText = allQuestions.length;
+        document.getElementById('cntOson').innerText = oson;
+        document.getElementById('cntQiyin').innerText = qiyin;
+        document.getElementById('cntReady').innerText = ready;
     }
 
     function changeTab(btn, path) {
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        
+        currentPath = path;
         currentFilter = 'all';
-        updateFilterUI();
-        
         loadQuestions(path);
         tg.HapticFeedback.impactOccurred('light');
     }
@@ -367,7 +369,7 @@
     function loadQuestions(path) {
         const app = document.getElementById('app');
         const nav = document.getElementById('nav-controls');
-        app.innerHTML = '<div class="loader">Savollar yuklanmoqda...</div>';
+        app.innerHTML = '<div class="loader">Yuklanmoqda...</div>';
         nav.style.display = 'none';
 
         db.ref(path).once('value', (snap) => {
@@ -389,18 +391,13 @@
         });
     }
 
-    function updateFilterUI() {
-        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active-filter'));
-        if (currentFilter === 'all') document.getElementById('filterAll').classList.add('active-filter');
-        if (currentFilter === 'oson') document.getElementById('filterOson').classList.add('active-filter');
-        if (currentFilter === 'qiyin') document.getElementById('filterQiyin').classList.add('active-filter');
-    }
-
     function applyFilter() {
         if (currentFilter === 'qiyin') {
             filteredQuestions = allQuestions.filter(q => questionStates[q.uniqueKey] === 'qiyin');
         } else if (currentFilter === 'oson') {
             filteredQuestions = allQuestions.filter(q => questionStates[q.uniqueKey] === 'oson');
+        } else if (currentFilter === 'ready') {
+            filteredQuestions = allQuestions.filter(q => questionStates[q.uniqueKey] === 'ready');
         } else {
             filteredQuestions = [...allQuestions];
         }
@@ -408,12 +405,18 @@
         currentIndex = 0;
         renderCurrent();
         updateFilterUI();
+        updateCounts();
     }
 
     function toggleFilter(filter) {
         currentFilter = filter;
         applyFilter();
         tg.HapticFeedback.impactOccurred('medium');
+    }
+
+    function updateFilterUI() {
+        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active-filter'));
+        document.getElementById('filter' + currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1)).classList.add('active-filter');
     }
 
     function setTag(type) {
@@ -436,7 +439,7 @@
         app.innerHTML = '';
 
         if (filteredQuestions.length === 0) {
-            app.innerHTML = `<div class="loader" style="font-size:13px; padding:20px;">Bu ro'yxat bo'sh.<br><br>Avval "Hammasi" rejimidan savollarni saralab oling.</div>`;
+            app.innerHTML = `<div class="loader" style="font-size:12px;">Bu filtrda savollar mavjud emas.</div>`;
             updateNavButtons();
             return;
         }
@@ -456,12 +459,12 @@
             <button class="show-ans-btn" onclick="toggleAns(this)">Javobni ko'rsatish</button>
             <div class="answer-content">${q.javob || "Javob yo'q"}</div>
             <div class="tag-actions">
-                <button class="tag-btn oson ${state === 'oson' ? 'active' : ''}" onclick="setTag('oson')">😊 OSON</button>
-                <button class="tag-btn qiyin ${state === 'qiyin' ? 'active' : ''}" onclick="setTag('qiyin')">🔥 QIYIN</button>
+                <button class="tag-btn oson ${state === 'oson' ? 'active' : ''}" onclick="setTag('oson')">OSON</button>
+                <button class="tag-btn qiyin ${state === 'qiyin' ? 'active' : ''}" onclick="setTag('qiyin')">QIYIN</button>
+                <button class="tag-btn ready ${state === 'ready' ? 'active' : ''}" onclick="setTag('ready')">100% TAYYOR</button>
             </div>
         `;
         app.appendChild(card);
-        // Savol o'zgarganda skrollni tepaga qaytarish
         document.querySelector('.container').scrollTop = 0;
         updateNavButtons();
     }
@@ -496,14 +499,21 @@
             content.style.display = 'block';
             btn.innerText = 'Yashirish';
             tg.HapticFeedback.notificationOccurred('success');
-            // Javob ochilganda avtomatik skroll qilish
             setTimeout(() => {
                 content.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 100);
         }
     }
 
-    // Birinchi yuklash
+    function resetLearned() {
+        if(confirm("Diqqat! Barcha belgilangan savollarni (Oson, Qiyin, Tayyor) tozalab yuborasizmi?")) {
+            questionStates = {};
+            saveStates();
+            applyFilter();
+            tg.HapticFeedback.notificationOccurred('warning');
+        }
+    }
+
     loadQuestions('fizika_savollari');
 </script>
 </body>
