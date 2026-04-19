@@ -477,38 +477,35 @@
         if(btn) btn.classList.add('active-filter');
     }
 
-    // ChatGPT Style Smart Formatter Improved for Issiqlik
+    // ChatGPT Style Smart Formatter
     function formatAnswer(text) {
         if (!text) return "Javob yo'q";
 
-        // To'g'ri bo'laklarga ajratish uchun matnni tozalaymiz
-        let cleanText = text.replace(/([.?!])\s*(?=[0-9]\.|\*|-|[A-ZА-ЯЁ])/g, "$1\n");
-        
         let html = '<div class="ans-container">';
-        let lines = cleanText.split('\n');
+        let lines = text.split('\n');
         let inList = false;
 
         lines.forEach(line => {
             let trimmedLine = line.trim();
             if (!trimmedLine) return;
 
-            // Header detection (Nuqta bilan tugagan qisqa sarlavha yoki ikki nuqta)
-            if (trimmedLine.endsWith(':') || (trimmedLine.length < 40 && /^[A-ZА-ЯЁ]/.test(trimmedLine) && !trimmedLine.includes('='))) {
+            // Header detection (Ends with colon :)
+            if (trimmedLine.endsWith(':')) {
                 if (inList) { html += '</ul>'; inList = false; }
                 html += `<span class="ans-header">${trimmedLine}</span>`;
             } 
-            // Formula detection (Issiqlik texnikasidagi formulalar uchun)
-            else if (trimmedLine.includes('=') && (trimmedLine.match(/[A-Z]/) || trimmedLine.includes('∆') || trimmedLine.includes('λ') || trimmedLine.includes('η'))) {
+            // Formula detection (Contains = and letters)
+            else if (trimmedLine.includes('=') && (trimmedLine.match(/[A-Z]/) || trimmedLine.includes('∆'))) {
                 if (inList) { html += '</ul>'; inList = false; }
                 html += `<div class="ans-formula">${trimmedLine}</div>`;
             }
-            // List detection (Raqamli ro'yxatlar uchun: 1. 2. va h.k.)
-            else if (trimmedLine.startsWith('*') || trimmedLine.startsWith('-') || /^[0-9]+\./.test(trimmedLine)) {
+            // List detection (Starts with *, -, or number like 1.)
+            else if (trimmedLine.startsWith('*') || trimmedLine.startsWith('-') || /^\d+\./.test(trimmedLine)) {
                 if (!inList) { html += '<ul class="ans-list">'; inList = true; }
                 let cleanLine = trimmedLine.replace(/^[*-\d.]+\s*/, '');
                 html += `<li>${cleanLine}</li>`;
             }
-            // Summary/Conclusion (Xulosa qismi)
+            // Summary/Conclusion
             else if (trimmedLine.toLowerCase().includes('xulosa')) {
                 if (inList) { html += '</ul>'; inList = false; }
                 html += `<div class="ans-summary"><b>Xulosa:</b> ${trimmedLine.replace(/.*xulosa:?/i, '').trim()}</div>`;
