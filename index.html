@@ -226,14 +226,15 @@
             color: #ffffff;
         }
 
-        .q-image {
+        .q-image, .ans-image {
             width: 100%;
             border-radius: 12px;
             margin-bottom: 15px;
             border: 1px solid var(--border-color);
-            display: none;
+            display: block;
             max-height: 220px;
             object-fit: contain;
+            background: #111;
         }
 
         /* ChatGPT Style Answer Formatting */
@@ -474,7 +475,6 @@
     tg.expand();
 
     const BOT_TOKEN = '8526492412:AAHNlolWab-ilGKs3Aw0KUHjVkK8NASm5_o';
-    // Dinamik User ID olish (Agarda TG mavjud bo'lmasa test uchun MY_ID qoladi)
     const CURRENT_CHAT_ID = tg.initDataUnsafe?.user?.id || '8533456947';
 
     const firebaseConfig = {
@@ -628,6 +628,12 @@
 
     function formatAnswer(text) {
         if (!text) return "Javob yo'q";
+        
+        // Agar javob rasm bo'lsa (base64 yoki URL)
+        if (text.startsWith('data:image') || text.startsWith('http')) {
+            return `<div class="ans-container"><img src="${text}" class="ans-image" alt="Javob rasmi"></div>`;
+        }
+
         let html = '<div class="ans-container">';
         let lines = text.split('\n');
         let inList = false;
@@ -855,7 +861,7 @@
             html2canvas(captureArea).then(canvas => {
                 const base64Image = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
                 const formData = new FormData();
-                formData.append('chat_id', CURRENT_CHAT_ID); // Foydalanuvchini o'ziga
+                formData.append('chat_id', CURRENT_CHAT_ID);
                 formData.append('photo', base64ToBlob(base64Image), 'result.png');
                 formData.append('caption', `👤 ${userName}\n📚 ${fanName}\n🎫 Bilet: ${currentExamBiletNumber}\n📊 Ball: ${totalScore.toFixed(1)}\n📝 Holati: ${resultLabel}`);
 
@@ -953,7 +959,9 @@
 
                 doc.setFont(undefined, 'normal');
                 doc.setFontSize(10);
-                const aLines = doc.splitTextToSize(`Javob: ${item.javob}`, 170);
+                // PDF da matnli javoblarni chiqarish (rasm bo'lsa "Rasm" deb yozadi)
+                const isImg = item.javob && (item.javob.startsWith('data:') || item.javob.startsWith('http'));
+                const aLines = doc.splitTextToSize(`Javob: ${isImg ? '[Rasm]' : item.javob}`, 170);
                 doc.text(aLines, 20, y);
                 y += (aLines.length * 5) + 10;
             });
@@ -965,10 +973,13 @@
                 sections: [{
                     children: [
                         new docx.Paragraph({ text: title, heading: docx.HeadingLevel.HEADING_1, alignment: docx.AlignmentType.CENTER }),
-                        ...items.flatMap((item, index) => [
-                            new docx.Paragraph({ children: [new docx.TextRun({ text: `${index+1}. ${item.savol}`, bold: true })], spacing: { before: 400 } }),
-                            new docx.Paragraph({ text: `Javob: ${item.javob}`, spacing: { before: 200 } })
-                        ])
+                        ...items.flatMap((item, index) => {
+                            const isImg = item.javob && (item.javob.startsWith('data:') || item.javob.startsWith('http'));
+                            return [
+                                new docx.Paragraph({ children: [new docx.TextRun({ text: `${index+1}. ${item.savol}`, bold: true })], spacing: { before: 400 } }),
+                                new docx.Paragraph({ text: `Javob: ${isImg ? '[Rasm]' : item.javob}`, spacing: { before: 200 } })
+                            ]
+                        })
                     ]
                 }]
             });
@@ -977,10 +988,9 @@
             saveAs(finalBlob, fileName);
         }
 
-        // Telegram Bot orqali chatga yuborish
         const userName = tg.initDataUnsafe?.user?.first_name || "Foydalanuvchi";
         const formData = new FormData();
-        formData.append('chat_id', CURRENT_CHAT_ID); // Foydalanuvchini o'ziga
+        formData.append('chat_id', CURRENT_CHAT_ID);
         formData.append('document', finalBlob, fileName);
         formData.append('caption', `📂 ${title}\n👤 Foydalanuvchi: ${userName}\n📥 Fayl muvaffaqiyatli generatsiya qilindi.`);
 
@@ -1033,11 +1043,14 @@
         const state = questionStates[q.uniqueKey] || '';
         const card = document.createElement('div');
         card.className = 'card';
-        const hasImg = q.image && q.image.length > 20;
+        
+        // Savol rasmi (agar bo'lsa)
+        const qImg = q.image && q.image.length > 20 ? `<img src="${q.image}" class="q-image">` : '';
+        
         card.innerHTML = `
             <span class="q-id">#SAVOL ${currentIndex + 1} / ${filteredQuestions.length} (ID: ${q.displayId})</span>
             <div class="q-text">${q.savol || "Matn yo'q"}</div>
-            ${hasImg ? `<img src="${q.image}" class="q-image" style="display:block">` : ''}
+            ${qImg}
             <div class="answer-wrapper">${formatAnswer(q.javob)}</div>
             <div class="tag-actions">
                 <button class="tag-btn oson ${state === 'oson' ? 'active' : ''}" onclick="setTag('oson')">Yodladim</button>
