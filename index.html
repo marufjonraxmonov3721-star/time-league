@@ -146,7 +146,7 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            padding-bottom: 110px;
+            padding-bottom: 20px; /* Navigatsiya yo'qolgani uchun padding kamaytirildi */
         }
 
         /* Card */
@@ -200,27 +200,16 @@
             object-fit: contain;
         }
 
-        /* Buttons */
-        .show-ans-btn {
-            width: 100%;
-            background: transparent;
-            border: 1px solid #333;
-            color: var(--text-color);
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 13px;
-        }
-
         .answer-content {
-            display: none;
+            display: block;
             margin-top: 15px;
             padding: 15px;
             background: #0d1a12;
             border-radius: 12px;
             font-size: 14px;
-            color: #b0b0b0;
+            color: #d1d1d1;
             border-left: 4px solid var(--success-color);
+            word-wrap: break-word;
         }
 
         /* Tag Actions - 3 buttons */
@@ -228,12 +217,12 @@
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             gap: 8px;
-            margin-top: 15px;
+            margin-top: 20px;
         }
 
         .tag-btn {
-            padding: 10px 2px;
-            border-radius: 10px;
+            padding: 14px 2px; /* Kattaroq tugmalar oson bosish uchun */
+            border-radius: 12px;
             border: 1px solid #222;
             font-size: 10px;
             font-weight: 800;
@@ -245,36 +234,6 @@
         .tag-btn.oson.active { background: var(--success-color); border-color: var(--success-color); }
         .tag-btn.qiyin.active { background: var(--danger-color); border-color: var(--danger-color); }
         .tag-btn.ready.active { background: var(--learned-color); border-color: var(--learned-color); }
-
-        /* Navigation Controls */
-        .navigation {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 25px 25px;
-            gap: 20px;
-            background: linear-gradient(to top, black 80%, transparent);
-            z-index: 100;
-        }
-
-        .nav-control {
-            flex: 1;
-            padding: 15px;
-            border-radius: 16px;
-            border: none;
-            background: var(--accent-color);
-            color: white;
-            font-weight: 800;
-            font-size: 18px;
-        }
-
-        .nav-control:disabled {
-            background: #1a1a1a;
-            color: #444;
-        }
 
         .loader {
             text-align: center;
@@ -305,11 +264,6 @@
 
 <div class="container" id="app">
     <div class="loader">Yuklanmoqda...</div>
-</div>
-
-<div class="navigation" id="nav-controls" style="display: none;">
-    <button class="nav-control" id="prevBtn" onclick="prevQuestion()">⬅️</button>
-    <button class="nav-control" id="nextBtn" onclick="nextQuestion()">➡️</button>
 </div>
 
 <script>
@@ -368,9 +322,7 @@
 
     function loadQuestions(path) {
         const app = document.getElementById('app');
-        const nav = document.getElementById('nav-controls');
         app.innerHTML = '<div class="loader">Yuklanmoqda...</div>';
-        nav.style.display = 'none';
 
         db.ref(path).once('value', (snap) => {
             const data = snap.val();
@@ -387,7 +339,6 @@
             }).sort((a, b) => a.displayId - b.displayId);
 
             applyFilter();
-            nav.style.display = 'flex';
         });
     }
 
@@ -416,13 +367,16 @@
 
     function updateFilterUI() {
         document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active-filter'));
-        document.getElementById('filter' + currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1)).classList.add('active-filter');
+        const targetId = 'filter' + currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1);
+        const btn = document.getElementById(targetId);
+        if(btn) btn.classList.add('active-filter');
     }
 
     function setTag(type) {
         const q = filteredQuestions[currentIndex];
         if (!q) return;
 
+        // Statusni saqlash
         if (questionStates[q.uniqueKey] === type) {
             delete questionStates[q.uniqueKey];
         } else {
@@ -430,8 +384,18 @@
         }
         
         saveStates();
-        renderCurrent();
         tg.HapticFeedback.notificationOccurred('success');
+
+        // Avtomatik keyingi savolga o'tish
+        setTimeout(() => {
+            if (currentIndex < filteredQuestions.length - 1) {
+                currentIndex++;
+                renderCurrent();
+            } else {
+                alert("Bu ro'yxatdagi oxirgi savol edi.");
+                renderCurrent(); // Oxirgi savol holatini yangilash (rangi o'zgarishi uchun)
+            }
+        }, 300); // Kichik pauza foydalanuvchi bosganini ko'rishi uchun
     }
 
     function renderCurrent() {
@@ -440,7 +404,6 @@
 
         if (filteredQuestions.length === 0) {
             app.innerHTML = `<div class="loader" style="font-size:12px;">Bu filtrda savollar mavjud emas.</div>`;
-            updateNavButtons();
             return;
         }
 
@@ -456,8 +419,7 @@
             <span class="q-id">#ID ${q.displayId}</span>
             <div class="q-text">${q.savol || "Matn yo'q"}</div>
             ${hasImg ? `<img src="${q.image}" class="q-image" style="display:block">` : ''}
-            <button class="show-ans-btn" onclick="toggleAns(this)">Javobni ko'rsatish</button>
-            <div class="answer-content">${q.javob || "Javob yo'q"}</div>
+            <div class="answer-content"><b>Javob:</b> ${q.javob || "Javob yo'q"}</div>
             <div class="tag-actions">
                 <button class="tag-btn oson ${state === 'oson' ? 'active' : ''}" onclick="setTag('oson')">OSON</button>
                 <button class="tag-btn qiyin ${state === 'qiyin' ? 'active' : ''}" onclick="setTag('qiyin')">QIYIN</button>
@@ -466,43 +428,6 @@
         `;
         app.appendChild(card);
         document.querySelector('.container').scrollTop = 0;
-        updateNavButtons();
-    }
-
-    function nextQuestion() {
-        if (currentIndex < filteredQuestions.length - 1) {
-            currentIndex++;
-            renderCurrent();
-            tg.HapticFeedback.impactOccurred('light');
-        }
-    }
-
-    function prevQuestion() {
-        if (currentIndex > 0) {
-            currentIndex--;
-            renderCurrent();
-            tg.HapticFeedback.impactOccurred('light');
-        }
-    }
-
-    function updateNavButtons() {
-        document.getElementById('prevBtn').disabled = currentIndex === 0 || filteredQuestions.length === 0;
-        document.getElementById('nextBtn').disabled = currentIndex === filteredQuestions.length - 1 || filteredQuestions.length === 0;
-    }
-
-    function toggleAns(btn) {
-        const content = btn.nextElementSibling;
-        if(content.style.display === 'block') {
-            content.style.display = 'none';
-            btn.innerText = 'Javobni ko\'rsatish';
-        } else {
-            content.style.display = 'block';
-            btn.innerText = 'Yashirish';
-            tg.HapticFeedback.notificationOccurred('success');
-            setTimeout(() => {
-                content.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }, 100);
-        }
     }
 
     function resetLearned() {
