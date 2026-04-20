@@ -653,9 +653,19 @@
     let selectedExamPath = '';
     let examDates = {};
 
-    // Audio uchun o'zgaruvchi
+    // Audio uchun o'zgaruvchilar
     let synth = window.speechSynthesis;
     let currentUtterance = null;
+    let voices = [];
+
+    // Ovozlar yuklanishini nazorat qilish
+    function loadVoices() {
+        voices = synth.getVoices();
+    }
+    loadVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+    }
 
     window.addEventListener('DOMContentLoaded', () => {
         const overlay = document.getElementById('main-loading-overlay');
@@ -1061,7 +1071,7 @@
         }
     }
 
-    /* O'zini sinash funksiyasi - Taqqoslash mantig'i yaxshilandi */
+    /* O'zini sinash funksiyasi */
     function checkUserAnswer() {
         const userInputRaw = document.getElementById('selfCheckInput').value.trim();
         const diffBox = document.getElementById('selfCheckDiff');
@@ -1075,23 +1085,16 @@
         diffBox.style.display = 'block';
         diffBox.innerHTML = '';
 
-        // So'zlarni tozalash: tinish belgilarini olib tashlash va kichik harfga o'tkazish
         const clean = (t) => t.toLowerCase().replace(/[.,!?:;()\-]/g, '').split(/\s+/).filter(w => w.length > 0);
         const userWordsClean = clean(userInputRaw);
-        
-        // Asl matnni so'zlarga ajratish (lekin asl formatini saqlagan holda)
         const originalWords = originalText.split(/\s+/);
         
         let outputHtml = '';
-        
         originalWords.forEach(word => {
             const cleanWord = word.toLowerCase().replace(/[.,!?:;()\-]/g, '');
-            
-            // Agar so'z toza holatda foydalanuvchi yozganlari ichida bo'lsa - yashil
             if (userWordsClean.includes(cleanWord)) {
                 outputHtml += `<span class="diff-correct">${word}</span> `;
             } else {
-                // Bo'lmasa - qizil
                 outputHtml += `<span class="diff-missed">${word}</span> `;
             }
         });
@@ -1100,7 +1103,7 @@
         tg.HapticFeedback.notificationOccurred('success');
     }
 
-    // Audio-Javob funksiyasi - Mustahkamlangan versiya
+    // Audio-Javob funksiyasi (Ishlamaslik muammosi tuzatildi)
     function toggleSpeech(btn) {
         if (synth.speaking) {
             stopAudio();
@@ -1109,26 +1112,22 @@
 
         const textToRead = allQuestions[currentIndex].javob;
         if (!textToRead || textToRead.startsWith('data:image') || textToRead.startsWith('http')) {
-            tg.showAlert("Ushbu javobni o'qib bo'lmaydi (rasm yoki matn yo'q).");
+            tg.showAlert("Ushbu javobni o'qib bo'lmaydi.");
             return;
         }
 
-        // Toza matn tayyorlash (HTML teglarni va belgilarini tozalash)
-        const tempDiv = document.createElement("div");
-        tempDiv.innerHTML = textToRead;
-        let cleanText = tempDiv.innerText || tempDiv.textContent || textToRead;
-        cleanText = cleanText.replace(/[#*_\-=`]/g, '').trim();
-
+        const cleanText = textToRead.replace(/[#*_\-=`]/g, '').trim();
         currentUtterance = new SpeechSynthesisUtterance(cleanText);
         
-        // Ovoz tanlash (agar bo'lsa)
-        let voices = synth.getVoices();
-        // Rus yoki Turk ovozlari o'zbek tiliga yaqinroq eshitilishi mumkin agar o'zbekcha yo'q bo'lsa
-        let preferredVoice = voices.find(v => v.lang.includes('uz')) || voices.find(v => v.lang.includes('ru')) || voices[0];
-        if(preferredVoice) currentUtterance.voice = preferredVoice;
-
+        // Til va Ovoz sozlamalari
+        let uzVoice = voices.find(v => v.lang.includes('uz') || v.name.includes('Uzbek'));
+        let ruVoice = voices.find(v => v.lang.includes('ru')); // O'zbekcha yo'q bo'lsa Ruscha biroz o'xshash
+        
+        if (uzVoice) currentUtterance.voice = uzVoice;
+        else if (ruVoice) currentUtterance.voice = ruVoice;
+        
         currentUtterance.lang = 'uz-UZ';
-        currentUtterance.rate = 0.9; 
+        currentUtterance.rate = 0.85; 
         currentUtterance.pitch = 1;
 
         currentUtterance.onstart = () => {
@@ -1141,8 +1140,8 @@
             btn.innerText = "🔊 Eshitish";
         };
 
-        currentUtterance.onerror = (event) => {
-            console.error('SpeechSynthesisError:', event);
+        currentUtterance.onerror = (e) => {
+            console.error("Speech Error:", e);
             btn.classList.remove('speaking');
             btn.innerText = "🔊 Eshitish";
         };
@@ -1197,3 +1196,7 @@
         `;
         app.appendChild(card);
         document.querySelector('.container').scrollTop = 0;
+    }
+</script>
+</body>
+</html>
