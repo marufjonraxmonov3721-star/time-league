@@ -54,11 +54,10 @@
             top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
             z-index: 9999;
-            display: flex;
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
         }
 
         .spinner {
@@ -74,13 +73,6 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            color: var(--text-color);
-            font-size: 14px;
-            font-weight: 500;
-            letter-spacing: 0.5px;
         }
 
         /* Header */
@@ -125,9 +117,37 @@
             font-weight: bold;
         }
 
-        /* Nav Tabs */
-        .nav-tabs {
+        /* Dashboard Style Home */
+        .dashboard {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .dash-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 25px 15px;
+            text-align: center;
             display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .dash-card:active { transform: scale(0.95); }
+        .dash-card i { font-size: 32px; margin-bottom: 10px; }
+        .dash-card span { font-weight: 700; font-size: 14px; color: #fff; }
+        .dash-card small { color: var(--hint-color); font-size: 10px; margin-top: 5px; }
+
+        /* Nav Tabs (Hidden on Home) */
+        .nav-tabs {
+            display: none;
             background: var(--secondary-bg);
             padding: 6px;
             margin: 10px 15px 5px;
@@ -158,8 +178,8 @@
 
         /* Matrix Container */
         .matrix-container {
+            display: none;
             padding: 10px 15px;
-            display: flex;
             gap: 8px;
             overflow-x: auto;
             white-space: nowrap;
@@ -188,7 +208,7 @@
 
         /* Study Tools */
         .study-tools {
-            display: grid;
+            display: none;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
             padding: 10px 15px 10px;
@@ -208,12 +228,7 @@
         }
 
         .tool-btn b { color: #fff; margin-left: 3px; }
-
-        .tool-btn.active-filter {
-            border-color: var(--accent-color);
-            color: var(--accent-color);
-            background: rgba(0, 136, 204, 0.05);
-        }
+        .tool-btn.active-filter { border-color: var(--accent-color); color: var(--accent-color); background: rgba(0, 136, 204, 0.05); }
 
         /* Main Container */
         .container {
@@ -240,259 +255,75 @@
             margin-bottom: 20px;
         }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
 
-        .q-id {
-            color: var(--accent-color);
-            font-weight: 800;
-            font-size: 12px;
-            margin-bottom: 8px;
-            display: block;
-        }
+        .q-id { color: var(--accent-color); font-weight: 800; font-size: 12px; margin-bottom: 8px; display: block; }
+        .q-text { font-size: 18px; font-weight: 700; line-height: 1.4; margin-bottom: 20px; color: #ffffff; }
+        .q-image, .ans-image { width: 100%; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); display: block; max-height: 220px; object-fit: contain; background: #111; }
 
-        .q-text {
-            font-size: 18px;
-            font-weight: 700;
-            line-height: 1.4;
-            margin-bottom: 20px;
-            color: #ffffff;
-        }
-
-        .q-image, .ans-image {
-            width: 100%;
-            border-radius: 12px;
-            margin-bottom: 15px;
-            border: 1px solid var(--border-color);
-            display: block;
-            max-height: 220px;
-            object-fit: contain;
-            background: #111;
-        }
-
-        /* ChatGPT Style Answer Formatting */
-        .ans-container {
-            color: #e0e0e0;
-            font-size: 15px;
-            line-height: 1.6;
-        }
-
-        .ans-header {
-            font-weight: 700;
-            color: #ffffff;
-            display: block;
-            margin-top: 15px;
-            margin-bottom: 5px;
-            font-size: 16px;
-            border-left: 3px solid var(--accent-color);
-            padding-left: 10px;
-        }
-
-        .ans-formula {
-            background: #1a1a1a;
-            padding: 12px;
-            border-radius: 8px;
-            margin: 10px 0;
-            font-family: 'Courier New', Courier, monospace;
-            color: #00ff00;
-            font-size: 18px;
-            text-align: center;
-            border: 1px dashed #333;
-        }
-
-        .ans-list {
-            margin: 5px 0;
-            padding-left: 20px;
-            list-style-type: disc;
-        }
-
-        .ans-list li {
-            margin-bottom: 8px;
-        }
-
-        .ans-summary {
-            background: rgba(0, 136, 204, 0.1);
-            padding: 12px;
-            border-radius: 10px;
-            margin-top: 20px;
-            border: 1px solid rgba(0, 136, 204, 0.2);
-        }
-
+        /* Answer Formatting */
+        .ans-container { color: #e0e0e0; font-size: 15px; line-height: 1.6; }
+        .ans-header { font-weight: 700; color: #ffffff; display: block; margin-top: 15px; margin-bottom: 5px; font-size: 16px; border-left: 3px solid var(--accent-color); padding-left: 10px; }
+        .ans-formula { background: #1a1a1a; padding: 12px; border-radius: 8px; margin: 10px 0; font-family: 'Courier New', Courier, monospace; color: #00ff00; font-size: 18px; text-align: center; border: 1px dashed #333; }
+        .ans-list { margin: 5px 0; padding-left: 20px; list-style-type: disc; }
+        .ans-list li { margin-bottom: 8px; }
+        .ans-summary { background: rgba(0, 136, 204, 0.1); padding: 12px; border-radius: 10px; margin-top: 20px; border: 1px solid rgba(0, 136, 204, 0.2); }
         .ans-summary b { color: var(--accent-color); }
 
         /* Tag Actions */
-        .tag-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 8px;
-            margin-top: 25px;
-        }
-
-        .tag-btn {
-            padding: 14px 2px;
-            border-radius: 12px;
-            border: 1px solid #222;
-            font-size: 10px;
-            font-weight: 700;
-            background: #050505;
-            color: #fff;
-            transition: 0.2s;
-            text-transform: uppercase;
-        }
-
+        .tag-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 25px; }
+        .tag-btn { padding: 14px 2px; border-radius: 12px; border: 1px solid #222; font-size: 10px; font-weight: 700; background: #050505; color: #fff; transition: 0.2s; text-transform: uppercase; }
         .tag-btn.oson.active { background: var(--success-color); border-color: var(--success-color); }
         .tag-btn.qiyin.active { background: var(--danger-color); border-color: var(--danger-color); }
         .tag-btn.ready.active { background: var(--learned-color); border-color: var(--learned-color); }
 
         /* Real Exam Styles */
-        .exam-input {
-            width: 100%;
-            background: #fdfdfd;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            color: #000;
-            padding: 12px;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 14px;
-            min-height: 80px;
-            margin-top: 10px;
-            resize: none;
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .exam-input:focus { border-color: var(--accent-color); outline: none; }
-        
-        .real-bilet {
-            background: #fff;
-            color: #000;
-            padding: 30px;
-            border-radius: 2px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-            position: relative;
-        }
-        .bilet-header {
-            text-align: center;
-            border-bottom: 2px double #000;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-        }
+        .exam-input { width: 100%; background: #fdfdfd; border: 1px solid #ccc; border-radius: 8px; color: #000; padding: 12px; font-family: 'Courier New', Courier, monospace; font-size: 14px; min-height: 80px; margin-top: 10px; resize: none; }
+        .real-bilet { background: #fff; color: #000; padding: 30px; border-radius: 2px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); margin-bottom: 20px; border: 1px solid #ddd; position: relative; }
+        .bilet-header { text-align: center; border-bottom: 2px double #000; margin-bottom: 20px; padding-bottom: 10px; }
         .bilet-savol-title { font-weight: bold; margin-top: 15px; display: block; }
-        
-        .score-box {
-            background: #f0f0f0;
-            padding: 15px;
-            border-radius: 10px;
-            border-left: 5px solid var(--accent-color);
-            margin-top: 10px;
-            color: #000;
-        }
+        .score-box { background: #f0f0f0; padding: 15px; border-radius: 10px; border-left: 5px solid var(--accent-color); margin-top: 10px; color: #000; }
+        .exam-btn { background: var(--accent-color); border: none; color: #fff; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        #examCanvas { background: #1a0f00; border-radius: 15px; box-shadow: inset 0 0 50px #000; width: 100%; height: 380px; cursor: pointer; }
 
-        .exam-btn {
-            background: var(--accent-color);
-            border: none;
-            color: #fff;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        /* Canvas Table Styles */
-        #examCanvas {
-            background: #1a0f00; /* Wood color */
-            border-radius: 15px;
-            box-shadow: inset 0 0 50px #000;
-            width: 100%;
-            height: 380px;
-            cursor: pointer;
-        }
-
-        .loader {
-            text-align: center;
-            padding: 50px;
-            color: var(--hint-color);
-            width: 100%;
-        }
+        .loader { text-align: center; padding: 50px; color: var(--hint-color); width: 100%; }
 
         /* Fixed Details Bug */
-        details.exam-ans-details {
-            margin-top: 10px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 5px;
-        }
-        details.exam-ans-details summary {
-            cursor: pointer;
-            font-weight: bold;
-            color: #0088cc;
-            padding: 5px;
-            outline: none;
-        }
-        details.exam-ans-details .ans-container {
-            color: #333 !important;
-            padding: 10px;
-            border-top: 1px solid #eee;
-        }
+        details.exam-ans-details { margin-top: 10px; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 5px; }
+        details.exam-ans-details summary { cursor: pointer; font-weight: bold; color: #0088cc; padding: 5px; outline: none; }
+        details.exam-ans-details .ans-container { color: #333 !important; padding: 10px; border-top: 1px solid #eee; }
         details.exam-ans-details .ans-header { color: #000 !important; }
         details.exam-ans-details .ans-formula { background: #f9f9f9; border-color: #ccc; color: #006600; }
 
-        /* Report Capture Styling */
-        #captureArea {
-            position: absolute;
-            left: -9999px;
-            top: 0;
-            width: 400px;
-            background: white;
-            color: black;
-            padding: 20px;
-            font-family: serif;
-        }
+        #captureArea { position: absolute; left: -9999px; top: 0; width: 400px; background: white; color: black; padding: 20px; font-family: serif; }
         
-        /* Export Section Styles */
-        .export-card {
-            text-align: center;
-            padding: 20px;
-        }
-        .export-btn {
-            background: #2c3e50;
-            color: white;
-            border: 1px solid #34495e;
-            padding: 15px;
-            border-radius: 12px;
-            margin: 10px 0;
-            width: 100%;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
+        .export-card { text-align: center; padding: 20px; }
+        .export-btn { background: #2c3e50; color: white; border: 1px solid #34495e; padding: 15px; border-radius: 12px; margin: 10px 0; width: 100%; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .export-btn.pdf { background: #e74c3c; }
         .export-btn.docx { background: #2980b9; }
+
+        /* Home Button in Header */
+        .home-btn { background: none; border: 1px solid #333; color: #fff; padding: 5px 10px; border-radius: 8px; font-size: 14px; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="main-loading-overlay">
     <div class="spinner"></div>
-    <div class="loading-text">Oraliq savollari yuklanmoqda...</div>
+    <div class="loading-text" id="loading-msg">Yuklanmoqda...</div>
 </div>
 
 <div class="header">
-    <button class="reset-all-btn" onclick="resetLearned()">🔄</button>
+    <button class="home-btn" onclick="showHome()">🏠</button>
     <h1>Exam Prep Pro</h1>
     <div class="stats-badge" id="totalPercent">0%</div>
 </div>
 
 <div class="nav-tabs" id="nav-tabs">
-    <button class="nav-btn active" data-path="fizika_savollari" onclick="changeTab(this, 'fizika_savollari')">Fizika</button>
-    <button class="nav-btn" data-path="Issiqlik_texnikasi" onclick="changeTab(this, 'Issiqlik_texnikasi')">Issiqlik</button>
-    <button class="nav-btn" onclick="startExamTab(this)">🔥 Imtihon</button>
-    <button class="nav-btn" onclick="showExportTab(this)">📤 Export</button>
+    <button class="nav-btn" id="tab-fizika" onclick="changeTab(this, 'fizika_savollari')">Fizika</button>
+    <button class="nav-btn" id="tab-issiqlik" onclick="changeTab(this, 'Issiqlik_texnikasi')">Issiqlik</button>
+    <button class="nav-btn" id="tab-exam" onclick="startExamTab(this)">🔥 Imtihon</button>
+    <button class="nav-btn" id="tab-export" onclick="showExportTab(this)">📤 Export</button>
 </div>
 
 <div class="matrix-container" id="matrix"></div>
@@ -534,17 +365,73 @@
     let filteredQuestions = [];
     let currentIndex = 0;
     let currentFilter = 'all'; 
-    let currentPath = 'fizika_savollari';
+    let currentPath = '';
     let isExamMode = false;
     let examQuestions = [];
     let selectedExamPath = '';
 
     let questionStates = JSON.parse(localStorage.getItem('exam_states_v3')) || {};
 
-    // First load to hide main loading screen
     window.addEventListener('DOMContentLoaded', () => {
-        loadQuestions('fizika_savollari', true);
+        showHome();
+        updateCounts();
     });
+
+    function showHome() {
+        isExamMode = false;
+        document.getElementById('nav-tabs').style.display = 'none';
+        document.getElementById('study-tools-ui').style.display = 'none';
+        document.getElementById('matrix').style.display = 'none';
+        
+        const app = document.getElementById('app');
+        app.innerHTML = `
+            <div class="dashboard">
+                <div class="dash-card" onclick="openSection('fizika_savollari')">
+                    <i>⚛️</i>
+                    <span>Fizika Savollari</span>
+                    <small>70 ta savol mavjud</small>
+                </div>
+                <div class="dash-card" onclick="openSection('Issiqlik_texnikasi')">
+                    <i>🔥</i>
+                    <span>Issiqlik Texnikasi</span>
+                    <small>90 ta savol mavjud</small>
+                </div>
+                <div class="dash-card" onclick="openExamDashboard()">
+                    <i>📝</i>
+                    <span>Real Imtihon</span>
+                    <small>Bilimingizni sinang</small>
+                </div>
+                <div class="dash-card" onclick="openExportDashboard()">
+                    <i>📤</i>
+                    <span>PDF/DOCX</span>
+                    <small>Fayl ko'rinishida yuklash</small>
+                </div>
+                <div class="dash-card" style="grid-column: span 2; padding: 15px;" onclick="resetLearned()">
+                    <span style="color:var(--danger-color)">🔄 Barcha natijalarni tozalash</span>
+                </div>
+            </div>
+        `;
+        tg.HapticFeedback.impactOccurred('light');
+    }
+
+    function openSection(path) {
+        document.getElementById('nav-tabs').style.display = 'flex';
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        const btn = path === 'fizika_savollari' ? document.getElementById('tab-fizika') : document.getElementById('tab-issiqlik');
+        btn.classList.add('active');
+        currentPath = path;
+        loadQuestions(path);
+    }
+
+    function openExamDashboard() {
+        document.getElementById('nav-tabs').style.display = 'flex';
+        startExamTab(document.getElementById('tab-exam'));
+    }
+
+    function openExportDashboard() {
+        document.getElementById('nav-tabs').style.display = 'flex';
+        showExportTab(document.getElementById('tab-export'));
+    }
 
     function saveStates() {
         localStorage.setItem('exam_states_v3', JSON.stringify(questionStates));
@@ -553,7 +440,8 @@
     }
 
     function updateCounts() {
-        let oson = 0, qiyin = 0, ready = 0;
+        let oson = 0, qiyin = 0, ready = 0, total = 0;
+        // Calculation logic across all categories if needed, for now current
         allQuestions.forEach(q => {
             const state = questionStates[q.uniqueKey];
             if(state === 'oson') oson++;
@@ -561,19 +449,13 @@
             if(state === 'ready') ready++;
         });
         
-        const cntAllEl = document.getElementById('cntAll');
-        const cntOsonEl = document.getElementById('cntOson');
-        const cntQiyinEl = document.getElementById('cntQiyin');
-        const cntReadyEl = document.getElementById('cntReady');
-        
-        if(cntAllEl) cntAllEl.innerText = allQuestions.length;
-        if(cntOsonEl) cntOsonEl.innerText = oson;
-        if(cntQiyinEl) cntQiyinEl.innerText = qiyin;
-        if(cntReadyEl) cntReadyEl.innerText = ready;
+        if(document.getElementById('cntAll')) document.getElementById('cntAll').innerText = allQuestions.length;
+        if(document.getElementById('cntOson')) document.getElementById('cntOson').innerText = oson;
+        if(document.getElementById('cntQiyin')) document.getElementById('cntQiyin').innerText = qiyin;
+        if(document.getElementById('cntReady')) document.getElementById('cntReady').innerText = ready;
 
-        const totalHandled = oson + qiyin + ready;
-        const percent = allQuestions.length > 0 ? Math.round((totalHandled / allQuestions.length) * 100) : 0;
-        document.getElementById('totalPercent').innerText = percent + '%';
+        const keys = Object.keys(questionStates);
+        document.getElementById('totalPercent').innerText = keys.length > 0 ? Math.min(100, Math.round((keys.length / 160) * 100)) + '%' : '0%';
     }
 
     function renderMatrix() {
@@ -600,9 +482,7 @@
         });
 
         const activeItem = matrix.children[currentIndex];
-        if (activeItem) {
-            activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-        }
+        if (activeItem) activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
 
     function changeTab(btn, path) {
@@ -617,21 +497,15 @@
         tg.HapticFeedback.impactOccurred('light');
     }
 
-    function loadQuestions(path, isInitial = false) {
+    function loadQuestions(path) {
         const app = document.getElementById('app');
-        if(!isInitial) app.innerHTML = '<div class="loader">Yuklanmoqda...</div>';
+        const overlay = document.getElementById('main-loading-overlay');
+        overlay.style.display = 'flex';
+        document.getElementById('loading-msg').innerText = "Savollar yuklanmoqda...";
 
         db.ref(path).once('value', (snap) => {
             const data = snap.val();
-            
-            // Hide main loading overlay once data is fetched
-            if(isInitial) {
-                const overlay = document.getElementById('main-loading-overlay');
-                overlay.style.opacity = '0';
-                setTimeout(() => {
-                    overlay.style.visibility = 'hidden';
-                }, 500);
-            }
+            overlay.style.display = 'none';
 
             if (!data) {
                 app.innerHTML = '<div class="loader">Ma\'lumot topilmadi</div>';
@@ -645,6 +519,8 @@
                 return { ...item, displayId: numericId, uniqueKey: uniqueKey };
             }).sort((a, b) => a.displayId - b.displayId);
 
+            document.getElementById('study-tools-ui').style.display = 'grid';
+            document.getElementById('matrix').style.display = 'flex';
             applyFilter();
         });
     }
@@ -675,18 +551,15 @@
 
     function updateFilterUI() {
         document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active-filter'));
-        const targetId = 'filter' + currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1);
-        const btn = document.getElementById(targetId);
+        const btn = document.getElementById('filter' + currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1));
         if(btn) btn.classList.add('active-filter');
     }
 
     function formatAnswer(text) {
         if (!text) return "Javob yo'q";
-        
         if (text.startsWith('data:image') || text.startsWith('http')) {
             return `<div class="ans-container"><img src="${text}" class="ans-image" alt="Javob rasmi"></div>`;
         }
-
         let html = '<div class="ans-container">';
         let lines = text.split('\n');
         let inList = false;
@@ -703,12 +576,7 @@
             }
             else if (trimmedLine.startsWith('*') || trimmedLine.startsWith('-') || /^\d+\./.test(trimmedLine)) {
                 if (!inList) { html += '<ul class="ans-list">'; inList = true; }
-                let cleanLine = trimmedLine.replace(/^[*-\d.]+\s*/, '');
-                html += `<li>${cleanLine}</li>`;
-            }
-            else if (trimmedLine.toLowerCase().includes('xulosa')) {
-                if (inList) { html += '</ul>'; inList = false; }
-                html += `<div class="ans-summary"><b>Xulosa:</b> ${trimmedLine.replace(/.*xulosa:?/i, '').trim()}</div>`;
+                html += `<li>${trimmedLine.replace(/^[*-\d.]+\s*/, '')}</li>`;
             }
             else {
                 if (inList) { html += '</ul>'; inList = false; }
@@ -716,13 +584,8 @@
             }
         });
         if (inList) html += '</ul>';
-        html += '</div>';
-        return html;
+        return html + '</div>';
     }
-
-    // --- REAL EXAM SYSTEM ---
-    let ticketPositions = [];
-    let currentExamBiletNumber = 0;
 
     function startExamTab(btn) {
         isExamMode = true;
@@ -749,50 +612,35 @@
         const ctx = canvas.getContext('2d');
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
-        
         selectedExamPath = path;
         const biletCount = Math.floor(count / 3);
         ticketPositions = [];
-        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         const cols = 5;
         const rows = Math.ceil(biletCount / cols);
         const w = 45, h = 30;
-
         for(let i=0; i<biletCount; i++) {
             const r = Math.floor(i / cols);
             const c = i % cols;
             const x = (canvas.width/(cols+1)) * (c+1) - w/2;
             const y = (canvas.height/(rows+1)) * (r+1) - h/2;
-            const angle = (Math.random() - 0.5) * 0.4;
-            
             ticketPositions.push({x, y, w, h, id: i+1});
-
             ctx.save();
             ctx.translate(x+w/2, y+h/2);
-            ctx.rotate(angle);
-            ctx.fillStyle = "#fff";
-            ctx.shadowBlur = 4;
-            ctx.shadowColor = "#000";
-            ctx.fillRect(-w/2, -h/2, w, h);
-            ctx.fillStyle = "#000";
-            ctx.font = "bold 10px sans-serif";
-            ctx.textAlign = "center";
-            ctx.fillText(i+1, 0, 5);
+            ctx.rotate((Math.random()-0.5)*0.4);
+            ctx.fillStyle = "#fff"; ctx.shadowBlur = 4; ctx.shadowColor = "#000"; ctx.fillRect(-w/2, -h/2, w, h);
+            ctx.fillStyle = "#000"; ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center"; ctx.fillText(i+1, 0, 5);
             ctx.restore();
         }
-
         canvas.onclick = (e) => {
             const rect = canvas.getBoundingClientRect();
             const mx = e.clientX - rect.left;
             const my = e.clientY - rect.top;
-            
             ticketPositions.forEach(p => {
                 if(mx > p.x && mx < p.x + p.w && my > p.y && my < p.y + p.h) {
                     currentExamBiletNumber = p.id;
                     tg.HapticFeedback.impactOccurred('heavy');
-                    generateBiletContent(selectedExamPath);
+                    generateBiletContent(path);
                 }
             });
         };
@@ -800,40 +648,26 @@
 
     function generateBiletContent(path) {
         db.ref(path).once('value', (snap) => {
-            const data = snap.val();
-            const items = Object.values(data);
+            const items = Object.values(snap.val());
             examQuestions = [];
             let tempArr = [...items];
-            
-            for(let i=0; i<3; i++) {
-                const rIdx = Math.floor(Math.random() * tempArr.length);
-                examQuestions.push(tempArr.splice(rIdx, 1)[0]);
-            }
+            for(let i=0; i<3; i++) examQuestions.push(tempArr.splice(Math.floor(Math.random() * tempArr.length), 1)[0]);
             renderPaperBilet();
         });
     }
 
     function renderPaperBilet() {
-        const app = document.getElementById('app');
-        app.innerHTML = `
+        document.getElementById('app').innerHTML = `
             <div class="real-bilet" id="biletPaper">
                 <div class="bilet-header">
                     <h3>IMTIHON BILETI №${currentExamBiletNumber}</h3>
                     <small>Fan: ${selectedExamPath === 'fizika_savollari' ? 'Fizika' : 'Issiqlik texnikasi'}</small>
                 </div>
-                
-                <span class="bilet-savol-title">1-SAVOL:</span>
-                <p>${examQuestions[0].savol}</p>
-                <textarea class="exam-input" id="ans0" placeholder="1-savol javobini kiriting..."></textarea>
-                
-                <span class="bilet-savol-title">2-SAVOL:</span>
-                <p>${examQuestions[1].savol}</p>
-                <textarea class="exam-input" id="ans1" placeholder="2-savol javobini kiriting..."></textarea>
-                
-                <span class="bilet-savol-title">3-SAVOL:</span>
-                <p>${examQuestions[2].savol}</p>
-                <textarea class="exam-input" id="ans2" placeholder="3-savol javobini kiriting..."></textarea>
-
+                ${examQuestions.map((q, i) => `
+                    <span class="bilet-savol-title">${i+1}-SAVOL:</span>
+                    <p>${q.savol}</p>
+                    <textarea class="exam-input" id="ans${i}" placeholder="Javobingizni kiriting..."></textarea>
+                `).join('')}
                 <div style="margin-top:30px;">
                     <button class="exam-btn" style="width:100%" id="finishExamBtn" onclick="evaluateBilet()">Tekshirish va Ball olish</button>
                 </div>
@@ -844,271 +678,163 @@
 
     async function evaluateBilet() {
         const btn = document.getElementById('finishExamBtn');
-        btn.disabled = true;
-        btn.innerText = "Hisoblanmoqda...";
-
+        btn.disabled = true; btn.innerText = "Hisoblanmoqda...";
         let totalScore = 0;
-        let detailsHtml = `<div class="card"><h2 style="text-align:center">Imtihon Natijasi</h2>`;
-        
+        let detailsHtml = `<div class="card"><h2 style="text-align:center">Natija</h2>`;
         const cleanText = (t) => t.toLowerCase().replace(/[.:•\-*!?]/g, ' ').replace(/\s+/g, ' ').trim();
 
         for(let i=0; i<3; i++) {
-            const userAnsRaw = document.getElementById(`ans${i}`).value.trim();
-            const originalAnsRaw = examQuestions[i].javob;
-            
-            if (originalAnsRaw && (originalAnsRaw.startsWith('data:image') || originalAnsRaw.startsWith('http'))) {
-                const imgBlob = originalAnsRaw.startsWith('data:') ? base64ToBlob(originalAnsRaw.split(',')[1]) : null;
-                const photoData = new FormData();
-                photoData.append('chat_id', CURRENT_CHAT_ID);
-                if (imgBlob) {
-                    photoData.append('photo', imgBlob, `answer_${i+1}.png`);
-                } else {
-                    photoData.append('photo', originalAnsRaw);
-                }
-                photoData.append('caption', `📖 Savol ${i+1}: ${examQuestions[i].savol}\n\nUshbu savolning asl javobi rasm ko'rinishida ekanligi sababli bot tomonidan alohida yuborildi.`);
-                
-                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-                    method: 'POST',
-                    body: photoData
-                });
+            const userAns = document.getElementById(`ans${i}`).value.trim();
+            const originalAns = examQuestions[i].javob;
+            let score = 0;
+
+            if(userAns.length > 5) {
+                const uWords = cleanText(userAns).split(' ');
+                const oWords = cleanText(originalAns).split(' ');
+                let match = 0;
+                const important = oWords.filter(w => w.length > 3);
+                important.forEach(w => { if(uWords.includes(w)) match++; });
+                const matchPerc = important.length > 0 ? (match / important.length) * 100 : 100;
+                score = Math.min(10, parseFloat(((matchPerc * 0.8) + (Math.min(userAns.length/originalAns.length,1)*20))/10).toFixed(1));
             }
-
-            if(userAnsRaw.length < 5) {
-                detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1}:</b> 0 ball.</div>`;
-                continue;
-            }
-
-            const uWords = cleanText(userAnsRaw).split(' ');
-            const oWords = cleanText(originalAnsRaw).split(' ');
-            
-            let match = 0;
-            const importantWords = oWords.filter(w => w.length > 3);
-            importantWords.forEach(w => {
-                if(uWords.includes(w)) match++;
-            });
-
-            const matchPerc = importantWords.length > 0 ? (match / importantWords.length) * 100 : 100;
-            const lenPerc = Math.min(userAnsRaw.length / originalAnsRaw.length, 1.2) * 100;
-            
-            let score = ((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10;
-            if(score > 10) score = 10;
-            score = parseFloat(score.toFixed(1));
-            
-            totalScore += score;
-            
+            totalScore += parseFloat(score);
             detailsHtml += `
                 <div class="score-box">
                     <b>Savol ${i+1} (${score} ball):</b>
-                    <details class="exam-ans-details"><summary>Asl javobni ko'rish</summary>${formatAnswer(originalAnsRaw)}</details>
+                    <details class="exam-ans-details"><summary>Asl javobni ko'rish</summary>${formatAnswer(originalAns)}</details>
                 </div>`;
+            
+            // Send original answer to bot if it's an image
+            if (originalAns && (originalAns.startsWith('data:') || originalAns.startsWith('http'))) {
+                sendToBot('photo', originalAns, `Bilet №${currentExamBiletNumber}, Savol ${i+1} javobi.`);
+            }
         }
 
         const passed = totalScore >= 18;
-        const resultLabel = passed ? "O'TDI ✅" : "O'TA OLMADI ❌";
-        const fanName = selectedExamPath === 'fizika_savollari' ? 'Fizika' : 'Issiqlik texnikasi';
         const userName = tg.initDataUnsafe?.user?.first_name || "Talaba";
-
-        const captureArea = document.getElementById('captureArea');
-        captureArea.innerHTML = `
-            <div style="border:10px double ${passed?'#0088cc':'#ff3d00'}; padding:20px; text-align:center;">
-                <h1 style="margin:0; font-size:24px;">IMTIHON SERTIFIKATI</h1>
-                <hr>
-                <p style="font-size:18px;">Talaba: <b>${userName}</b></p>
-                <p>Fan: ${fanName}</p>
-                <p>Bilet: №${currentExamBiletNumber}</p>
-                <div style="background:#f0f0f0; padding:15px; margin:10px 0; border-radius:10px;">
-                    <h2 style="margin:0;">BALL: ${totalScore.toFixed(1)}</h2>
-                    <h3 style="color:${passed?'green':'red'}; margin:5px 0;">${resultLabel}</h3>
-                </div>
-            </div>
-        `;
-
-        setTimeout(() => {
-            html2canvas(captureArea).then(canvas => {
-                const base64Image = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
-                const formData = new FormData();
-                formData.append('chat_id', CURRENT_CHAT_ID);
-                formData.append('photo', base64ToBlob(base64Image), 'result.png');
-                formData.append('caption', `👤 ${userName}\n📚 ${fanName}\n🎫 Bilet: ${currentExamBiletNumber}\n📊 Ball: ${totalScore.toFixed(1)}\n📝 Holati: ${resultLabel}`);
-
-                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-                    method: 'POST',
-                    body: formData
-                });
-            });
-        }, 500);
-
-        detailsHtml += `
-            <div style="text-align:center; margin-top:20px;">
-                <h1 style="color:${passed ? 'var(--success-color)' : 'var(--danger-color)'}">${totalScore.toFixed(1)} BALL</h1>
-                <button class="exam-btn" style="width:100%" onclick="startExamTab(document.querySelector('.nav-btn:last-child'))">Tugallash</button>
-            </div>
-        </div>`;
-
+        
+        detailsHtml += `<div style="text-align:center; margin-top:20px;"><h1 style="color:${passed?'green':'red'}">${totalScore.toFixed(1)} BALL</h1><button class="exam-btn" style="width:100%" onclick="showHome()">Tugallash</button></div></div>`;
         document.getElementById('biletPaper').style.display = 'none';
         const resDiv = document.getElementById('examFinalResult');
-        resDiv.innerHTML = detailsHtml;
-        resDiv.style.display = 'block';
-        tg.HapticFeedback.notificationOccurred(passed ? 'success' : 'error');
+        resDiv.innerHTML = detailsHtml; resDiv.style.display = 'block';
+
+        // Result Image Logic
+        const captureArea = document.getElementById('captureArea');
+        captureArea.innerHTML = `<div style="border:10px double ${passed?'#0088cc':'#ff3d00'}; padding:20px; text-align:center;"><h1>SERTIFIKAT</h1><p>Talaba: ${userName}</p><h2>BALL: ${totalScore.toFixed(1)}</h2></div>`;
+        
+        setTimeout(() => {
+            html2canvas(captureArea).then(canvas => {
+                sendToBot('photo', canvas.toDataURL("image/png"), `📊 Imtihon yakunlandi: ${totalScore.toFixed(1)} ball.`);
+                tg.showAlert("✅ Natijangiz va kerakli rasmlar bot orqali yuborildi!");
+            });
+        }, 500);
     }
 
-    function base64ToBlob(base64) {
-        const binary = atob(base64);
-        const array = [];
-        for (let i = 0; i < binary.length; i++) array.push(binary.charCodeAt(i));
-        return new Blob([new Uint8Array(array)], {type: 'image/png'});
+    function sendToBot(type, content, caption) {
+        const formData = new FormData();
+        formData.append('chat_id', CURRENT_CHAT_ID);
+        formData.append('caption', caption);
+        if(type === 'photo') {
+            const blob = content.startsWith('data:') ? base64ToBlob(content.split(',')[1]) : content;
+            formData.append('photo', blob, 'image.png');
+        }
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/send${type.charAt(0).toUpperCase()+type.slice(1)}`, { method: 'POST', body: formData });
     }
 
-    // --- EXPORT SYSTEM ---
+    function base64ToBlob(b64) {
+        const bin = atob(b64); const arr = [];
+        for(let i=0; i<bin.length; i++) arr.push(bin.charCodeAt(i));
+        return new Blob([new Uint8Array(arr)], {type: 'image/png'});
+    }
+
     function showExportTab(btn) {
         isExamMode = true; 
         document.getElementById('study-tools-ui').style.display = 'none';
         document.getElementById('matrix').style.display = 'none';
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-
-        const app = document.getElementById('app');
-        app.innerHTML = `
+        document.getElementById('app').innerHTML = `
             <div class="card export-card">
-                <h2 style="color:var(--accent-color)">Barcha savollarni yuklash</h2>
-                <div style="margin-top:20px;">
-                    <h3 style="font-size:14px; text-align:left;">Fizika fanidan:</h3>
-                    <button class="export-btn pdf" onclick="exportData('fizika_savollari', 'pdf')">📄 PDF Yuklash</button>
-                    <button class="export-btn docx" onclick="exportData('fizika_savollari', 'docx')">📝 DOCX Yuklash</button>
-                </div>
-                <div style="margin-top:20px; border-top:1px solid #222; padding-top:15px;">
-                    <h3 style="font-size:14px; text-align:left;">Issiqlik texnikasidan:</h3>
-                    <button class="export-btn pdf" onclick="exportData('Issiqlik_texnikasi', 'pdf')">📄 PDF Yuklash</button>
-                    <button class="export-btn docx" onclick="exportData('Issiqlik_texnikasi', 'docx')">📝 DOCX Yuklash</button>
-                </div>
+                <h2 style="color:var(--accent-color)">Savollarni yuklash</h2>
+                <button class="export-btn pdf" onclick="exportData('fizika_savollari', 'pdf')">Fizika PDF</button>
+                <button class="export-btn docx" onclick="exportData('fizika_savollari', 'docx')">Fizika DOCX</button>
+                <button class="export-btn pdf" onclick="exportData('Issiqlik_texnikasi', 'pdf')">Issiqlik PDF</button>
+                <button class="export-btn docx" onclick="exportData('Issiqlik_texnikasi', 'docx')">Issiqlik DOCX</button>
             </div>
         `;
     }
 
     async function exportData(path, format) {
         tg.MainButton.showProgress();
-        tg.MainButton.setText("Fayl tayyorlanmoqda...");
-        tg.MainButton.show();
-
         const snap = await db.ref(path).once('value');
-        const data = snap.val();
-        if(!data) {
-            alert("Ma'lumot topilmadi");
-            tg.MainButton.hide();
-            return;
-        }
-
-        const items = Object.values(data).sort((a,b) => (a.id || 0) - (b.id || 0));
-        const title = path === 'fizika_savollari' ? "Fizika Fanidan Savollar" : "Issiqlik Texnikasi Savollari";
-        const fileName = `${path}.${format}`;
+        const items = Object.values(snap.val()).sort((a,b) => (a.id||0)-(b.id||0));
         let finalBlob;
+        const fileName = `${path}.${format}`;
 
         if(format === 'pdf') {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
-            let y = 20;
-            doc.text(title, 105, y, { align: 'center' });
-            y += 15;
-            items.forEach((item, index) => {
-                if(y > 270) { doc.addPage(); y = 20; }
-                const qLines = doc.splitTextToSize(`${index + 1}. ${item.savol}`, 180);
-                doc.text(qLines, 15, y);
-                y += (qLines.length * 7);
-                const isImg = item.javob && (item.javob.startsWith('data:') || item.javob.startsWith('http'));
-                const aLines = doc.splitTextToSize(`Javob: ${isImg ? '[Rasm]' : item.javob}`, 170);
-                doc.text(aLines, 20, y);
-                y += (aLines.length * 5) + 10;
+            const { jsPDF } = window.jspdf; const doc = new jsPDF();
+            let y = 20; doc.text(path, 10, y); y += 10;
+            items.forEach((item, i) => {
+                if(y>270){doc.addPage(); y=20;}
+                const qLines = doc.splitTextToSize(`${i+1}. ${item.savol}`, 180);
+                doc.text(qLines, 10, y); y += (qLines.length * 7) + 5;
             });
             finalBlob = doc.output('blob');
             doc.save(fileName);
         } else {
-            const doc = new docx.Document({
-                sections: [{
-                    children: [
-                        new docx.Paragraph({ text: title, heading: docx.HeadingLevel.HEADING_1, alignment: docx.AlignmentType.CENTER }),
-                        ...items.flatMap((item, index) => {
-                            const isImg = item.javob && (item.javob.startsWith('data:') || item.javob.startsWith('http'));
-                            return [
-                                new docx.Paragraph({ children: [new docx.TextRun({ text: `${index+1}. ${item.savol}`, bold: true })], spacing: { before: 400 } }),
-                                new docx.Paragraph({ text: `Javob: ${isImg ? '[Rasm]' : item.javob}`, spacing: { before: 200 } })
-                            ]
-                        })
-                    ]
-                }]
-            });
+            const doc = new docx.Document({ sections: [{ children: items.flatMap((it, i) => [new docx.Paragraph({text: `${i+1}. ${it.savol}`, bold: true}), new docx.Paragraph({text: `Javob: ${it.javob}`})]) }] });
             finalBlob = await docx.Packer.toBlob(doc);
             saveAs(finalBlob, fileName);
         }
-
-        const formData = new FormData();
-        formData.append('chat_id', CURRENT_CHAT_ID);
-        formData.append('document', finalBlob, fileName);
-        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: formData });
-
+        
+        const fd = new FormData(); fd.append('chat_id', CURRENT_CHAT_ID); fd.append('document', finalBlob, fileName);
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: fd });
         tg.MainButton.hide();
+        tg.showAlert("📁 Fayl bot orqali yuborildi!");
     }
 
     function setTag(type) {
         const q = filteredQuestions[currentIndex];
         if (!q) return;
-        if (questionStates[q.uniqueKey] === type) {
-            delete questionStates[q.uniqueKey];
-        } else {
-            questionStates[q.uniqueKey] = type;
-        }
+        questionStates[q.uniqueKey] = (questionStates[q.uniqueKey] === type) ? null : type;
         saveStates();
         tg.HapticFeedback.notificationOccurred('success');
-        setTimeout(() => {
-            if (currentIndex < filteredQuestions.length - 1) {
-                currentIndex++;
-                renderCurrent();
-                renderMatrix();
-            } else {
-                renderCurrent();
-            }
-        }, 300);
+        setTimeout(() => { if (currentIndex < filteredQuestions.length - 1) { currentIndex++; renderCurrent(); renderMatrix(); } }, 200);
     }
 
     function renderCurrent() {
         const app = document.getElementById('app');
         if(!app) return;
         app.innerHTML = '';
-        if (filteredQuestions.length === 0) {
-            app.innerHTML = `<div class="loader">Bu filtrda savollar mavjud emas.</div>`;
-            return;
-        }
+        if (filteredQuestions.length === 0) { app.innerHTML = `<div class="loader">Savollar yo'q.</div>`; return; }
         const q = filteredQuestions[currentIndex];
         const state = questionStates[q.uniqueKey] || '';
         const card = document.createElement('div');
         card.className = 'card';
-        
-        const qImg = q.image && q.image.length > 20 ? `<img src="${q.image}" class="q-image">` : '';
-        
         card.innerHTML = `
-            <span class="q-id">#SAVOL ${currentIndex + 1} / ${filteredQuestions.length} (ID: ${q.displayId})</span>
+            <span class="q-id">#SAVOL ${currentIndex + 1} / ${filteredQuestions.length}</span>
             <div class="q-text">${q.savol || "Matn yo'q"}</div>
-            ${qImg}
+            ${q.image && q.image.length > 20 ? `<img src="${q.image}" class="q-image">` : ''}
             <div class="answer-wrapper">${formatAnswer(q.javob)}</div>
             <div class="tag-actions">
                 <button class="tag-btn oson ${state === 'oson' ? 'active' : ''}" onclick="setTag('oson')">Yodladim</button>
-                <button class="tag-btn qiyin ${state === 'qiyin' ? 'active' : ''}" onclick="setTag('qiyin')">Yodlamadim</button>
-                <button class="tag-btn ready ${state === 'ready' ? 'active' : ''}" onclick="setTag('ready')">100% Tayyor</button>
+                <button class="tag-btn qiyin ${state === 'qiyin' ? 'active' : ''}" onclick="setTag('qiyin')">Qiyin</button>
+                <button class="tag-btn ready ${state === 'ready' ? 'active' : ''}" onclick="setTag('ready')">Tayyor</button>
             </div>
         `;
         app.appendChild(card);
-        document.querySelector('.container').scrollTop = 0;
+        app.scrollTop = 0;
     }
 
     function resetLearned() {
-        if(confirm("Diqqat! Barcha natijalarni tozalaysizmi?")) {
+        if(confirm("Barcha natijalarni tozalashni xohlaysizmi?")) {
             questionStates = {};
-            saveStates();
-            applyFilter();
-            tg.HapticFeedback.notificationOccurred('warning');
+            localStorage.removeItem('exam_states_v3');
+            updateCounts();
+            tg.showAlert("✅ Barcha natijalar tozalandi.");
+            showHome();
         }
     }
 </script>
 </body>
 </html>
-
- 
