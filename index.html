@@ -1100,7 +1100,7 @@
         tg.HapticFeedback.notificationOccurred('success');
     }
 
-    // Audio-Javob funksiyasi
+    // Audio-Javob funksiyasi - Mustahkamlangan versiya
     function toggleSpeech(btn) {
         if (synth.speaking) {
             stopAudio();
@@ -1113,13 +1113,23 @@
             return;
         }
 
-        // Toza matn tayyorlash
-        const cleanText = textToRead.replace(/[#*_\-=`]/g, '').trim();
+        // Toza matn tayyorlash (HTML teglarni va belgilarini tozalash)
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = textToRead;
+        let cleanText = tempDiv.innerText || tempDiv.textContent || textToRead;
+        cleanText = cleanText.replace(/[#*_\-=`]/g, '').trim();
+
         currentUtterance = new SpeechSynthesisUtterance(cleanText);
         
-        // Til sozlamalari
-        currentUtterance.lang = 'uz-UZ'; // Agar tizim qo'llab-quvvatlasa
-        currentUtterance.rate = 0.9; // Tezlik biroz sekinroq (yaxshi tushunish uchun)
+        // Ovoz tanlash (agar bo'lsa)
+        let voices = synth.getVoices();
+        // Rus yoki Turk ovozlari o'zbek tiliga yaqinroq eshitilishi mumkin agar o'zbekcha yo'q bo'lsa
+        let preferredVoice = voices.find(v => v.lang.includes('uz')) || voices.find(v => v.lang.includes('ru')) || voices[0];
+        if(preferredVoice) currentUtterance.voice = preferredVoice;
+
+        currentUtterance.lang = 'uz-UZ';
+        currentUtterance.rate = 0.9; 
+        currentUtterance.pitch = 1;
 
         currentUtterance.onstart = () => {
             btn.classList.add('speaking');
@@ -1127,6 +1137,12 @@
         };
 
         currentUtterance.onend = () => {
+            btn.classList.remove('speaking');
+            btn.innerText = "🔊 Eshitish";
+        };
+
+        currentUtterance.onerror = (event) => {
+            console.error('SpeechSynthesisError:', event);
             btn.classList.remove('speaking');
             btn.innerText = "🔊 Eshitish";
         };
@@ -1181,7 +1197,3 @@
         `;
         app.appendChild(card);
         document.querySelector('.container').scrollTop = 0;
-    }
-</script>
-</body>
-</html>
