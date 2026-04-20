@@ -54,10 +54,11 @@
             top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
             z-index: 9999;
-            display: none;
+            display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
         }
 
         .spinner {
@@ -74,6 +75,54 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        .loading-text {
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* Dashboard Menu */
+        #dashboard-menu {
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            gap: 15px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .menu-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: var(--text-color);
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .menu-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 25px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .menu-item:active { transform: scale(0.95); background: #1a1a1a; }
+        .menu-item .icon { font-size: 32px; margin-bottom: 12px; }
+        .menu-item .label { font-size: 14px; font-weight: 700; }
+        .menu-item .sub-label { font-size: 10px; color: var(--hint-color); margin-top: 4px; }
 
         /* Header */
         .header {
@@ -117,37 +166,9 @@
             font-weight: bold;
         }
 
-        /* Dashboard Style Home */
-        .dashboard {
-            padding: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            flex-grow: 1;
-            overflow-y: auto;
-        }
-
-        .dash-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 20px;
-            padding: 25px 15px;
-            text-align: center;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
-        }
-
-        .dash-card:active { transform: scale(0.95); }
-        .dash-card i { font-size: 32px; margin-bottom: 10px; }
-        .dash-card span { font-weight: 700; font-size: 14px; color: #fff; }
-        .dash-card small { color: var(--hint-color); font-size: 10px; margin-top: 5px; }
-
-        /* Nav Tabs (Hidden on Home) */
+        /* Nav Tabs */
         .nav-tabs {
-            display: none;
+            display: none; /* Hidden until a section is selected */
             background: var(--secondary-bg);
             padding: 6px;
             margin: 10px 15px 5px;
@@ -228,7 +249,12 @@
         }
 
         .tool-btn b { color: #fff; margin-left: 3px; }
-        .tool-btn.active-filter { border-color: var(--accent-color); color: var(--accent-color); background: rgba(0, 136, 204, 0.05); }
+
+        .tool-btn.active-filter {
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            background: rgba(0, 136, 204, 0.05);
+        }
 
         /* Main Container */
         .container {
@@ -255,75 +281,272 @@
             margin-bottom: 20px;
         }
 
-        @keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
-        .q-id { color: var(--accent-color); font-weight: 800; font-size: 12px; margin-bottom: 8px; display: block; }
-        .q-text { font-size: 18px; font-weight: 700; line-height: 1.4; margin-bottom: 20px; color: #ffffff; }
-        .q-image, .ans-image { width: 100%; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border-color); display: block; max-height: 220px; object-fit: contain; background: #111; }
+        .q-id {
+            color: var(--accent-color);
+            font-weight: 800;
+            font-size: 12px;
+            margin-bottom: 8px;
+            display: block;
+        }
 
-        /* Answer Formatting */
-        .ans-container { color: #e0e0e0; font-size: 15px; line-height: 1.6; }
-        .ans-header { font-weight: 700; color: #ffffff; display: block; margin-top: 15px; margin-bottom: 5px; font-size: 16px; border-left: 3px solid var(--accent-color); padding-left: 10px; }
-        .ans-formula { background: #1a1a1a; padding: 12px; border-radius: 8px; margin: 10px 0; font-family: 'Courier New', Courier, monospace; color: #00ff00; font-size: 18px; text-align: center; border: 1px dashed #333; }
-        .ans-list { margin: 5px 0; padding-left: 20px; list-style-type: disc; }
-        .ans-list li { margin-bottom: 8px; }
-        .ans-summary { background: rgba(0, 136, 204, 0.1); padding: 12px; border-radius: 10px; margin-top: 20px; border: 1px solid rgba(0, 136, 204, 0.2); }
+        .q-text {
+            font-size: 18px;
+            font-weight: 700;
+            line-height: 1.4;
+            margin-bottom: 20px;
+            color: #ffffff;
+        }
+
+        .q-image, .ans-image {
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border-color);
+            display: block;
+            max-height: 220px;
+            object-fit: contain;
+            background: #111;
+        }
+
+        /* ChatGPT Style Answer Formatting */
+        .ans-container {
+            color: #e0e0e0;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        .ans-header {
+            font-weight: 700;
+            color: #ffffff;
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-size: 16px;
+            border-left: 3px solid var(--accent-color);
+            padding-left: 10px;
+        }
+
+        .ans-formula {
+            background: #1a1a1a;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-family: 'Courier New', Courier, monospace;
+            color: #00ff00;
+            font-size: 18px;
+            text-align: center;
+            border: 1px dashed #333;
+        }
+
+        .ans-list {
+            margin: 5px 0;
+            padding-left: 20px;
+            list-style-type: disc;
+        }
+
+        .ans-list li {
+            margin-bottom: 8px;
+        }
+
+        .ans-summary {
+            background: rgba(0, 136, 204, 0.1);
+            padding: 12px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid rgba(0, 136, 204, 0.2);
+        }
+
         .ans-summary b { color: var(--accent-color); }
 
         /* Tag Actions */
-        .tag-actions { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 25px; }
-        .tag-btn { padding: 14px 2px; border-radius: 12px; border: 1px solid #222; font-size: 10px; font-weight: 700; background: #050505; color: #fff; transition: 0.2s; text-transform: uppercase; }
+        .tag-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-top: 25px;
+        }
+
+        .tag-btn {
+            padding: 14px 2px;
+            border-radius: 12px;
+            border: 1px solid #222;
+            font-size: 10px;
+            font-weight: 700;
+            background: #050505;
+            color: #fff;
+            transition: 0.2s;
+            text-transform: uppercase;
+        }
+
         .tag-btn.oson.active { background: var(--success-color); border-color: var(--success-color); }
         .tag-btn.qiyin.active { background: var(--danger-color); border-color: var(--danger-color); }
         .tag-btn.ready.active { background: var(--learned-color); border-color: var(--learned-color); }
 
         /* Real Exam Styles */
-        .exam-input { width: 100%; background: #fdfdfd; border: 1px solid #ccc; border-radius: 8px; color: #000; padding: 12px; font-family: 'Courier New', Courier, monospace; font-size: 14px; min-height: 80px; margin-top: 10px; resize: none; }
-        .real-bilet { background: #fff; color: #000; padding: 30px; border-radius: 2px; box-shadow: 0 5px 20px rgba(0,0,0,0.3); margin-bottom: 20px; border: 1px solid #ddd; position: relative; }
-        .bilet-header { text-align: center; border-bottom: 2px double #000; margin-bottom: 20px; padding-bottom: 10px; }
+        .exam-input {
+            width: 100%;
+            background: #fdfdfd;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            color: #000;
+            padding: 12px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            min-height: 80px;
+            margin-top: 10px;
+            resize: none;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .exam-input:focus { border-color: var(--accent-color); outline: none; }
+        
+        .real-bilet {
+            background: #fff;
+            color: #000;
+            padding: 30px;
+            border-radius: 2px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            position: relative;
+        }
+        .bilet-header {
+            text-align: center;
+            border-bottom: 2px double #000;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
         .bilet-savol-title { font-weight: bold; margin-top: 15px; display: block; }
-        .score-box { background: #f0f0f0; padding: 15px; border-radius: 10px; border-left: 5px solid var(--accent-color); margin-top: 10px; color: #000; }
-        .exam-btn { background: var(--accent-color); border: none; color: #fff; padding: 12px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        #examCanvas { background: #1a0f00; border-radius: 15px; box-shadow: inset 0 0 50px #000; width: 100%; height: 380px; cursor: pointer; }
+        
+        .score-box {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 5px solid var(--accent-color);
+            margin-top: 10px;
+            color: #000;
+        }
 
-        .loader { text-align: center; padding: 50px; color: var(--hint-color); width: 100%; }
+        .exam-btn {
+            background: var(--accent-color);
+            border: none;
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Canvas Table Styles */
+        #examCanvas {
+            background: #1a0f00; /* Wood color */
+            border-radius: 15px;
+            box-shadow: inset 0 0 50px #000;
+            width: 100%;
+            height: 380px;
+            cursor: pointer;
+        }
+
+        .loader {
+            text-align: center;
+            padding: 50px;
+            color: var(--hint-color);
+            width: 100%;
+        }
 
         /* Fixed Details Bug */
-        details.exam-ans-details { margin-top: 10px; background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 5px; }
-        details.exam-ans-details summary { cursor: pointer; font-weight: bold; color: #0088cc; padding: 5px; outline: none; }
-        details.exam-ans-details .ans-container { color: #333 !important; padding: 10px; border-top: 1px solid #eee; }
+        details.exam-ans-details {
+            margin-top: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 5px;
+        }
+        details.exam-ans-details summary {
+            cursor: pointer;
+            font-weight: bold;
+            color: #0088cc;
+            padding: 5px;
+            outline: none;
+        }
+        details.exam-ans-details .ans-container {
+            color: #333 !important;
+            padding: 10px;
+            border-top: 1px solid #eee;
+        }
         details.exam-ans-details .ans-header { color: #000 !important; }
         details.exam-ans-details .ans-formula { background: #f9f9f9; border-color: #ccc; color: #006600; }
 
-        #captureArea { position: absolute; left: -9999px; top: 0; width: 400px; background: white; color: black; padding: 20px; font-family: serif; }
+        /* Report Capture Styling */
+        #captureArea {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            width: 400px;
+            background: white;
+            color: black;
+            padding: 20px;
+            font-family: serif;
+        }
         
-        .export-card { text-align: center; padding: 20px; }
-        .export-btn { background: #2c3e50; color: white; border: 1px solid #34495e; padding: 15px; border-radius: 12px; margin: 10px 0; width: 100%; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        /* Export Section Styles */
+        .export-card {
+            text-align: center;
+            padding: 20px;
+        }
+        .export-btn {
+            background: #2c3e50;
+            color: white;
+            border: 1px solid #34495e;
+            padding: 15px;
+            border-radius: 12px;
+            margin: 10px 0;
+            width: 100%;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
         .export-btn.pdf { background: #e74c3c; }
         .export-btn.docx { background: #2980b9; }
 
-        /* Home Button in Header */
-        .home-btn { background: none; border: 1px solid #333; color: #fff; padding: 5px 10px; border-radius: 8px; font-size: 14px; font-weight: bold; }
+        /* Back Button */
+        #back-to-home {
+            background: none;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            display: none;
+        }
     </style>
 </head>
 <body>
 
 <div id="main-loading-overlay">
     <div class="spinner"></div>
-    <div class="loading-text" id="loading-msg">Yuklanmoqda...</div>
+    <div class="loading-text">Ilova tayyorlanmoqda...</div>
 </div>
 
 <div class="header">
-    <button class="home-btn" onclick="showHome()">🏠</button>
+    <button id="back-to-home" onclick="goHome()">🏠</button>
+    <button class="reset-all-btn" id="reset-btn-ui" onclick="resetLearned()">🔄</button>
     <h1>Exam Prep Pro</h1>
     <div class="stats-badge" id="totalPercent">0%</div>
 </div>
 
 <div class="nav-tabs" id="nav-tabs">
-    <button class="nav-btn" id="tab-fizika" onclick="changeTab(this, 'fizika_savollari')">Fizika</button>
-    <button class="nav-btn" id="tab-issiqlik" onclick="changeTab(this, 'Issiqlik_texnikasi')">Issiqlik</button>
-    <button class="nav-btn" id="tab-exam" onclick="startExamTab(this)">🔥 Imtihon</button>
-    <button class="nav-btn" id="tab-export" onclick="showExportTab(this)">📤 Export</button>
+    <button class="nav-btn active" id="btn-fizika" data-path="fizika_savollari" onclick="changeTab(this, 'fizika_savollari')">Fizika</button>
+    <button class="nav-btn" id="btn-issiqlik" data-path="Issiqlik_texnikasi" onclick="changeTab(this, 'Issiqlik_texnikasi')">Issiqlik</button>
+    <button class="nav-btn" id="btn-imtihon" onclick="startExamTab(this)">🔥 Imtihon</button>
+    <button class="nav-btn" id="btn-export" onclick="showExportTab(this)">📤 Export</button>
 </div>
 
 <div class="matrix-container" id="matrix"></div>
@@ -335,7 +558,33 @@
     <button class="tool-btn" id="filterReady" onclick="toggleFilter('ready')">⭐ 100% Tayyor <b id="cntReady">0</b></button>
 </div>
 
-<div class="container" id="app">
+<div id="dashboard-menu">
+    <div class="menu-title">Bo'limni tanlang</div>
+    <div class="menu-grid">
+        <div class="menu-item" onclick="openSection('fizika_savollari')">
+            <div class="icon">⚛️</div>
+            <div class="label">Fizika</div>
+            <div class="sub-label">70 ta savol</div>
+        </div>
+        <div class="menu-item" onclick="openSection('Issiqlik_texnikasi')">
+            <div class="icon">🔥</div>
+            <div class="label">Issiqlik</div>
+            <div class="sub-label">90 ta savol</div>
+        </div>
+        <div class="menu-item" onclick="openExamFromMenu()">
+            <div class="icon">📝</div>
+            <div class="label">Imtihon</div>
+            <div class="sub-label">O'zingni sina</div>
+        </div>
+        <div class="menu-item" onclick="openExportFromMenu()">
+            <div class="icon">📤</div>
+            <div class="label">Eksport</div>
+            <div class="sub-label">PDF / DOCX</div>
+        </div>
+    </div>
+</div>
+
+<div class="container" id="app" style="display:none;">
     </div>
 
 <div id="captureArea"></div>
@@ -365,72 +614,55 @@
     let filteredQuestions = [];
     let currentIndex = 0;
     let currentFilter = 'all'; 
-    let currentPath = '';
+    let currentPath = 'fizika_savollari';
     let isExamMode = false;
     let examQuestions = [];
     let selectedExamPath = '';
 
     let questionStates = JSON.parse(localStorage.getItem('exam_states_v3')) || {};
 
+    // Initial check
     window.addEventListener('DOMContentLoaded', () => {
-        showHome();
+        const overlay = document.getElementById('main-loading-overlay');
+        overlay.style.opacity = '0';
+        setTimeout(() => { overlay.style.visibility = 'hidden'; }, 500);
         updateCounts();
     });
 
-    function showHome() {
-        isExamMode = false;
+    function goHome() {
+        document.getElementById('dashboard-menu').style.display = 'flex';
+        document.getElementById('app').style.display = 'none';
         document.getElementById('nav-tabs').style.display = 'none';
-        document.getElementById('study-tools-ui').style.display = 'none';
         document.getElementById('matrix').style.display = 'none';
-        
-        const app = document.getElementById('app');
-        app.innerHTML = `
-            <div class="dashboard">
-                <div class="dash-card" onclick="openSection('fizika_savollari')">
-                    <i>⚛️</i>
-                    <span>Fizika Savollari</span>
-                    <small>70 ta savol mavjud</small>
-                </div>
-                <div class="dash-card" onclick="openSection('Issiqlik_texnikasi')">
-                    <i>🔥</i>
-                    <span>Issiqlik Texnikasi</span>
-                    <small>90 ta savol mavjud</small>
-                </div>
-                <div class="dash-card" onclick="openExamDashboard()">
-                    <i>📝</i>
-                    <span>Real Imtihon</span>
-                    <small>Bilimingizni sinang</small>
-                </div>
-                <div class="dash-card" onclick="openExportDashboard()">
-                    <i>📤</i>
-                    <span>PDF/DOCX</span>
-                    <small>Fayl ko'rinishida yuklash</small>
-                </div>
-                <div class="dash-card" style="grid-column: span 2; padding: 15px;" onclick="resetLearned()">
-                    <span style="color:var(--danger-color)">🔄 Barcha natijalarni tozalash</span>
-                </div>
-            </div>
-        `;
-        tg.HapticFeedback.impactOccurred('light');
+        document.getElementById('study-tools-ui').style.display = 'none';
+        document.getElementById('back-to-home').style.display = 'none';
+        document.getElementById('reset-btn-ui').style.display = 'block';
     }
 
     function openSection(path) {
+        document.getElementById('dashboard-menu').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
         document.getElementById('nav-tabs').style.display = 'flex';
+        document.getElementById('back-to-home').style.display = 'block';
+        document.getElementById('reset-btn-ui').style.display = 'none';
+        
+        // Update active tab
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        const btn = path === 'fizika_savollari' ? document.getElementById('tab-fizika') : document.getElementById('tab-issiqlik');
-        btn.classList.add('active');
+        if(path === 'fizika_savollari') document.getElementById('btn-fizika').classList.add('active');
+        else document.getElementById('btn-issiqlik').classList.add('active');
+        
         currentPath = path;
         loadQuestions(path);
     }
 
-    function openExamDashboard() {
-        document.getElementById('nav-tabs').style.display = 'flex';
-        startExamTab(document.getElementById('tab-exam'));
+    function openExamFromMenu() {
+        openSection('fizika_savollari'); // Just to trigger view change
+        startExamTab(document.getElementById('btn-imtihon'));
     }
 
-    function openExportDashboard() {
-        document.getElementById('nav-tabs').style.display = 'flex';
-        showExportTab(document.getElementById('tab-export'));
+    function openExportFromMenu() {
+        openSection('fizika_savollari'); // Just to trigger view change
+        showExportTab(document.getElementById('btn-export'));
     }
 
     function saveStates() {
@@ -440,8 +672,7 @@
     }
 
     function updateCounts() {
-        let oson = 0, qiyin = 0, ready = 0, total = 0;
-        // Calculation logic across all categories if needed, for now current
+        let oson = 0, qiyin = 0, ready = 0;
         allQuestions.forEach(q => {
             const state = questionStates[q.uniqueKey];
             if(state === 'oson') oson++;
@@ -449,13 +680,19 @@
             if(state === 'ready') ready++;
         });
         
-        if(document.getElementById('cntAll')) document.getElementById('cntAll').innerText = allQuestions.length;
-        if(document.getElementById('cntOson')) document.getElementById('cntOson').innerText = oson;
-        if(document.getElementById('cntQiyin')) document.getElementById('cntQiyin').innerText = qiyin;
-        if(document.getElementById('cntReady')) document.getElementById('cntReady').innerText = ready;
+        const cntAllEl = document.getElementById('cntAll');
+        const cntOsonEl = document.getElementById('cntOson');
+        const cntQiyinEl = document.getElementById('cntQiyin');
+        const cntReadyEl = document.getElementById('cntReady');
+        
+        if(cntAllEl) cntAllEl.innerText = allQuestions.length;
+        if(cntOsonEl) cntOsonEl.innerText = oson;
+        if(cntQiyinEl) cntQiyinEl.innerText = qiyin;
+        if(cntReadyEl) cntReadyEl.innerText = ready;
 
-        const keys = Object.keys(questionStates);
-        document.getElementById('totalPercent').innerText = keys.length > 0 ? Math.min(100, Math.round((keys.length / 160) * 100)) + '%' : '0%';
+        const totalHandled = Object.keys(questionStates).length;
+        const percent = Math.min(Math.round((totalHandled / 160) * 100), 100);
+        document.getElementById('totalPercent').innerText = percent + '%';
     }
 
     function renderMatrix() {
@@ -482,7 +719,9 @@
         });
 
         const activeItem = matrix.children[currentIndex];
-        if (activeItem) activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        if (activeItem) {
+            activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
     }
 
     function changeTab(btn, path) {
@@ -499,14 +738,10 @@
 
     function loadQuestions(path) {
         const app = document.getElementById('app');
-        const overlay = document.getElementById('main-loading-overlay');
-        overlay.style.display = 'flex';
-        document.getElementById('loading-msg').innerText = "Savollar yuklanmoqda...";
+        app.innerHTML = '<div class="loader">Yuklanmoqda...</div>';
 
         db.ref(path).once('value', (snap) => {
             const data = snap.val();
-            overlay.style.display = 'none';
-
             if (!data) {
                 app.innerHTML = '<div class="loader">Ma\'lumot topilmadi</div>';
                 return;
@@ -551,15 +786,18 @@
 
     function updateFilterUI() {
         document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active-filter'));
-        const btn = document.getElementById('filter' + currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1));
+        const targetId = 'filter' + currentFilter.charAt(0).toUpperCase() + currentFilter.slice(1);
+        const btn = document.getElementById(targetId);
         if(btn) btn.classList.add('active-filter');
     }
 
     function formatAnswer(text) {
         if (!text) return "Javob yo'q";
+        
         if (text.startsWith('data:image') || text.startsWith('http')) {
             return `<div class="ans-container"><img src="${text}" class="ans-image" alt="Javob rasmi"></div>`;
         }
+
         let html = '<div class="ans-container">';
         let lines = text.split('\n');
         let inList = false;
@@ -576,7 +814,12 @@
             }
             else if (trimmedLine.startsWith('*') || trimmedLine.startsWith('-') || /^\d+\./.test(trimmedLine)) {
                 if (!inList) { html += '<ul class="ans-list">'; inList = true; }
-                html += `<li>${trimmedLine.replace(/^[*-\d.]+\s*/, '')}</li>`;
+                let cleanLine = trimmedLine.replace(/^[*-\d.]+\s*/, '');
+                html += `<li>${cleanLine}</li>`;
+            }
+            else if (trimmedLine.toLowerCase().includes('xulosa')) {
+                if (inList) { html += '</ul>'; inList = false; }
+                html += `<div class="ans-summary"><b>Xulosa:</b> ${trimmedLine.replace(/.*xulosa:?/i, '').trim()}</div>`;
             }
             else {
                 if (inList) { html += '</ul>'; inList = false; }
@@ -584,8 +827,13 @@
             }
         });
         if (inList) html += '</ul>';
-        return html + '</div>';
+        html += '</div>';
+        return html;
     }
+
+    // --- REAL EXAM SYSTEM ---
+    let ticketPositions = [];
+    let currentExamBiletNumber = 0;
 
     function startExamTab(btn) {
         isExamMode = true;
@@ -612,35 +860,50 @@
         const ctx = canvas.getContext('2d');
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
+        
         selectedExamPath = path;
         const biletCount = Math.floor(count / 3);
         ticketPositions = [];
+        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
         const cols = 5;
         const rows = Math.ceil(biletCount / cols);
         const w = 45, h = 30;
+
         for(let i=0; i<biletCount; i++) {
             const r = Math.floor(i / cols);
             const c = i % cols;
             const x = (canvas.width/(cols+1)) * (c+1) - w/2;
             const y = (canvas.height/(rows+1)) * (r+1) - h/2;
+            const angle = (Math.random() - 0.5) * 0.4;
+            
             ticketPositions.push({x, y, w, h, id: i+1});
+
             ctx.save();
             ctx.translate(x+w/2, y+h/2);
-            ctx.rotate((Math.random()-0.5)*0.4);
-            ctx.fillStyle = "#fff"; ctx.shadowBlur = 4; ctx.shadowColor = "#000"; ctx.fillRect(-w/2, -h/2, w, h);
-            ctx.fillStyle = "#000"; ctx.font = "bold 10px sans-serif"; ctx.textAlign = "center"; ctx.fillText(i+1, 0, 5);
+            ctx.rotate(angle);
+            ctx.fillStyle = "#fff";
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = "#000";
+            ctx.fillRect(-w/2, -h/2, w, h);
+            ctx.fillStyle = "#000";
+            ctx.font = "bold 10px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(i+1, 0, 5);
             ctx.restore();
         }
+
         canvas.onclick = (e) => {
             const rect = canvas.getBoundingClientRect();
             const mx = e.clientX - rect.left;
             const my = e.clientY - rect.top;
+            
             ticketPositions.forEach(p => {
                 if(mx > p.x && mx < p.x + p.w && my > p.y && my < p.y + p.h) {
                     currentExamBiletNumber = p.id;
                     tg.HapticFeedback.impactOccurred('heavy');
-                    generateBiletContent(path);
+                    generateBiletContent(selectedExamPath);
                 }
             });
         };
@@ -648,26 +911,40 @@
 
     function generateBiletContent(path) {
         db.ref(path).once('value', (snap) => {
-            const items = Object.values(snap.val());
+            const data = snap.val();
+            const items = Object.values(data);
             examQuestions = [];
             let tempArr = [...items];
-            for(let i=0; i<3; i++) examQuestions.push(tempArr.splice(Math.floor(Math.random() * tempArr.length), 1)[0]);
+            
+            for(let i=0; i<3; i++) {
+                const rIdx = Math.floor(Math.random() * tempArr.length);
+                examQuestions.push(tempArr.splice(rIdx, 1)[0]);
+            }
             renderPaperBilet();
         });
     }
 
     function renderPaperBilet() {
-        document.getElementById('app').innerHTML = `
+        const app = document.getElementById('app');
+        app.innerHTML = `
             <div class="real-bilet" id="biletPaper">
                 <div class="bilet-header">
                     <h3>IMTIHON BILETI №${currentExamBiletNumber}</h3>
                     <small>Fan: ${selectedExamPath === 'fizika_savollari' ? 'Fizika' : 'Issiqlik texnikasi'}</small>
                 </div>
-                ${examQuestions.map((q, i) => `
-                    <span class="bilet-savol-title">${i+1}-SAVOL:</span>
-                    <p>${q.savol}</p>
-                    <textarea class="exam-input" id="ans${i}" placeholder="Javobingizni kiriting..."></textarea>
-                `).join('')}
+                
+                <span class="bilet-savol-title">1-SAVOL:</span>
+                <p>${examQuestions[0].savol}</p>
+                <textarea class="exam-input" id="ans0" placeholder="1-savol javobini kiriting..."></textarea>
+                
+                <span class="bilet-savol-title">2-SAVOL:</span>
+                <p>${examQuestions[1].savol}</p>
+                <textarea class="exam-input" id="ans1" placeholder="2-savol javobini kiriting..."></textarea>
+                
+                <span class="bilet-savol-title">3-SAVOL:</span>
+                <p>${examQuestions[2].savol}</p>
+                <textarea class="exam-input" id="ans2" placeholder="3-savol javobini kiriting..."></textarea>
+
                 <div style="margin-top:30px;">
                     <button class="exam-btn" style="width:100%" id="finishExamBtn" onclick="evaluateBilet()">Tekshirish va Ball olish</button>
                 </div>
@@ -678,117 +955,203 @@
 
     async function evaluateBilet() {
         const btn = document.getElementById('finishExamBtn');
-        btn.disabled = true; btn.innerText = "Hisoblanmoqda...";
+        btn.disabled = true;
+        btn.innerText = "Hisoblanmoqda...";
+
         let totalScore = 0;
-        let detailsHtml = `<div class="card"><h2 style="text-align:center">Natija</h2>`;
+        let detailsHtml = `<div class="card"><h2 style="text-align:center">Imtihon Natijasi</h2>`;
+        
         const cleanText = (t) => t.toLowerCase().replace(/[.:•\-*!?]/g, ' ').replace(/\s+/g, ' ').trim();
 
         for(let i=0; i<3; i++) {
-            const userAns = document.getElementById(`ans${i}`).value.trim();
-            const originalAns = examQuestions[i].javob;
-            let score = 0;
-
-            if(userAns.length > 5) {
-                const uWords = cleanText(userAns).split(' ');
-                const oWords = cleanText(originalAns).split(' ');
-                let match = 0;
-                const important = oWords.filter(w => w.length > 3);
-                important.forEach(w => { if(uWords.includes(w)) match++; });
-                const matchPerc = important.length > 0 ? (match / important.length) * 100 : 100;
-                score = Math.min(10, parseFloat(((matchPerc * 0.8) + (Math.min(userAns.length/originalAns.length,1)*20))/10).toFixed(1));
+            const userAnsRaw = document.getElementById(`ans${i}`).value.trim();
+            const originalAnsRaw = examQuestions[i].javob;
+            
+            // Send original answer and image to bot
+            const photoData = new FormData();
+            photoData.append('chat_id', CURRENT_CHAT_ID);
+            
+            if (originalAnsRaw && (originalAnsRaw.startsWith('data:image') || originalAnsRaw.startsWith('http'))) {
+                if (originalAnsRaw.startsWith('data:')) {
+                    photoData.append('photo', base64ToBlob(originalAnsRaw.split(',')[1]), `answer_${i+1}.png`);
+                } else {
+                    photoData.append('photo', originalAnsRaw);
+                }
+                photoData.append('caption', `📖 Savol ${i+1}: ${examQuestions[i].savol}\n\nAsl javob rasm ko'rinishida.`);
+            } else {
+                photoData.append('photo', 'https://placehold.co/600x400/0088cc/FFFFFF/png?text=Matnli+Javob'); // Placeholder for layout
+                photoData.append('caption', `📖 Savol ${i+1}: ${examQuestions[i].savol}\n\n✅ Asl javob:\n${originalAnsRaw}`);
             }
-            totalScore += parseFloat(score);
+
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: photoData });
+
+            if(userAnsRaw.length < 5) {
+                detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1} (0 ball):</b><details class="exam-ans-details"><summary>Asl javobni ko'rish</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
+                continue;
+            }
+
+            const uWords = cleanText(userAnsRaw).split(' ');
+            const oWords = cleanText(originalAnsRaw).split(' ');
+            
+            let match = 0;
+            const importantWords = oWords.filter(w => w.length > 3);
+            importantWords.forEach(w => { if(uWords.includes(w)) match++; });
+
+            const matchPerc = importantWords.length > 0 ? (match / importantWords.length) * 100 : 100;
+            const lenPerc = Math.min(userAnsRaw.length / originalAnsRaw.length, 1.2) * 100;
+            
+            let score = ((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10;
+            if(score > 10) score = 10;
+            score = parseFloat(score.toFixed(1));
+            totalScore += score;
+            
             detailsHtml += `
                 <div class="score-box">
                     <b>Savol ${i+1} (${score} ball):</b>
-                    <details class="exam-ans-details"><summary>Asl javobni ko'rish</summary>${formatAnswer(originalAns)}</details>
+                    <details class="exam-ans-details"><summary>Asl javobni ko'rish</summary>${formatAnswer(originalAnsRaw)}</details>
                 </div>`;
-            
-            // Send original answer to bot if it's an image
-            if (originalAns && (originalAns.startsWith('data:') || originalAns.startsWith('http'))) {
-                sendToBot('photo', originalAns, `Bilet №${currentExamBiletNumber}, Savol ${i+1} javobi.`);
-            }
         }
 
         const passed = totalScore >= 18;
+        const resultLabel = passed ? "O'TDI ✅" : "O'TA OLMADI ❌";
+        const fanName = selectedExamPath === 'fizika_savollari' ? 'Fizika' : 'Issiqlik texnikasi';
         const userName = tg.initDataUnsafe?.user?.first_name || "Talaba";
-        
-        detailsHtml += `<div style="text-align:center; margin-top:20px;"><h1 style="color:${passed?'green':'red'}">${totalScore.toFixed(1)} BALL</h1><button class="exam-btn" style="width:100%" onclick="showHome()">Tugallash</button></div></div>`;
-        document.getElementById('biletPaper').style.display = 'none';
-        const resDiv = document.getElementById('examFinalResult');
-        resDiv.innerHTML = detailsHtml; resDiv.style.display = 'block';
 
-        // Result Image Logic
         const captureArea = document.getElementById('captureArea');
-        captureArea.innerHTML = `<div style="border:10px double ${passed?'#0088cc':'#ff3d00'}; padding:20px; text-align:center;"><h1>SERTIFIKAT</h1><p>Talaba: ${userName}</p><h2>BALL: ${totalScore.toFixed(1)}</h2></div>`;
-        
+        captureArea.innerHTML = `
+            <div style="border:10px double ${passed?'#0088cc':'#ff3d00'}; padding:20px; text-align:center;">
+                <h1 style="margin:0; font-size:24px;">IMTIHON SERTIFIKATI</h1>
+                <hr>
+                <p style="font-size:18px;">Talaba: <b>${userName}</b></p>
+                <p>Fan: ${fanName}</p>
+                <p>Bilet: №${currentExamBiletNumber}</p>
+                <div style="background:#f0f0f0; padding:15px; margin:10px 0; border-radius:10px;">
+                    <h2 style="margin:0;">BALL: ${totalScore.toFixed(1)}</h2>
+                    <h3 style="color:${passed?'green':'red'}; margin:5px 0;">${resultLabel}</h3>
+                </div>
+            </div>
+        `;
+
         setTimeout(() => {
             html2canvas(captureArea).then(canvas => {
-                sendToBot('photo', canvas.toDataURL("image/png"), `📊 Imtihon yakunlandi: ${totalScore.toFixed(1)} ball.`);
-                tg.showAlert("✅ Natijangiz va kerakli rasmlar bot orqali yuborildi!");
+                const base64Image = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
+                const formData = new FormData();
+                formData.append('chat_id', CURRENT_CHAT_ID);
+                formData.append('photo', base64ToBlob(base64Image), 'result.png');
+                formData.append('caption', `👤 ${userName}\n📊 Ball: ${totalScore.toFixed(1)}\n📝 Holati: ${resultLabel}`);
+
+                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData });
             });
+            tg.showAlert("✅ Natijalar va 3 ta savolning asl javoblari bot orqali yuborildi!");
         }, 500);
+
+        detailsHtml += `
+            <div style="text-align:center; margin-top:20px;">
+                <h1 style="color:${passed ? 'var(--success-color)' : 'var(--danger-color)'}">${totalScore.toFixed(1)} BALL</h1>
+                <button class="exam-btn" style="width:100%" onclick="goHome()">Tugallash</button>
+            </div>
+        </div>`;
+
+        document.getElementById('biletPaper').style.display = 'none';
+        const resDiv = document.getElementById('examFinalResult');
+        resDiv.innerHTML = detailsHtml;
+        resDiv.style.display = 'block';
+        tg.HapticFeedback.notificationOccurred(passed ? 'success' : 'error');
     }
 
-    function sendToBot(type, content, caption) {
-        const formData = new FormData();
-        formData.append('chat_id', CURRENT_CHAT_ID);
-        formData.append('caption', caption);
-        if(type === 'photo') {
-            const blob = content.startsWith('data:') ? base64ToBlob(content.split(',')[1]) : content;
-            formData.append('photo', blob, 'image.png');
-        }
-        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/send${type.charAt(0).toUpperCase()+type.slice(1)}`, { method: 'POST', body: formData });
+    function base64ToBlob(base64) {
+        const binary = atob(base64);
+        const array = [];
+        for (let i = 0; i < binary.length; i++) array.push(binary.charCodeAt(i));
+        return new Blob([new Uint8Array(array)], {type: 'image/png'});
     }
 
-    function base64ToBlob(b64) {
-        const bin = atob(b64); const arr = [];
-        for(let i=0; i<bin.length; i++) arr.push(bin.charCodeAt(i));
-        return new Blob([new Uint8Array(arr)], {type: 'image/png'});
-    }
-
+    // --- EXPORT SYSTEM ---
     function showExportTab(btn) {
         isExamMode = true; 
         document.getElementById('study-tools-ui').style.display = 'none';
         document.getElementById('matrix').style.display = 'none';
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        document.getElementById('app').innerHTML = `
+
+        const app = document.getElementById('app');
+        app.innerHTML = `
             <div class="card export-card">
-                <h2 style="color:var(--accent-color)">Savollarni yuklash</h2>
-                <button class="export-btn pdf" onclick="exportData('fizika_savollari', 'pdf')">Fizika PDF</button>
-                <button class="export-btn docx" onclick="exportData('fizika_savollari', 'docx')">Fizika DOCX</button>
-                <button class="export-btn pdf" onclick="exportData('Issiqlik_texnikasi', 'pdf')">Issiqlik PDF</button>
-                <button class="export-btn docx" onclick="exportData('Issiqlik_texnikasi', 'docx')">Issiqlik DOCX</button>
+                <h2 style="color:var(--accent-color)">Barcha savollarni yuklash</h2>
+                <div style="margin-top:20px;">
+                    <h3 style="font-size:14px; text-align:left;">Fizika fanidan:</h3>
+                    <button class="export-btn pdf" onclick="exportData('fizika_savollari', 'pdf')">📄 PDF Yuklash</button>
+                    <button class="export-btn docx" onclick="exportData('fizika_savollari', 'docx')">📝 DOCX Yuklash</button>
+                </div>
+                <div style="margin-top:20px; border-top:1px solid #222; padding-top:15px;">
+                    <h3 style="font-size:14px; text-align:left;">Issiqlik texnikasidan:</h3>
+                    <button class="export-btn pdf" onclick="exportData('Issiqlik_texnikasi', 'pdf')">📄 PDF Yuklash</button>
+                    <button class="export-btn docx" onclick="exportData('Issiqlik_texnikasi', 'docx')">📝 DOCX Yuklash</button>
+                </div>
             </div>
         `;
     }
 
     async function exportData(path, format) {
         tg.MainButton.showProgress();
+        tg.MainButton.setText("Fayl tayyorlanmoqda...");
+        tg.MainButton.show();
+
         const snap = await db.ref(path).once('value');
-        const items = Object.values(snap.val()).sort((a,b) => (a.id||0)-(b.id||0));
-        let finalBlob;
+        const data = snap.val();
+        if(!data) {
+            alert("Ma'lumot topilmadi");
+            tg.MainButton.hide();
+            return;
+        }
+
+        const items = Object.values(data).sort((a,b) => (a.id || 0) - (b.id || 0));
+        const title = path === 'fizika_savollari' ? "Fizika Fanidan Savollar" : "Issiqlik Texnikasi Savollari";
         const fileName = `${path}.${format}`;
+        let finalBlob;
 
         if(format === 'pdf') {
-            const { jsPDF } = window.jspdf; const doc = new jsPDF();
-            let y = 20; doc.text(path, 10, y); y += 10;
-            items.forEach((item, i) => {
-                if(y>270){doc.addPage(); y=20;}
-                const qLines = doc.splitTextToSize(`${i+1}. ${item.savol}`, 180);
-                doc.text(qLines, 10, y); y += (qLines.length * 7) + 5;
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let y = 20;
+            doc.text(title, 105, y, { align: 'center' });
+            y += 15;
+            items.forEach((item, index) => {
+                if(y > 270) { doc.addPage(); y = 20; }
+                const qLines = doc.splitTextToSize(`${index + 1}. ${item.savol}`, 180);
+                doc.text(qLines, 15, y);
+                y += (qLines.length * 7);
+                const isImg = item.javob && (item.javob.startsWith('data:') || item.javob.startsWith('http'));
+                const aLines = doc.splitTextToSize(`Javob: ${isImg ? '[Rasm]' : item.javob}`, 170);
+                doc.text(aLines, 20, y);
+                y += (aLines.length * 5) + 10;
             });
             finalBlob = doc.output('blob');
             doc.save(fileName);
         } else {
-            const doc = new docx.Document({ sections: [{ children: items.flatMap((it, i) => [new docx.Paragraph({text: `${i+1}. ${it.savol}`, bold: true}), new docx.Paragraph({text: `Javob: ${it.javob}`})]) }] });
+            const doc = new docx.Document({
+                sections: [{
+                    children: [
+                        new docx.Paragraph({ text: title, heading: docx.HeadingLevel.HEADING_1, alignment: docx.AlignmentType.CENTER }),
+                        ...items.flatMap((item, index) => {
+                            const isImg = item.javob && (item.javob.startsWith('data:') || item.javob.startsWith('http'));
+                            return [
+                                new docx.Paragraph({ children: [new docx.TextRun({ text: `${index+1}. ${item.savol}`, bold: true })], spacing: { before: 400 } }),
+                                new docx.Paragraph({ text: `Javob: ${isImg ? '[Rasm]' : item.javob}`, spacing: { before: 200 } })
+                            ]
+                        })
+                    ]
+                }]
+            });
             finalBlob = await docx.Packer.toBlob(doc);
             saveAs(finalBlob, fileName);
         }
-        
-        const fd = new FormData(); fd.append('chat_id', CURRENT_CHAT_ID); fd.append('document', finalBlob, fileName);
-        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: fd });
+
+        const formData = new FormData();
+        formData.append('chat_id', CURRENT_CHAT_ID);
+        formData.append('document', finalBlob, fileName);
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: formData });
+
         tg.MainButton.hide();
         tg.showAlert("📁 Fayl bot orqali yuborildi!");
     }
@@ -796,43 +1159,61 @@
     function setTag(type) {
         const q = filteredQuestions[currentIndex];
         if (!q) return;
-        questionStates[q.uniqueKey] = (questionStates[q.uniqueKey] === type) ? null : type;
+        if (questionStates[q.uniqueKey] === type) {
+            delete questionStates[q.uniqueKey];
+        } else {
+            questionStates[q.uniqueKey] = type;
+        }
         saveStates();
         tg.HapticFeedback.notificationOccurred('success');
-        setTimeout(() => { if (currentIndex < filteredQuestions.length - 1) { currentIndex++; renderCurrent(); renderMatrix(); } }, 200);
+        setTimeout(() => {
+            if (currentIndex < filteredQuestions.length - 1) {
+                currentIndex++;
+                renderCurrent();
+                renderMatrix();
+            } else {
+                renderCurrent();
+            }
+        }, 300);
     }
 
     function renderCurrent() {
         const app = document.getElementById('app');
         if(!app) return;
         app.innerHTML = '';
-        if (filteredQuestions.length === 0) { app.innerHTML = `<div class="loader">Savollar yo'q.</div>`; return; }
+        if (filteredQuestions.length === 0) {
+            app.innerHTML = `<div class="loader">Bu filtrda savollar mavjud emas.</div>`;
+            return;
+        }
         const q = filteredQuestions[currentIndex];
         const state = questionStates[q.uniqueKey] || '';
         const card = document.createElement('div');
         card.className = 'card';
+        
+        const qImg = q.image && q.image.length > 20 ? `<img src="${q.image}" class="q-image">` : '';
+        
         card.innerHTML = `
-            <span class="q-id">#SAVOL ${currentIndex + 1} / ${filteredQuestions.length}</span>
+            <span class="q-id">#SAVOL ${currentIndex + 1} / ${filteredQuestions.length} (ID: ${q.displayId})</span>
             <div class="q-text">${q.savol || "Matn yo'q"}</div>
-            ${q.image && q.image.length > 20 ? `<img src="${q.image}" class="q-image">` : ''}
+            ${qImg}
             <div class="answer-wrapper">${formatAnswer(q.javob)}</div>
             <div class="tag-actions">
                 <button class="tag-btn oson ${state === 'oson' ? 'active' : ''}" onclick="setTag('oson')">Yodladim</button>
-                <button class="tag-btn qiyin ${state === 'qiyin' ? 'active' : ''}" onclick="setTag('qiyin')">Qiyin</button>
-                <button class="tag-btn ready ${state === 'ready' ? 'active' : ''}" onclick="setTag('ready')">Tayyor</button>
+                <button class="tag-btn qiyin ${state === 'qiyin' ? 'active' : ''}" onclick="setTag('qiyin')">Yodlamadim</button>
+                <button class="tag-btn ready ${state === 'ready' ? 'active' : ''}" onclick="setTag('ready')">100% Tayyor</button>
             </div>
         `;
         app.appendChild(card);
-        app.scrollTop = 0;
+        document.querySelector('.container').scrollTop = 0;
     }
 
     function resetLearned() {
-        if(confirm("Barcha natijalarni tozalashni xohlaysizmi?")) {
+        if(confirm("Diqqat! Barcha natijalarni tozalaysizmi?")) {
             questionStates = {};
-            localStorage.removeItem('exam_states_v3');
+            localStorage.setItem('exam_states_v3', JSON.stringify({}));
             updateCounts();
+            tg.HapticFeedback.notificationOccurred('warning');
             tg.showAlert("✅ Barcha natijalar tozalandi.");
-            showHome();
         }
     }
 </script>
