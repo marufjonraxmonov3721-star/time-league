@@ -483,6 +483,62 @@
             cursor: pointer;
             display: none;
         }
+
+        /* O'zini sinash uchun yangi stillar */
+        .check-container {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed var(--border-color);
+        }
+        .check-area {
+            width: 100%;
+            background: #050505;
+            border: 1px solid #333;
+            border-radius: 10px;
+            color: #fff;
+            padding: 10px;
+            font-size: 14px;
+            min-height: 80px;
+            resize: vertical;
+            margin-bottom: 10px;
+        }
+        .check-btn {
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        .diff-output {
+            font-size: 14px;
+            line-height: 1.6;
+            background: #000;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #222;
+            display: none;
+        }
+        .diff-missed { color: var(--danger-color); text-decoration: line-through; }
+        .diff-correct { color: var(--success-color); font-weight: bold; }
+        .diff-neutral { color: #888; }
+
+        /* Asl javob blokirovkasi uchun animatsiya va holat */
+        .asl-javob-box {
+            transition: all 0.3s ease;
+            opacity: 1;
+        }
+        .asl-javob-box.hidden-ans {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-10px);
+            height: 0;
+            overflow: hidden;
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -965,6 +1021,47 @@
         }
     }
 
+    /* Asl javobni yashirish funksiyasi */
+    function hideOriginalAnswer() {
+        const ansBox = document.getElementById('aslJavobWrapper');
+        if(ansBox) {
+            ansBox.classList.add('hidden-ans');
+        }
+    }
+
+    /* O'zini sinash funksiyasi */
+    function checkUserAnswer() {
+        const userInput = document.getElementById('selfCheckInput').value.trim();
+        const diffBox = document.getElementById('selfCheckDiff');
+        const originalText = allQuestions[currentIndex].javob;
+
+        if (!userInput) {
+            tg.showAlert("Iltimos, avval javobingizni yozing!");
+            return;
+        }
+
+        diffBox.style.display = 'block';
+        diffBox.innerHTML = '';
+
+        const clean = (t) => t.toLowerCase().replace(/[.,!?:;]/g, '').split(/\s+/);
+        const userWords = clean(userInput);
+        const originalWords = originalText.split(/\s+/);
+        
+        let outputHtml = '';
+        
+        originalWords.forEach(word => {
+            const cleanWord = word.toLowerCase().replace(/[.,!?:;]/g, '');
+            if (userWords.includes(cleanWord)) {
+                outputHtml += `<span class="diff-correct">${word}</span> `;
+            } else {
+                outputHtml += `<span class="diff-missed">${word}</span> `;
+            }
+        });
+
+        diffBox.innerHTML = `<strong>Taqqoslash:</strong><br>${outputHtml}`;
+        tg.HapticFeedback.notificationOccurred('success');
+    }
+
     function renderCurrent() {
         const app = document.getElementById('app');
         if(!app) return;
@@ -974,11 +1071,25 @@
         const card = document.createElement('div');
         card.className = 'card';
         const qImg = q.image && q.image.length > 20 ? `<img src="${q.image}" class="q-image">` : '';
+        
         card.innerHTML = `
             <span class="q-id">#SAVOL ${currentIndex + 1} / ${allQuestions.length}</span>
             <div class="q-text">${q.savol || "..."}</div>
             ${qImg}
-            <div class="answer-wrapper">${formatAnswer(q.javob)}</div>
+            
+            <div id="aslJavobWrapper" class="asl-javob-box">
+                <span style="font-weight:bold; color:var(--accent-color); font-size:14px; display:block; margin-bottom:5px;">✅ Asl javob:</span>
+                <div class="answer-wrapper">${formatAnswer(q.javob)}</div>
+            </div>
+
+            <div class="check-container">
+                <textarea class="check-area" id="selfCheckInput" 
+                          oninput="hideOriginalAnswer()" 
+                          placeholder="O'zingizni sinab ko'ring: bu yerga javobingizni yozing..."></textarea>
+                <button class="check-btn" onclick="checkUserAnswer()">Tekshirish</button>
+                <div class="diff-output" id="selfCheckDiff"></div>
+            </div>
+
             <div class="tag-actions">
                 <button class="tag-btn" onclick="prevQuestion()" ${currentIndex === 0 ? 'style="opacity:0.3; pointer-events:none;"' : ''}>Ortga</button>
                 <button class="tag-btn" onclick="nextQuestion()" ${currentIndex === allQuestions.length - 1 ? 'style="opacity:0.3; pointer-events:none;"' : ''}>Oldinga</button>
@@ -990,5 +1101,3 @@
 </script>
 </body>
 </html>
-
- 
