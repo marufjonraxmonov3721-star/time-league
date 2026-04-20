@@ -874,19 +874,29 @@
         for(let i=0; i<3; i++) {
             const userAnsRaw = document.getElementById(`ans${i}`).value.trim();
             const originalAnsRaw = examQuestions[i].javob;
+            
+            // 1. Foydalanuvchi javobini yuborish
+            const userMsgData = new FormData();
+            userMsgData.append('chat_id', CURRENT_CHAT_ID);
+            userMsgData.append('photo', 'https://placehold.co/600x400/000000/FFD700/png?text=Talaba+Javobi');
+            userMsgData.append('caption', `📝 Savol ${i+1}: ${examQuestions[i].savol}\n\n👤 Talaba javobi:\n${userAnsRaw || "Javob berilmadi"}`);
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: userMsgData });
+
+            // 2. Asl javobni yuborish (Rasm yoki Matn)
             const photoData = new FormData();
             photoData.append('chat_id', CURRENT_CHAT_ID);
             
             if (originalAnsRaw && (originalAnsRaw.startsWith('data:image') || originalAnsRaw.startsWith('http'))) {
                 if (originalAnsRaw.startsWith('data:')) photoData.append('photo', base64ToBlob(originalAnsRaw.split(',')[1]), `answer_${i+1}.png`);
                 else photoData.append('photo', originalAnsRaw);
-                photoData.append('caption', `Savol ${i+1}: ${examQuestions[i].savol}\nAsl javob rasmda.`);
+                photoData.append('caption', `✅ Savol ${i+1} uchun asl javob (Rasmda).`);
             } else {
-                photoData.append('photo', 'https://placehold.co/600x400/000000/FFD700/png?text=Matnli+Javob');
-                photoData.append('caption', `Savol ${i+1}: ${examQuestions[i].savol}\n✅ Asl javob:\n${originalAnsRaw}`);
+                photoData.append('photo', 'https://placehold.co/600x400/000000/00C853/png?text=Asl+Javob');
+                photoData.append('caption', `✅ Savol ${i+1} uchun asl javob:\n${originalAnsRaw}`);
             }
-            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: photoData });
+            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: photoData });
 
+            // Ballni hisoblash qismi
             if(userAnsRaw.length < 5) {
                 detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1} (0 ball)</b><details class="exam-ans-details"><summary>Asl javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
                 continue;
@@ -897,7 +907,7 @@
             const importantWords = oWords.filter(w => w.length > 3);
             importantWords.forEach(w => { if(uWords.includes(w)) match++; });
             const matchPerc = importantWords.length > 0 ? (match / importantWords.length) * 100 : 100;
-            const lenPerc = Math.min(userAnsRaw.length / originalAnsRaw.length, 1.2) * 100;
+            const lenPerc = Math.min(userAnsRaw.length / (originalAnsRaw.length || 1), 1.2) * 100;
             let score = parseFloat((((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10).toFixed(1));
             totalScore += Math.min(score, 10);
             detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${Math.min(score,10)} ball)</b><details class="exam-ans-details"><summary>Asl javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
@@ -916,7 +926,7 @@
                 const formData = new FormData();
                 formData.append('chat_id', CURRENT_CHAT_ID);
                 formData.append('photo', base64ToBlob(base64Image), 'result.png');
-                formData.append('caption', `👤 ${userName}\n📊 Ball: ${totalScore.toFixed(1)}\n📝 Holati: ${resultLabel}`);
+                formData.append('caption', `👤 ${userName}\n📊 Jami ball: ${totalScore.toFixed(1)}\n📝 Holati: ${resultLabel}`);
                 fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData });
             });
             tg.showAlert("Natijalar yuborildi!");
