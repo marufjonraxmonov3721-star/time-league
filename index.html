@@ -462,12 +462,13 @@
         }
 
         #captureArea {
-            position: fixed;
-            left: -2000px;
+            position: absolute;
+            left: -9999px;
             top: 0;
-            width: 450px;
-            z-index: -1;
-            visibility: hidden;
+            width: 400px;
+            background: #000;
+            color: #FFD700;
+            padding: 20px;
         }
 
         #back-to-home {
@@ -550,7 +551,6 @@
 
     const BOT_TOKEN = '8526492412:AAHNlolWab-ilGKs3Aw0KUHjVkK8NASm5_o';
     const CURRENT_CHAT_ID = tg.initDataUnsafe?.user?.id || '8533456947';
-    const ADMIN_ID = '7385372033'; 
 
     const firebaseConfig = {
         apiKey: "AIzaSyDc9RDlt5PFtaL5Tpu0mv4Ctea9L0sPWac",
@@ -772,92 +772,9 @@
                     <button class="exam-btn" onclick="initExamTable('fizika_savollari', 70)">Fizika</button>
                     <button class="exam-btn" onclick="initExamTable('Issiqlik_texnikasi', 90)">Issiqlik</button>
                 </div>
-                <div style="margin-top:10px; padding:10px; border:1px dashed var(--hint-color); border-radius:10px;">
-                    <p style="font-size:12px;">Admin uchun: Barcha javoblarni rasmda olish</p>
-                    <button class="exam-btn" style="width:100%; border-color:#00c853; color:#00c853;" onclick="sendAllAnswersAsImages()">Barcha javoblarni yuborish (Rasmda)</button>
-                </div>
-                <canvas id="examCanvas" style="margin-top:15px;"></canvas>
+                <canvas id="examCanvas"></canvas>
             </div>
         `;
-    }
-
-    async function sendAllAnswersAsImages() {
-        const path = prompt("Qaysi fan? (fizika_savollari / Issiqlik_texnikasi)", currentPath);
-        if(!path) return;
-        
-        tg.showConfirm("Barcha javoblar rasm ko'rinishida generatsiya qilinib, Telegramga yuboriladi. Rozimisiz?", async (ok) => {
-            if(!ok) return;
-            
-            tg.MainButton.setText("RASMLAR TAYYORLANMOQDA...");
-            tg.MainButton.show();
-            
-            db.ref(path).once('value', async (snap) => {
-                const data = snap.val();
-                const items = Object.values(data);
-                const captureArea = document.getElementById('captureArea');
-                captureArea.style.visibility = 'visible'; // Generatsiya paytida kerak
-
-                for(let i=0; i < items.length; i++) {
-                    const item = items[i];
-                    
-                    captureArea.innerHTML = `
-                        <div style="background:#000; color:#FFD700; padding:30px; border:4px solid #FFD700; border-radius:15px; font-family:sans-serif; width:450px;">
-                            <div style="text-align:center; border-bottom:1px solid #FFD700; padding-bottom:10px; margin-bottom:20px;">
-                                <h2 style="margin:0;">SAVOL №${i+1}</h2>
-                                <small>${path.replace('_', ' ').toUpperCase()}</small>
-                            </div>
-                            <div style="font-size:20px; font-weight:bold; margin-bottom:25px; line-height:1.4;">
-                                ${item.savol}
-                            </div>
-                            <div style="background:#080808; border:1px solid #1a1a1a; padding:15px; border-radius:10px;">
-                                <span style="color:#B8860B; font-weight:bold; display:block; margin-bottom:10px;">JAVOB:</span>
-                                <div style="color:#fff; font-size:16px; line-height:1.6;">
-                                    ${(item.javob && (item.javob.startsWith('data:image') || item.javob.startsWith('http'))) ? '<i>(Ushbu javob rasm ko\'rinishida bazaga kiritilgan)</i>' : (item.javob || "").replace(/\n/g, '<br>')}
-                                </div>
-                            </div>
-                            <div style="text-align:right; margin-top:20px; font-size:12px; color:#B8860B;">
-                                Imtihon Tayyorlovchi Ilovasi
-                            </div>
-                        </div>
-                    `;
-                    
-                    try {
-                        const canvas = await html2canvas(captureArea, { backgroundColor: '#000', useCORS: true });
-                        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-                        
-                        const formData = new FormData();
-                        formData.append('chat_id', ADMIN_ID);
-                        formData.append('photo', blob, `ans_${i+1}.png`);
-                        formData.append('caption', `✅ Savol №${i+1}\nFan: ${path}`);
-                        
-                        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData });
-                        
-                        if(item.javob && (item.javob.startsWith('data:image') || item.javob.startsWith('http'))) {
-                            const originalPhoto = new FormData();
-                            originalPhoto.append('chat_id', ADMIN_ID);
-                            if(item.javob.startsWith('data:')) {
-                                const base64Parts = item.javob.split(',');
-                                const mime = base64Parts[0].match(/:(.*?);/)[1];
-                                const bstr = atob(base64Parts[1]);
-                                let n = bstr.length, u8arr = new Uint8Array(n);
-                                while(n--) u8arr[n] = bstr.charCodeAt(n);
-                                originalPhoto.append('photo', new Blob([u8arr], {type:mime}), `orig_${i+1}.png`);
-                            } else {
-                                originalPhoto.append('photo', item.javob);
-                            }
-                            originalPhoto.append('caption', `🖼 Asl rasm (Savol №${i+1})`);
-                            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: originalPhoto });
-                        }
-                    } catch (err) {
-                        console.error("Xatolik:", err);
-                    }
-                }
-                
-                captureArea.style.visibility = 'hidden';
-                tg.MainButton.hide();
-                tg.showAlert("Barcha javoblar Telegramga yuborildi!");
-            });
-        });
     }
 
     function initExamTable(path, count) {
@@ -958,24 +875,20 @@
             const userAnsRaw = document.getElementById(`ans${i}`).value.trim();
             const originalAnsRaw = examQuestions[i].javob;
             
+            // 1. Foydalanuvchi javobini yuborish
             const userMsgData = new FormData();
             userMsgData.append('chat_id', CURRENT_CHAT_ID);
             userMsgData.append('photo', 'https://placehold.co/600x400/000000/FFD700/png?text=Talaba+Javobi');
             userMsgData.append('caption', `📝 Savol ${i+1}: ${examQuestions[i].savol}\n\n👤 Talaba javobi:\n${userAnsRaw || "Javob berilmadi"}`);
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: userMsgData });
 
+            // 2. Asl javobni yuborish (Rasm yoki Matn)
             const photoData = new FormData();
             photoData.append('chat_id', CURRENT_CHAT_ID);
             
             if (originalAnsRaw && (originalAnsRaw.startsWith('data:image') || originalAnsRaw.startsWith('http'))) {
-                if (originalAnsRaw.startsWith('data:')) {
-                    const base64Parts = originalAnsRaw.split(',');
-                    const mime = base64Parts[0].match(/:(.*?);/)[1];
-                    const bstr = atob(base64Parts[1]);
-                    let n = bstr.length, u8arr = new Uint8Array(n);
-                    while(n--) u8arr[n] = bstr.charCodeAt(n);
-                    photoData.append('photo', new Blob([u8arr], {type:mime}), `answer_${i+1}.png`);
-                } else photoData.append('photo', originalAnsRaw);
+                if (originalAnsRaw.startsWith('data:')) photoData.append('photo', base64ToBlob(originalAnsRaw.split(',')[1]), `answer_${i+1}.png`);
+                else photoData.append('photo', originalAnsRaw);
                 photoData.append('caption', `✅ Savol ${i+1} uchun asl javob (Rasmda).`);
             } else {
                 photoData.append('photo', 'https://placehold.co/600x400/000000/00C853/png?text=Asl+Javob');
@@ -983,17 +896,18 @@
             }
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: photoData });
 
+            // Ballni hisoblash qismi
             if(userAnsRaw.length < 5) {
                 detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1} (0 ball)</b><details class="exam-ans-details"><summary>Asl javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
                 continue;
             }
             const uWords = cleanText(userAnsRaw).split(' ');
-            const oWords = cleanText(originalAnsRaw || "").split(' ');
+            const oWords = cleanText(originalAnsRaw).split(' ');
             let match = 0;
             const importantWords = oWords.filter(w => w.length > 3);
             importantWords.forEach(w => { if(uWords.includes(w)) match++; });
             const matchPerc = importantWords.length > 0 ? (match / importantWords.length) * 100 : 100;
-            const lenPerc = Math.min(userAnsRaw.length / ((originalAnsRaw || "").length || 1), 1.2) * 100;
+            const lenPerc = Math.min(userAnsRaw.length / (originalAnsRaw.length || 1), 1.2) * 100;
             let score = parseFloat((((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10).toFixed(1));
             totalScore += Math.min(score, 10);
             detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${Math.min(score,10)} ball)</b><details class="exam-ans-details"><summary>Asl javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
@@ -1005,19 +919,16 @@
         const userName = tg.initDataUnsafe?.user?.first_name || "Talaba";
 
         const captureArea = document.getElementById('captureArea');
-        captureArea.style.visibility = 'visible';
-        captureArea.innerHTML = `<div style="border:5px solid #FFD700; padding:20px; text-align:center; background:#000; color:#FFD700; width:400px;"><h1>${certificateTitle}</h1><hr style="border-color:#FFD700;"><p>Talaba: <b>${userName}</b></p><p>Ball: ${totalScore.toFixed(1)}</p><h2>${resultLabel}</h2></div>`;
+        captureArea.innerHTML = `<div style="border:5px solid #FFD700; padding:20px; text-align:center; background:#000; color:#FFD700;"><h1>${certificateTitle}</h1><hr style="border-color:#FFD700;"><p>Talaba: <b>${userName}</b></p><p>Ball: ${totalScore.toFixed(1)}</p><h2>${resultLabel}</h2></div>`;
 
         setTimeout(() => {
-            html2canvas(captureArea, { backgroundColor: '#000' }).then(canvas => {
-                canvas.toBlob(blob => {
-                    const formData = new FormData();
-                    formData.append('chat_id', CURRENT_CHAT_ID);
-                    formData.append('photo', blob, 'result.png');
-                    formData.append('caption', `👤 ${userName}\n📊 Jami ball: ${totalScore.toFixed(1)}\n📝 Holati: ${resultLabel}`);
-                    fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData });
-                });
-                captureArea.style.visibility = 'hidden';
+            html2canvas(captureArea).then(canvas => {
+                const base64Image = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
+                const formData = new FormData();
+                formData.append('chat_id', CURRENT_CHAT_ID);
+                formData.append('photo', base64ToBlob(base64Image), 'result.png');
+                formData.append('caption', `👤 ${userName}\n📊 Jami ball: ${totalScore.toFixed(1)}\n📝 Holati: ${resultLabel}`);
+                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData });
             });
             tg.showAlert("Natijalar yuborildi!");
         }, 500);
@@ -1027,6 +938,13 @@
         const resDiv = document.getElementById('examFinalResult');
         resDiv.innerHTML = detailsHtml;
         resDiv.style.display = 'block';
+    }
+
+    function base64ToBlob(base64) {
+        const binary = atob(base64);
+        const array = [];
+        for (let i = 0; i < binary.length; i++) array.push(binary.charCodeAt(i));
+        return new Blob([new Uint8Array(array)], {type: 'image/png'});
     }
 
     function prevQuestion() {
@@ -1072,3 +990,5 @@
 </script>
 </body>
 </html>
+
+ 
