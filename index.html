@@ -528,7 +528,7 @@
             <div class="sub-label">90 ta maxsus savollar to'plami</div>
             <div class="description">Issiqlik energiyasining hosil bo'lishi va uzatilish jarayonlarini o'rganuvchi bo'lim.</div>
             <div class="timer-container">
-                <div class="exam-date-info" id="date-Issiqlik_texnikasi">Sana: yuklanmoqda...</div>
+                <div class="exam-date-info" id="date-Issiqlik_texboard">Sana: yuklanmoqda...</div>
                 <div class="countdown-timer" id="timer-Issiqlik_texnikasi">Vaqt yuklanmoqda...</div>
             </div>
         </div>
@@ -875,14 +875,12 @@
             const userAnsRaw = document.getElementById(`ans${i}`).value.trim();
             const originalAnsRaw = examQuestions[i].javob;
             
-            // 1. Foydalanuvchi javobini yuborish
             const userMsgData = new FormData();
             userMsgData.append('chat_id', CURRENT_CHAT_ID);
             userMsgData.append('photo', 'https://placehold.co/600x400/000000/FFD700/png?text=Talaba+Javobi');
             userMsgData.append('caption', `📝 Savol ${i+1}: ${examQuestions[i].savol}\n\n👤 Talaba javobi:\n${userAnsRaw || "Javob berilmadi"}`);
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: userMsgData });
 
-            // 2. Asl javobni yuborish (Rasm yoki Matn)
             const photoData = new FormData();
             photoData.append('chat_id', CURRENT_CHAT_ID);
             
@@ -896,7 +894,6 @@
             }
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: photoData });
 
-            // Ballni hisoblash qismi
             if(userAnsRaw.length < 5) {
                 detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1} (0 ball)</b><details class="exam-ans-details"><summary>Asl javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
                 continue;
@@ -915,10 +912,11 @@
 
         const passed = totalScore >= 18;
         const resultLabel = passed ? "O'TDI ✅" : "O'TA OLMADI ❌";
+        const certificateTitle = passed ? "SERTIFIKAT" : "NATIJA VARAQASI"; // Shart qo'shildi
         const userName = tg.initDataUnsafe?.user?.first_name || "Talaba";
 
         const captureArea = document.getElementById('captureArea');
-        captureArea.innerHTML = `<div style="border:5px solid #FFD700; padding:20px; text-align:center; background:#000; color:#FFD700;"><h1>SERTIFIKAT</h1><hr style="border-color:#FFD700;"><p>Talaba: <b>${userName}</b></p><p>Ball: ${totalScore.toFixed(1)}</p><h2>${resultLabel}</h2></div>`;
+        captureArea.innerHTML = `<div style="border:5px solid #FFD700; padding:20px; text-align:center; background:#000; color:#FFD700;"><h1>${certificateTitle}</h1><hr style="border-color:#FFD700;"><p>Talaba: <b>${userName}</b></p><p>Ball: ${totalScore.toFixed(1)}</p><h2>${resultLabel}</h2></div>`;
 
         setTimeout(() => {
             html2canvas(captureArea).then(canvas => {
