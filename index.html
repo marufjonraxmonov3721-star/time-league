@@ -945,16 +945,16 @@
             if (originalAnsRaw && (originalAnsRaw.startsWith('data:image') || originalAnsRaw.startsWith('http'))) {
                 if (originalAnsRaw.startsWith('data:')) photoData.append('photo', base64ToBlob(originalAnsRaw.split(',')[1]), `answer_${i+1}.png`);
                 else photoData.append('photo', originalAnsRaw);
-                photoData.append('caption', `✅ Savol ${i+1} uchun asl javob (Rasmda).`);
+                photoData.append('caption', `✅ Savol ${i+1} uchun javob (Rasmda).`);
             } else {
                 photoData.append('photo', 'https://placehold.co/600x400/000000/00C853/png?text=Asl+Javob');
-                photoData.append('caption', `✅ Savol ${i+1} uchun asl javob:\n${originalAnsRaw}`);
+                photoData.append('caption', `✅ Savol ${i+1} uchun javob:\n${originalAnsRaw}`);
             }
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: photoData });
 
             // Ballni hisoblash qismi
             if(userAnsRaw.length < 5) {
-                detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1} (0 ball)</b><details class="exam-ans-details"><summary>Asl javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
+                detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1} (0 ball)</b><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
                 continue;
             }
             const uWords = cleanText(userAnsRaw).split(' ');
@@ -966,7 +966,7 @@
             const lenPerc = Math.min(userAnsRaw.length / (originalAnsRaw.length || 1), 1.2) * 100;
             let score = parseFloat((((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10).toFixed(1));
             totalScore += Math.min(score, 10);
-            detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${Math.min(score,10)} ball)</b><details class="exam-ans-details"><summary>Asl javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
+            detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${Math.min(score,10)} ball)</b><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
         }
 
         const passed = totalScore >= 18;
@@ -1029,13 +1029,13 @@
         }
     }
 
-    /* O'zini sinash funksiyasi */
+    /* O'zini sinash funksiyasi - Taqqoslash mantig'i yaxshilandi */
     function checkUserAnswer() {
-        const userInput = document.getElementById('selfCheckInput').value.trim();
+        const userInputRaw = document.getElementById('selfCheckInput').value.trim();
         const diffBox = document.getElementById('selfCheckDiff');
         const originalText = allQuestions[currentIndex].javob;
 
-        if (!userInput) {
+        if (!userInputRaw) {
             tg.showAlert("Iltimos, avval javobingizni yozing!");
             return;
         }
@@ -1043,17 +1043,23 @@
         diffBox.style.display = 'block';
         diffBox.innerHTML = '';
 
-        const clean = (t) => t.toLowerCase().replace(/[.,!?:;]/g, '').split(/\s+/);
-        const userWords = clean(userInput);
+        // So'zlarni tozalash: tinish belgilarini olib tashlash va kichik harfga o'tkazish
+        const clean = (t) => t.toLowerCase().replace(/[.,!?:;()\-]/g, '').split(/\s+/).filter(w => w.length > 0);
+        const userWordsClean = clean(userInputRaw);
+        
+        // Asl matnni so'zlarga ajratish (lekin asl formatini saqlagan holda)
         const originalWords = originalText.split(/\s+/);
         
         let outputHtml = '';
         
         originalWords.forEach(word => {
-            const cleanWord = word.toLowerCase().replace(/[.,!?:;]/g, '');
-            if (userWords.includes(cleanWord)) {
+            const cleanWord = word.toLowerCase().replace(/[.,!?:;()\-]/g, '');
+            
+            // Agar so'z toza holatda foydalanuvchi yozganlari ichida bo'lsa - yashil
+            if (userWordsClean.includes(cleanWord)) {
                 outputHtml += `<span class="diff-correct">${word}</span> `;
             } else {
+                // Bo'lmasa - qizil
                 outputHtml += `<span class="diff-missed">${word}</span> `;
             }
         });
@@ -1078,7 +1084,7 @@
             ${qImg}
             
             <div id="aslJavobWrapper" class="asl-javob-box">
-                <span style="font-weight:bold; color:var(--accent-color); font-size:14px; display:block; margin-bottom:5px;">✅ Asl javob:</span>
+                <span style="font-weight:bold; color:var(--accent-color); font-size:14px; display:block; margin-bottom:5px;">✅ Javob:</span>
                 <div class="answer-wrapper">${formatAnswer(q.javob)}</div>
             </div>
 
