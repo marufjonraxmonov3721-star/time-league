@@ -54,7 +54,7 @@
             top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
             z-index: 9999;
-            display: flex;
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -127,7 +127,7 @@
 
         /* Nav Tabs */
         .nav-tabs {
-            display: flex;
+            display: none;
             background: var(--secondary-bg);
             padding: 6px;
             margin: 10px 15px 5px;
@@ -156,10 +156,65 @@
             color: var(--accent-color);
         }
 
+        /* Dashboard Styles */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+
+        .dash-card {
+            background: linear-gradient(145deg, #111, #050505);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 25px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dash-card:active {
+            transform: scale(0.97);
+        }
+
+        .dash-icon {
+            font-size: 32px;
+            width: 60px;
+            height: 60px;
+            background: #1a1a1a;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dash-info h3 {
+            margin: 0;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        .dash-info p {
+            margin: 5px 0 0;
+            font-size: 12px;
+            color: var(--hint-color);
+        }
+
+        .dash-card.accent { border-left: 4px solid var(--accent-color); }
+        .dash-card.purple { border-left: 4px solid var(--learned-color); }
+        .dash-card.orange { border-left: 4px solid #f39c12; }
+        .dash-card.red { border-left: 4px solid var(--danger-color); }
+
         /* Matrix Container */
         .matrix-container {
             padding: 10px 15px;
-            display: flex;
+            display: none;
             gap: 8px;
             overflow-x: auto;
             white-space: nowrap;
@@ -188,7 +243,7 @@
 
         /* Study Tools */
         .study-tools {
-            display: grid;
+            display: none;
             grid-template-columns: 1fr 1fr;
             gap: 8px;
             padding: 10px 15px 10px;
@@ -223,7 +278,7 @@
             flex-grow: 1;
             overflow-y: auto;
             width: 100%;
-            display: flex;
+            display: none;
             flex-direction: column;
             padding-bottom: 20px;
         }
@@ -479,20 +534,20 @@
 
 <div id="main-loading-overlay">
     <div class="spinner"></div>
-    <div class="loading-text">Oraliq savollari yuklanmoqda...</div>
+    <div class="loading-text">Yuklanmoqda...</div>
 </div>
 
 <div class="header">
-    <button class="reset-all-btn" onclick="resetLearned()">🔄</button>
+    <button class="reset-all-btn" onclick="goToHome()">🏠</button>
     <h1>Exam Prep Pro</h1>
     <div class="stats-badge" id="totalPercent">0%</div>
 </div>
 
 <div class="nav-tabs" id="nav-tabs">
-    <button class="nav-btn active" data-path="fizika_savollari" onclick="changeTab(this, 'fizika_savollari')">Fizika</button>
-    <button class="nav-btn" data-path="Issiqlik_texnikasi" onclick="changeTab(this, 'Issiqlik_texnikasi')">Issiqlik</button>
-    <button class="nav-btn" onclick="startExamTab(this)">🔥 Imtihon</button>
-    <button class="nav-btn" onclick="showExportTab(this)">📤 Export</button>
+    <button class="nav-btn active" id="tab-fizika" onclick="switchSection('fizika_savollari')">Fizika</button>
+    <button class="nav-btn" id="tab-issiqlik" onclick="switchSection('Issiqlik_texnikasi')">Issiqlik</button>
+    <button class="nav-btn" id="tab-exam" onclick="startExamTab()">🔥 Imtihon</button>
+    <button class="nav-btn" id="tab-export" onclick="showExportTab()">📤 Export</button>
 </div>
 
 <div class="matrix-container" id="matrix"></div>
@@ -504,8 +559,41 @@
     <button class="tool-btn" id="filterReady" onclick="toggleFilter('ready')">⭐ 100% Tayyor <b id="cntReady">0</b></button>
 </div>
 
-<div class="container" id="app">
+<div class="dashboard" id="home-dashboard">
+    <div class="dash-card accent" onclick="switchSection('fizika_savollari')">
+        <div class="dash-icon">⚛️</div>
+        <div class="dash-info">
+            <h3>Fizika</h3>
+            <p>70 ta asosiy savollar va javoblar</p>
+        </div>
     </div>
+
+    <div class="dash-card orange" onclick="switchSection('Issiqlik_texnikasi')">
+        <div class="dash-icon">🔥</div>
+        <div class="dash-info">
+            <h3>Issiqlik Texnikasi</h3>
+            <p>90 ta o'quv savollari majmuasi</p>
+        </div>
+    </div>
+
+    <div class="dash-card red" onclick="startExamTab()">
+        <div class="dash-icon">🎯</div>
+        <div class="dash-info">
+            <h3>Real Imtihon</h3>
+            <p>Bilet tanlash va ball olish tizimi</p>
+        </div>
+    </div>
+
+    <div class="dash-card purple" onclick="showExportTab()">
+        <div class="dash-icon">📂</div>
+        <div class="dash-info">
+            <h3>Hujjatlarni Export qilish</h3>
+            <p>PDF va DOCX formatida yuklab olish</p>
+        </div>
+    </div>
+</div>
+
+<div class="container" id="app"></div>
 
 <div id="captureArea"></div>
 
@@ -534,17 +622,41 @@
     let filteredQuestions = [];
     let currentIndex = 0;
     let currentFilter = 'all'; 
-    let currentPath = 'fizika_savollari';
+    let currentPath = '';
     let isExamMode = false;
     let examQuestions = [];
     let selectedExamPath = '';
 
     let questionStates = JSON.parse(localStorage.getItem('exam_states_v3')) || {};
 
-    // First load to hide main loading screen
-    window.addEventListener('DOMContentLoaded', () => {
-        loadQuestions('fizika_savollari', true);
-    });
+    function goToHome() {
+        document.getElementById('home-dashboard').style.display = 'grid';
+        document.getElementById('nav-tabs').style.display = 'none';
+        document.getElementById('matrix').style.display = 'none';
+        document.getElementById('study-tools-ui').style.display = 'none';
+        document.getElementById('app').style.display = 'none';
+        isExamMode = false;
+        tg.HapticFeedback.impactOccurred('medium');
+    }
+
+    function switchSection(path) {
+        currentPath = path;
+        currentFilter = 'all';
+        isExamMode = false;
+        
+        document.getElementById('home-dashboard').style.display = 'none';
+        document.getElementById('nav-tabs').style.display = 'flex';
+        document.getElementById('matrix').style.display = 'flex';
+        document.getElementById('study-tools-ui').style.display = 'grid';
+        document.getElementById('app').style.display = 'flex';
+        
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        if(path === 'fizika_savollari') document.getElementById('tab-fizika').classList.add('active');
+        if(path === 'Issiqlik_texnikasi') document.getElementById('tab-issiqlik').classList.add('active');
+
+        loadQuestions(path);
+        tg.HapticFeedback.impactOccurred('light');
+    }
 
     function saveStates() {
         localStorage.setItem('exam_states_v3', JSON.stringify(questionStates));
@@ -605,33 +717,19 @@
         }
     }
 
-    function changeTab(btn, path) {
-        isExamMode = false;
-        document.getElementById('study-tools-ui').style.display = 'grid';
-        document.getElementById('matrix').style.display = 'flex';
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentPath = path;
-        currentFilter = 'all';
-        loadQuestions(path);
-        tg.HapticFeedback.impactOccurred('light');
-    }
-
-    function loadQuestions(path, isInitial = false) {
+    function loadQuestions(path) {
         const app = document.getElementById('app');
-        if(!isInitial) app.innerHTML = '<div class="loader">Yuklanmoqda...</div>';
+        const overlay = document.getElementById('main-loading-overlay');
+        
+        overlay.style.display = 'flex';
+        overlay.style.opacity = '1';
+        overlay.style.visibility = 'visible';
 
         db.ref(path).once('value', (snap) => {
             const data = snap.val();
             
-            // Hide main loading overlay once data is fetched
-            if(isInitial) {
-                const overlay = document.getElementById('main-loading-overlay');
-                overlay.style.opacity = '0';
-                setTimeout(() => {
-                    overlay.style.visibility = 'hidden';
-                }, 500);
-            }
+            overlay.style.opacity = '0';
+            setTimeout(() => { overlay.style.visibility = 'hidden'; overlay.style.display = 'none'; }, 500);
 
             if (!data) {
                 app.innerHTML = '<div class="loader">Ma\'lumot topilmadi</div>';
@@ -682,11 +780,9 @@
 
     function formatAnswer(text) {
         if (!text) return "Javob yo'q";
-        
         if (text.startsWith('data:image') || text.startsWith('http')) {
             return `<div class="ans-container"><img src="${text}" class="ans-image" alt="Javob rasmi"></div>`;
         }
-
         let html = '<div class="ans-container">';
         let lines = text.split('\n');
         let inList = false;
@@ -720,16 +816,20 @@
         return html;
     }
 
-    // --- REAL EXAM SYSTEM ---
+    // REAL EXAM SYSTEM
     let ticketPositions = [];
     let currentExamBiletNumber = 0;
 
-    function startExamTab(btn) {
+    function startExamTab() {
         isExamMode = true;
+        document.getElementById('home-dashboard').style.display = 'none';
+        document.getElementById('nav-tabs').style.display = 'flex';
         document.getElementById('study-tools-ui').style.display = 'none';
         document.getElementById('matrix').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        document.getElementById('tab-exam').classList.add('active');
         
         const app = document.getElementById('app');
         app.innerHTML = `
@@ -742,6 +842,7 @@
                 <canvas id="examCanvas"></canvas>
             </div>
         `;
+        tg.HapticFeedback.impactOccurred('medium');
     }
 
     function initExamTable(path, count) {
@@ -755,7 +856,6 @@
         ticketPositions = [];
         
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         const cols = 5;
         const rows = Math.ceil(biletCount / cols);
         const w = 45, h = 30;
@@ -768,7 +868,6 @@
             const angle = (Math.random() - 0.5) * 0.4;
             
             ticketPositions.push({x, y, w, h, id: i+1});
-
             ctx.save();
             ctx.translate(x+w/2, y+h/2);
             ctx.rotate(angle);
@@ -787,7 +886,6 @@
             const rect = canvas.getBoundingClientRect();
             const mx = e.clientX - rect.left;
             const my = e.clientY - rect.top;
-            
             ticketPositions.forEach(p => {
                 if(mx > p.x && mx < p.x + p.w && my > p.y && my < p.y + p.h) {
                     currentExamBiletNumber = p.id;
@@ -804,7 +902,6 @@
             const items = Object.values(data);
             examQuestions = [];
             let tempArr = [...items];
-            
             for(let i=0; i<3; i++) {
                 const rIdx = Math.floor(Math.random() * tempArr.length);
                 examQuestions.push(tempArr.splice(rIdx, 1)[0]);
@@ -821,19 +918,15 @@
                     <h3>IMTIHON BILETI №${currentExamBiletNumber}</h3>
                     <small>Fan: ${selectedExamPath === 'fizika_savollari' ? 'Fizika' : 'Issiqlik texnikasi'}</small>
                 </div>
-                
                 <span class="bilet-savol-title">1-SAVOL:</span>
                 <p>${examQuestions[0].savol}</p>
                 <textarea class="exam-input" id="ans0" placeholder="1-savol javobini kiriting..."></textarea>
-                
                 <span class="bilet-savol-title">2-SAVOL:</span>
                 <p>${examQuestions[1].savol}</p>
                 <textarea class="exam-input" id="ans1" placeholder="2-savol javobini kiriting..."></textarea>
-                
                 <span class="bilet-savol-title">3-SAVOL:</span>
                 <p>${examQuestions[2].savol}</p>
                 <textarea class="exam-input" id="ans2" placeholder="3-savol javobini kiriting..."></textarea>
-
                 <div style="margin-top:30px;">
                     <button class="exam-btn" style="width:100%" id="finishExamBtn" onclick="evaluateBilet()">Tekshirish va Ball olish</button>
                 </div>
@@ -846,10 +939,8 @@
         const btn = document.getElementById('finishExamBtn');
         btn.disabled = true;
         btn.innerText = "Hisoblanmoqda...";
-
         let totalScore = 0;
         let detailsHtml = `<div class="card"><h2 style="text-align:center">Imtihon Natijasi</h2>`;
-        
         const cleanText = (t) => t.toLowerCase().replace(/[.:•\-*!?]/g, ' ').replace(/\s+/g, ' ').trim();
 
         for(let i=0; i<3; i++) {
@@ -860,17 +951,10 @@
                 const imgBlob = originalAnsRaw.startsWith('data:') ? base64ToBlob(originalAnsRaw.split(',')[1]) : null;
                 const photoData = new FormData();
                 photoData.append('chat_id', CURRENT_CHAT_ID);
-                if (imgBlob) {
-                    photoData.append('photo', imgBlob, `answer_${i+1}.png`);
-                } else {
-                    photoData.append('photo', originalAnsRaw);
-                }
-                photoData.append('caption', `📖 Savol ${i+1}: ${examQuestions[i].savol}\n\nUshbu savolning asl javobi rasm ko'rinishida ekanligi sababli bot tomonidan alohida yuborildi.`);
-                
-                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-                    method: 'POST',
-                    body: photoData
-                });
+                if (imgBlob) photoData.append('photo', imgBlob, `answer_${i+1}.png`);
+                else photoData.append('photo', originalAnsRaw);
+                photoData.append('caption', `📖 Savol ${i+1}: ${examQuestions[i].savol}\n\nJavob rasmda.`);
+                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: photoData });
             }
 
             if(userAnsRaw.length < 5) {
@@ -880,27 +964,17 @@
 
             const uWords = cleanText(userAnsRaw).split(' ');
             const oWords = cleanText(originalAnsRaw).split(' ');
-            
             let match = 0;
             const importantWords = oWords.filter(w => w.length > 3);
-            importantWords.forEach(w => {
-                if(uWords.includes(w)) match++;
-            });
+            importantWords.forEach(w => { if(uWords.includes(w)) match++; });
 
             const matchPerc = importantWords.length > 0 ? (match / importantWords.length) * 100 : 100;
             const lenPerc = Math.min(userAnsRaw.length / originalAnsRaw.length, 1.2) * 100;
-            
             let score = ((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10;
             if(score > 10) score = 10;
             score = parseFloat(score.toFixed(1));
-            
             totalScore += score;
-            
-            detailsHtml += `
-                <div class="score-box">
-                    <b>Savol ${i+1} (${score} ball):</b>
-                    <details class="exam-ans-details"><summary>Asl javobni ko'rish</summary>${formatAnswer(originalAnsRaw)}</details>
-                </div>`;
+            detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${score} ball):</b><details class="exam-ans-details"><summary>Asl javobni ko'rish</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
         }
 
         const passed = totalScore >= 18;
@@ -909,19 +983,7 @@
         const userName = tg.initDataUnsafe?.user?.first_name || "Talaba";
 
         const captureArea = document.getElementById('captureArea');
-        captureArea.innerHTML = `
-            <div style="border:10px double ${passed?'#0088cc':'#ff3d00'}; padding:20px; text-align:center;">
-                <h1 style="margin:0; font-size:24px;">IMTIHON SERTIFIKATI</h1>
-                <hr>
-                <p style="font-size:18px;">Talaba: <b>${userName}</b></p>
-                <p>Fan: ${fanName}</p>
-                <p>Bilet: №${currentExamBiletNumber}</p>
-                <div style="background:#f0f0f0; padding:15px; margin:10px 0; border-radius:10px;">
-                    <h2 style="margin:0;">BALL: ${totalScore.toFixed(1)}</h2>
-                    <h3 style="color:${passed?'green':'red'}; margin:5px 0;">${resultLabel}</h3>
-                </div>
-            </div>
-        `;
+        captureArea.innerHTML = `<div style="border:10px double ${passed?'#0088cc':'#ff3d00'}; padding:20px; text-align:center;"><h1>IMTIHON SERTIFIKATI</h1><hr><p>Talaba: <b>${userName}</b></p><p>Fan: ${fanName}</p><p>Bilet: №${currentExamBiletNumber}</p><div style="background:#f0f0f0; padding:15px; margin:10px 0; border-radius:10px;"><h2>BALL: ${totalScore.toFixed(1)}</h2><h3 style="color:${passed?'green':'red'};">${resultLabel}</h3></div></div>`;
 
         setTimeout(() => {
             html2canvas(captureArea).then(canvas => {
@@ -929,22 +991,12 @@
                 const formData = new FormData();
                 formData.append('chat_id', CURRENT_CHAT_ID);
                 formData.append('photo', base64ToBlob(base64Image), 'result.png');
-                formData.append('caption', `👤 ${userName}\n📚 ${fanName}\n🎫 Bilet: ${currentExamBiletNumber}\n📊 Ball: ${totalScore.toFixed(1)}\n📝 Holati: ${resultLabel}`);
-
-                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
-                    method: 'POST',
-                    body: formData
-                });
+                formData.append('caption', `👤 ${userName}\n📚 ${fanName}\n📊 Ball: ${totalScore.toFixed(1)}\n📝 Holati: ${resultLabel}`);
+                fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: formData });
             });
         }, 500);
 
-        detailsHtml += `
-            <div style="text-align:center; margin-top:20px;">
-                <h1 style="color:${passed ? 'var(--success-color)' : 'var(--danger-color)'}">${totalScore.toFixed(1)} BALL</h1>
-                <button class="exam-btn" style="width:100%" onclick="startExamTab(document.querySelector('.nav-btn:last-child'))">Tugallash</button>
-            </div>
-        </div>`;
-
+        detailsHtml += `<div style="text-align:center; margin-top:20px;"><h1 style="color:${passed ? 'var(--success-color)' : 'var(--danger-color)'}">${totalScore.toFixed(1)} BALL</h1><button class="exam-btn" style="width:100%" onclick="goToHome()">Tugallash</button></div></div>`;
         document.getElementById('biletPaper').style.display = 'none';
         const resDiv = document.getElementById('examFinalResult');
         resDiv.innerHTML = detailsHtml;
@@ -959,25 +1011,29 @@
         return new Blob([new Uint8Array(array)], {type: 'image/png'});
     }
 
-    // --- EXPORT SYSTEM ---
-    function showExportTab(btn) {
+    // EXPORT SYSTEM
+    function showExportTab() {
         isExamMode = true; 
+        document.getElementById('home-dashboard').style.display = 'none';
+        document.getElementById('nav-tabs').style.display = 'flex';
         document.getElementById('study-tools-ui').style.display = 'none';
         document.getElementById('matrix').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+        document.getElementById('tab-export').classList.add('active');
 
         const app = document.getElementById('app');
         app.innerHTML = `
             <div class="card export-card">
-                <h2 style="color:var(--accent-color)">Barcha savollarni yuklash</h2>
+                <h2 style="color:var(--accent-color)">Hujjatlarni yuklash</h2>
                 <div style="margin-top:20px;">
-                    <h3 style="font-size:14px; text-align:left;">Fizika fanidan:</h3>
+                    <h3 style="font-size:14px; text-align:left;">Fizika:</h3>
                     <button class="export-btn pdf" onclick="exportData('fizika_savollari', 'pdf')">📄 PDF Yuklash</button>
                     <button class="export-btn docx" onclick="exportData('fizika_savollari', 'docx')">📝 DOCX Yuklash</button>
                 </div>
                 <div style="margin-top:20px; border-top:1px solid #222; padding-top:15px;">
-                    <h3 style="font-size:14px; text-align:left;">Issiqlik texnikasidan:</h3>
+                    <h3 style="font-size:14px; text-align:left;">Issiqlik texnikasi:</h3>
                     <button class="export-btn pdf" onclick="exportData('Issiqlik_texnikasi', 'pdf')">📄 PDF Yuklash</button>
                     <button class="export-btn docx" onclick="exportData('Issiqlik_texnikasi', 'docx')">📝 DOCX Yuklash</button>
                 </div>
@@ -989,17 +1045,11 @@
         tg.MainButton.showProgress();
         tg.MainButton.setText("Fayl tayyorlanmoqda...");
         tg.MainButton.show();
-
         const snap = await db.ref(path).once('value');
         const data = snap.val();
-        if(!data) {
-            alert("Ma'lumot topilmadi");
-            tg.MainButton.hide();
-            return;
-        }
-
+        if(!data) { alert("Ma'lumot topilmadi"); tg.MainButton.hide(); return; }
         const items = Object.values(data).sort((a,b) => (a.id || 0) - (b.id || 0));
-        const title = path === 'fizika_savollari' ? "Fizika Fanidan Savollar" : "Issiqlik Texnikasi Savollari";
+        const title = path === 'fizika_savollari' ? "Fizika" : "Issiqlik Texnikasi";
         const fileName = `${path}.${format}`;
         let finalBlob;
 
@@ -1039,33 +1089,23 @@
             finalBlob = await docx.Packer.toBlob(doc);
             saveAs(finalBlob, fileName);
         }
-
         const formData = new FormData();
         formData.append('chat_id', CURRENT_CHAT_ID);
         formData.append('document', finalBlob, fileName);
         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: formData });
-
         tg.MainButton.hide();
     }
 
     function setTag(type) {
         const q = filteredQuestions[currentIndex];
         if (!q) return;
-        if (questionStates[q.uniqueKey] === type) {
-            delete questionStates[q.uniqueKey];
-        } else {
-            questionStates[q.uniqueKey] = type;
-        }
+        if (questionStates[q.uniqueKey] === type) delete questionStates[q.uniqueKey];
+        else questionStates[q.uniqueKey] = type;
         saveStates();
         tg.HapticFeedback.notificationOccurred('success');
         setTimeout(() => {
-            if (currentIndex < filteredQuestions.length - 1) {
-                currentIndex++;
-                renderCurrent();
-                renderMatrix();
-            } else {
-                renderCurrent();
-            }
+            if (currentIndex < filteredQuestions.length - 1) { currentIndex++; renderCurrent(); renderMatrix(); }
+            else renderCurrent();
         }, 300);
     }
 
@@ -1073,19 +1113,14 @@
         const app = document.getElementById('app');
         if(!app) return;
         app.innerHTML = '';
-        if (filteredQuestions.length === 0) {
-            app.innerHTML = `<div class="loader">Bu filtrda savollar mavjud emas.</div>`;
-            return;
-        }
+        if (filteredQuestions.length === 0) { app.innerHTML = `<div class="loader">Savollar yo'q.</div>`; return; }
         const q = filteredQuestions[currentIndex];
         const state = questionStates[q.uniqueKey] || '';
         const card = document.createElement('div');
         card.className = 'card';
-        
         const qImg = q.image && q.image.length > 20 ? `<img src="${q.image}" class="q-image">` : '';
-        
         card.innerHTML = `
-            <span class="q-id">#SAVOL ${currentIndex + 1} / ${filteredQuestions.length} (ID: ${q.displayId})</span>
+            <span class="q-id">#SAVOL ${currentIndex + 1} / ${filteredQuestions.length}</span>
             <div class="q-text">${q.savol || "Matn yo'q"}</div>
             ${qImg}
             <div class="answer-wrapper">${formatAnswer(q.javob)}</div>
@@ -1100,14 +1135,8 @@
     }
 
     function resetLearned() {
-        if(confirm("Diqqat! Barcha natijalarni tozalaysizmi?")) {
-            questionStates = {};
-            saveStates();
-            applyFilter();
-            tg.HapticFeedback.notificationOccurred('warning');
-        }
+        if(confirm("Tozalansinmi?")) { questionStates = {}; saveStates(); applyFilter(); }
     }
 </script>
 </body>
 </html>
-
