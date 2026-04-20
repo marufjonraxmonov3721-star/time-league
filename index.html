@@ -539,29 +539,6 @@
             overflow: hidden;
             margin: 0;
         }
-
-        /* Audio tugmasi stili */
-        .audio-btn {
-            background: rgba(255, 215, 0, 0.1);
-            border: 1px solid var(--accent-color);
-            color: var(--accent-color);
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            float: right;
-            cursor: pointer;
-        }
-        .audio-btn.speaking {
-            background: var(--accent-color);
-            color: #000;
-            animation: pulse 1.5s infinite;
-        }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.6; }
-            100% { opacity: 1; }
-        }
     </style>
 </head>
 <body>
@@ -653,20 +630,6 @@
     let selectedExamPath = '';
     let examDates = {};
 
-    // Audio uchun o'zgaruvchilar
-    let synth = window.speechSynthesis;
-    let currentUtterance = null;
-    let voices = [];
-
-    // Ovozlar yuklanishini nazorat qilish
-    function loadVoices() {
-        voices = synth.getVoices();
-    }
-    loadVoices();
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = loadVoices;
-    }
-
     window.addEventListener('DOMContentLoaded', () => {
         const overlay = document.getElementById('main-loading-overlay');
         overlay.style.opacity = '0';
@@ -719,7 +682,6 @@
     }
 
     function goHome() {
-        stopAudio();
         document.getElementById('dashboard-menu').style.display = 'flex';
         document.getElementById('app').style.display = 'none';
         document.getElementById('nav-tabs').style.display = 'none';
@@ -782,7 +744,6 @@
     }
 
     function changeTab(btn, path) {
-        stopAudio();
         isExamMode = false;
         document.getElementById('matrix').style.display = 'flex';
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -854,7 +815,6 @@
     let currentExamBiletNumber = 0;
 
     function startExamTab(btn) {
-        stopAudio();
         isExamMode = true;
         document.getElementById('matrix').style.display = 'none';
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
@@ -1044,7 +1004,6 @@
     }
 
     function prevQuestion() {
-        stopAudio();
         if (currentIndex > 0) {
             currentIndex--;
             renderCurrent();
@@ -1054,7 +1013,6 @@
     }
 
     function nextQuestion() {
-        stopAudio();
         if (currentIndex < allQuestions.length - 1) {
             currentIndex++;
             renderCurrent();
@@ -1071,7 +1029,7 @@
         }
     }
 
-    /* O'zini sinash funksiyasi */
+    /* O'zini sinash funksiyasi - Taqqoslash mantig'i yaxshilandi */
     function checkUserAnswer() {
         const userInputRaw = document.getElementById('selfCheckInput').value.trim();
         const diffBox = document.getElementById('selfCheckDiff');
@@ -1085,79 +1043,29 @@
         diffBox.style.display = 'block';
         diffBox.innerHTML = '';
 
+        // So'zlarni tozalash: tinish belgilarini olib tashlash va kichik harfga o'tkazish
         const clean = (t) => t.toLowerCase().replace(/[.,!?:;()\-]/g, '').split(/\s+/).filter(w => w.length > 0);
         const userWordsClean = clean(userInputRaw);
+        
+        // Asl matnni so'zlarga ajratish (lekin asl formatini saqlagan holda)
         const originalWords = originalText.split(/\s+/);
         
         let outputHtml = '';
+        
         originalWords.forEach(word => {
             const cleanWord = word.toLowerCase().replace(/[.,!?:;()\-]/g, '');
+            
+            // Agar so'z toza holatda foydalanuvchi yozganlari ichida bo'lsa - yashil
             if (userWordsClean.includes(cleanWord)) {
                 outputHtml += `<span class="diff-correct">${word}</span> `;
             } else {
+                // Bo'lmasa - qizil
                 outputHtml += `<span class="diff-missed">${word}</span> `;
             }
         });
 
         diffBox.innerHTML = `<strong>Taqqoslash:</strong><br>${outputHtml}`;
         tg.HapticFeedback.notificationOccurred('success');
-    }
-
-    // Audio-Javob funksiyasi (Ishlamaslik muammosi tuzatildi)
-    function toggleSpeech(btn) {
-        if (synth.speaking) {
-            stopAudio();
-            return;
-        }
-
-        const textToRead = allQuestions[currentIndex].javob;
-        if (!textToRead || textToRead.startsWith('data:image') || textToRead.startsWith('http')) {
-            tg.showAlert("Ushbu javobni o'qib bo'lmaydi.");
-            return;
-        }
-
-        const cleanText = textToRead.replace(/[#*_\-=`]/g, '').trim();
-        currentUtterance = new SpeechSynthesisUtterance(cleanText);
-        
-        // Til va Ovoz sozlamalari
-        let uzVoice = voices.find(v => v.lang.includes('uz') || v.name.includes('Uzbek'));
-        let ruVoice = voices.find(v => v.lang.includes('ru')); // O'zbekcha yo'q bo'lsa Ruscha biroz o'xshash
-        
-        if (uzVoice) currentUtterance.voice = uzVoice;
-        else if (ruVoice) currentUtterance.voice = ruVoice;
-        
-        currentUtterance.lang = 'uz-UZ';
-        currentUtterance.rate = 0.85; 
-        currentUtterance.pitch = 1;
-
-        currentUtterance.onstart = () => {
-            btn.classList.add('speaking');
-            btn.innerText = "🛑 To'xtatish";
-        };
-
-        currentUtterance.onend = () => {
-            btn.classList.remove('speaking');
-            btn.innerText = "🔊 Eshitish";
-        };
-
-        currentUtterance.onerror = (e) => {
-            console.error("Speech Error:", e);
-            btn.classList.remove('speaking');
-            btn.innerText = "🔊 Eshitish";
-        };
-
-        synth.speak(currentUtterance);
-    }
-
-    function stopAudio() {
-        if (synth.speaking) {
-            synth.cancel();
-        }
-        const btn = document.querySelector('.audio-btn');
-        if (btn) {
-            btn.classList.remove('speaking');
-            btn.innerText = "🔊 Eshitish";
-        }
     }
 
     function renderCurrent() {
@@ -1171,7 +1079,6 @@
         const qImg = q.image && q.image.length > 20 ? `<img src="${q.image}" class="q-image">` : '';
         
         card.innerHTML = `
-            <button class="audio-btn" onclick="toggleSpeech(this)">🔊 Eshitish</button>
             <span class="q-id">#SAVOL ${currentIndex + 1} / ${allQuestions.length}</span>
             <div class="q-text">${q.savol || "..."}</div>
             ${qImg}
@@ -1200,3 +1107,5 @@
 </script>
 </body>
 </html>
+
+  
