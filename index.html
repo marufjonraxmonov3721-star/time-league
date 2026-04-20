@@ -48,6 +48,41 @@
             flex-direction: column;
         }
 
+        /* Full Screen Loading Overlay */
+        #main-loading-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(0, 136, 204, 0.1);
+            border-top: 3px solid var(--accent-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--text-color);
+            font-size: 14px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
         /* Header */
         .header {
             background-color: var(--glass-bg);
@@ -442,6 +477,11 @@
 </head>
 <body>
 
+<div id="main-loading-overlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Oraliq savollari yuklanmoqda...</div>
+</div>
+
 <div class="header">
     <button class="reset-all-btn" onclick="resetLearned()">🔄</button>
     <h1>Exam Prep Pro</h1>
@@ -465,8 +505,7 @@
 </div>
 
 <div class="container" id="app">
-    <div class="loader">Yuklanmoqda...</div>
-</div>
+    </div>
 
 <div id="captureArea"></div>
 
@@ -501,6 +540,11 @@
     let selectedExamPath = '';
 
     let questionStates = JSON.parse(localStorage.getItem('exam_states_v3')) || {};
+
+    // First load to hide main loading screen
+    window.addEventListener('DOMContentLoaded', () => {
+        loadQuestions('fizika_savollari', true);
+    });
 
     function saveStates() {
         localStorage.setItem('exam_states_v3', JSON.stringify(questionStates));
@@ -573,12 +617,22 @@
         tg.HapticFeedback.impactOccurred('light');
     }
 
-    function loadQuestions(path) {
+    function loadQuestions(path, isInitial = false) {
         const app = document.getElementById('app');
-        app.innerHTML = '<div class="loader">Yuklanmoqda...</div>';
+        if(!isInitial) app.innerHTML = '<div class="loader">Yuklanmoqda...</div>';
 
         db.ref(path).once('value', (snap) => {
             const data = snap.val();
+            
+            // Hide main loading overlay once data is fetched
+            if(isInitial) {
+                const overlay = document.getElementById('main-loading-overlay');
+                overlay.style.opacity = '0';
+                setTimeout(() => {
+                    overlay.style.visibility = 'hidden';
+                }, 500);
+            }
+
             if (!data) {
                 app.innerHTML = '<div class="loader">Ma\'lumot topilmadi</div>';
                 return;
@@ -629,7 +683,6 @@
     function formatAnswer(text) {
         if (!text) return "Javob yo'q";
         
-        // Agar javob rasm bo'lsa (base64 yoki URL)
         if (text.startsWith('data:image') || text.startsWith('http')) {
             return `<div class="ans-container"><img src="${text}" class="ans-image" alt="Javob rasmi"></div>`;
         }
@@ -803,7 +856,6 @@
             const userAnsRaw = document.getElementById(`ans${i}`).value.trim();
             const originalAnsRaw = examQuestions[i].javob;
             
-            // Agar javob rasm bo'lsa, botga alohida rasm sifatida tashlash
             if (originalAnsRaw && (originalAnsRaw.startsWith('data:image') || originalAnsRaw.startsWith('http'))) {
                 const imgBlob = originalAnsRaw.startsWith('data:') ? base64ToBlob(originalAnsRaw.split(',')[1]) : null;
                 const photoData = new FormData();
@@ -813,7 +865,7 @@
                 } else {
                     photoData.append('photo', originalAnsRaw);
                 }
-                photoData.append('caption', `📖 Savol ${i+1}: ${examQuestions[i].savol}\n\nUshbu savolning asl javobi rasm ko'rinishida ekanligi sababli bot tomonidan alohida yuborildi. Murakkab chizma yoki formulalarni ko'rib chiqing.`);
+                photoData.append('caption', `📖 Savol ${i+1}: ${examQuestions[i].savol}\n\nUshbu savolning asl javobi rasm ko'rinishida ekanligi sababli bot tomonidan alohida yuborildi.`);
                 
                 fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, {
                     method: 'POST',
@@ -868,10 +920,6 @@
                     <h2 style="margin:0;">BALL: ${totalScore.toFixed(1)}</h2>
                     <h3 style="color:${passed?'green':'red'}; margin:5px 0;">${resultLabel}</h3>
                 </div>
-                <div style="font-size:12px; color:#666; margin-top:20px;">
-                    Sana: ${new Date().toLocaleString()}<br>
-                    ID: ${tg.initDataUnsafe?.user?.id || 'Noma\'lum'}
-                </div>
             </div>
         `;
 
@@ -923,14 +971,11 @@
         app.innerHTML = `
             <div class="card export-card">
                 <h2 style="color:var(--accent-color)">Barcha savollarni yuklash</h2>
-                <p style="font-size:12px; color:var(--hint-color)">Bazadagi barcha savollar va javoblarni tanlangan formatda yuklab oling.</p>
-                
                 <div style="margin-top:20px;">
                     <h3 style="font-size:14px; text-align:left;">Fizika fanidan:</h3>
                     <button class="export-btn pdf" onclick="exportData('fizika_savollari', 'pdf')">📄 PDF Yuklash</button>
                     <button class="export-btn docx" onclick="exportData('fizika_savollari', 'docx')">📝 DOCX Yuklash</button>
                 </div>
-
                 <div style="margin-top:20px; border-top:1px solid #222; padding-top:15px;">
                     <h3 style="font-size:14px; text-align:left;">Issiqlik texnikasidan:</h3>
                     <button class="export-btn pdf" onclick="exportData('Issiqlik_texnikasi', 'pdf')">📄 PDF Yuklash</button>
@@ -962,28 +1007,18 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             let y = 20;
-
-            doc.setFontSize(16);
             doc.text(title, 105, y, { align: 'center' });
             y += 15;
-
             items.forEach((item, index) => {
                 if(y > 270) { doc.addPage(); y = 20; }
-                doc.setFontSize(12);
-                doc.setFont(undefined, 'bold');
                 const qLines = doc.splitTextToSize(`${index + 1}. ${item.savol}`, 180);
                 doc.text(qLines, 15, y);
                 y += (qLines.length * 7);
-
-                doc.setFont(undefined, 'normal');
-                doc.setFontSize(10);
-                // PDF da matnli javoblarni chiqarish (rasm bo'lsa "Rasm" deb yozadi)
                 const isImg = item.javob && (item.javob.startsWith('data:') || item.javob.startsWith('http'));
                 const aLines = doc.splitTextToSize(`Javob: ${isImg ? '[Rasm]' : item.javob}`, 170);
                 doc.text(aLines, 20, y);
                 y += (aLines.length * 5) + 10;
             });
-
             finalBlob = doc.output('blob');
             doc.save(fileName);
         } else {
@@ -1001,31 +1036,16 @@
                     ]
                 }]
             });
-
             finalBlob = await docx.Packer.toBlob(doc);
             saveAs(finalBlob, fileName);
         }
 
-        const userName = tg.initDataUnsafe?.user?.first_name || "Foydalanuvchi";
         const formData = new FormData();
         formData.append('chat_id', CURRENT_CHAT_ID);
         formData.append('document', finalBlob, fileName);
-        formData.append('caption', `📂 ${title}\n👤 Foydalanuvchi: ${userName}\n📥 Fayl muvaffaqiyatli generatsiya qilindi.`);
-
-        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(res => {
-            if(res.ok) {
-                tg.showAlert("Fayl Telegram bot orqali ham yuborildi!");
-            }
-        })
-        .catch(err => console.error("Botga yuborishda xato:", err));
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendDocument`, { method: 'POST', body: formData });
 
         tg.MainButton.hide();
-        tg.HapticFeedback.notificationOccurred('success');
     }
 
     function setTag(type) {
@@ -1054,7 +1074,7 @@
         if(!app) return;
         app.innerHTML = '';
         if (filteredQuestions.length === 0) {
-            app.innerHTML = `<div class="loader" style="font-size:12px;">Bu filtrda savollar mavjud emas.</div>`;
+            app.innerHTML = `<div class="loader">Bu filtrda savollar mavjud emas.</div>`;
             return;
         }
         const q = filteredQuestions[currentIndex];
@@ -1062,7 +1082,6 @@
         const card = document.createElement('div');
         card.className = 'card';
         
-        // Savol rasmi (agar bo'lsa)
         const qImg = q.image && q.image.length > 20 ? `<img src="${q.image}" class="q-image">` : '';
         
         card.innerHTML = `
@@ -1088,8 +1107,6 @@
             tg.HapticFeedback.notificationOccurred('warning');
         }
     }
-
-    loadQuestions('fizika_savollari');
 </script>
 </body>
 </html>
