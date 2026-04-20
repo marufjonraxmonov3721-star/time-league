@@ -10,18 +10,18 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
-        /* Modern Minimalist OLED Gold Design */
+        /* Modern Minimalist OLED Design - Gold & Black Edition */
         :root {
             --bg-color: #000000;
-            --secondary-bg: #000000;
-            --card-bg: #000000;
-            --text-color: #d4af37; /* Tilla rang */
-            --hint-color: #aa8a2e; /* To'qroq tilla */
-            --accent-color: #d4af37;
-            --success-color: #ffd700;
+            --secondary-bg: #050505;
+            --card-bg: #080808;
+            --text-color: #FFD700; /* Tilla rang */
+            --hint-color: #B8860B; /* To'qroq tilla/bronza */
+            --accent-color: #FFD700;
+            --success-color: #00c853;
             --danger-color: #ff3d00;
             --learned-color: #9b59b6;
-            --border-color: #d4af37;
+            --border-color: #1a1a1a;
             --glass-bg: rgba(0, 0, 0, 0.9);
         }
 
@@ -39,7 +39,7 @@
             padding: 0;
             line-height: 1.5;
             overflow: hidden;
-            letter-spacing: -0.02em;
+            letter-spacing: -0.01em;
             height: 100vh;
             display: flex;
             flex-direction: column;
@@ -61,7 +61,7 @@
         .spinner {
             width: 50px;
             height: 50px;
-            border: 3px solid rgba(212, 175, 55, 0.1);
+            border: 3px solid rgba(255, 215, 0, 0.1);
             border-top: 3px solid var(--accent-color);
             border-radius: 50%;
             animation: spin 1s linear infinite;
@@ -91,10 +91,10 @@
         }
 
         .motivation-box {
-            background: #000;
+            background: linear-gradient(135deg, #000, #0a0a0a);
             padding: 20px;
             border-radius: 20px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--hint-color);
             margin-bottom: 10px;
             text-align: center;
         }
@@ -103,7 +103,6 @@
             font-size: 18px;
             margin: 0 0 8px 0;
             color: var(--accent-color);
-            text-transform: uppercase;
         }
 
         .motivation-box p {
@@ -111,6 +110,7 @@
             color: var(--text-color);
             margin: 0;
             font-style: italic;
+            opacity: 0.8;
         }
 
         .menu-title {
@@ -118,7 +118,6 @@
             font-weight: 800;
             margin-bottom: 5px;
             color: var(--text-color);
-            text-align: center;
         }
 
         .menu-grid {
@@ -138,9 +137,9 @@
             position: relative;
         }
 
-        .menu-item:active { transform: scale(0.98); background: #0a0a0a; }
-        .menu-item .label { font-size: 18px; font-weight: 700; color: var(--accent-color); margin-bottom: 6px; text-transform: uppercase;}
-        .menu-item .sub-label { font-size: 13px; color: var(--text-color); margin-bottom: 8px; font-weight: 600; }
+        .menu-item:active { transform: scale(0.98); border-color: var(--accent-color); }
+        .menu-item .label { font-size: 18px; font-weight: 700; color: var(--accent-color); margin-bottom: 6px;}
+        .menu-item .sub-label { font-size: 13px; color: #fff; margin-bottom: 8px; font-weight: 500; }
         .menu-item .description { font-size: 12px; color: var(--hint-color); line-height: 1.4; }
 
         /* Countdown & Date styles */
@@ -155,7 +154,7 @@
             font-size: 12px;
             font-weight: 700;
             color: var(--text-color);
-            background: rgba(212, 175, 55, 0.05);
+            background: rgba(255, 215, 0, 0.05);
             padding: 5px 10px;
             border-radius: 8px;
             border: 1px solid var(--border-color);
@@ -164,17 +163,18 @@
         .countdown-timer {
             font-family: 'Courier New', monospace;
             font-size: 11px;
-            color: var(--text-color);
-            background: rgba(212, 175, 55, 0.1);
+            color: #fff;
+            background: rgba(184, 134, 11, 0.2);
             padding: 4px 8px;
             border-radius: 6px;
             display: inline-block;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--hint-color);
         }
 
         /* Header */
         .header {
-            background-color: var(--bg-color);
+            background-color: var(--glass-bg);
+            backdrop-filter: blur(10px);
             padding: 15px;
             text-align: center;
             border-bottom: 1px solid var(--border-color);
@@ -197,7 +197,7 @@
         /* Nav Tabs */
         .nav-tabs {
             display: none;
-            background: #000;
+            background: var(--secondary-bg);
             padding: 6px;
             margin: 10px 15px 5px;
             border-radius: 12px;
@@ -221,8 +221,9 @@
         }
 
         .nav-btn.active {
-            background: var(--text-color);
-            color: #000;
+            background: #111;
+            color: var(--accent-color);
+            box-shadow: inset 0 0 5px var(--accent-color);
         }
 
         /* Matrix Container */
@@ -243,7 +244,7 @@
             min-width: 35px;
             height: 35px;
             background: #000;
-            border: 1px solid var(--border-color);
+            border: 1px solid #1a1a1a;
             border-radius: 8px;
             display: flex;
             align-items: center;
@@ -255,8 +256,9 @@
         }
 
         .matrix-item.active { 
-            background: var(--text-color); 
+            border-color: var(--accent-color); 
             color: #000; 
+            background: var(--accent-color);
             transform: scale(1.1); 
         }
 
@@ -280,7 +282,7 @@
             border-radius: 20px;
             padding: 20px;
             width: 100%;
-            box-shadow: 0 0 20px rgba(212, 175, 55, 0.1);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.05);
             animation: slideUp 0.4s ease;
             margin-bottom: 20px;
         }
@@ -310,7 +312,7 @@
             width: 100%;
             border-radius: 12px;
             margin-bottom: 15px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--hint-color);
             display: block;
             max-height: 220px;
             object-fit: contain;
@@ -319,14 +321,14 @@
 
         /* Answer Formatting */
         .ans-container {
-            color: var(--text-color);
+            color: #ffffff;
             font-size: 15px;
             line-height: 1.6;
         }
 
         .ans-header {
             font-weight: 700;
-            color: var(--text-color);
+            color: var(--accent-color);
             display: block;
             margin-top: 15px;
             margin-bottom: 5px;
@@ -341,19 +343,19 @@
             border-radius: 8px;
             margin: 10px 0;
             font-family: 'Courier New', Courier, monospace;
-            color: #ffd700;
+            color: var(--accent-color);
             font-size: 18px;
             text-align: center;
-            border: 1px dashed var(--border-color);
+            border: 1px solid var(--hint-color);
         }
 
         .ans-list {
             margin: 5px 0;
             padding-left: 20px;
-            list-style-type: disc;
+            list-style-type: circle;
         }
 
-        .ans-list li { margin-bottom: 8px; }
+        .ans-list li { margin-bottom: 8px; color: #fff; }
 
         /* Tag Actions */
         .tag-actions {
@@ -366,24 +368,24 @@
         .tag-btn {
             padding: 14px 2px;
             border-radius: 12px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--hint-color);
             font-size: 12px;
             font-weight: 700;
             background: #000;
-            color: var(--text-color);
+            color: var(--accent-color);
             transition: 0.2s;
             text-transform: uppercase;
         }
         
-        .tag-btn:active { background: var(--text-color); color: #000; transform: scale(0.98); }
+        .tag-btn:active { background: var(--accent-color); color: #000; transform: scale(0.98); }
 
         /* Real Exam Styles */
         .exam-input {
             width: 100%;
             background: #000;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--hint-color);
             border-radius: 8px;
-            color: var(--text-color);
+            color: #fff;
             padding: 12px;
             font-family: 'Courier New', Courier, monospace;
             font-size: 14px;
@@ -396,38 +398,38 @@
             background: #000;
             color: var(--text-color);
             padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.1);
             margin-bottom: 20px;
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--hint-color);
             position: relative;
         }
         .bilet-header {
             text-align: center;
-            border-bottom: 2px double var(--border-color);
+            border-bottom: 2px double var(--accent-color);
             margin-bottom: 20px;
             padding-bottom: 10px;
         }
         
         .score-box {
-            background: #000;
+            background: #050505;
             padding: 15px;
             border-radius: 10px;
-            border: 1px solid var(--border-color);
+            border-left: 5px solid var(--accent-color);
             margin-top: 10px;
-            color: var(--text-color);
+            color: #fff;
         }
 
         .exam-btn {
-            background: var(--text-color);
-            border: none;
-            color: #000;
+            background: #000;
+            border: 1px solid var(--accent-color);
+            color: var(--accent-color);
             padding: 12px;
             border-radius: 8px;
             font-weight: bold;
             cursor: pointer;
-            text-transform: uppercase;
         }
+        .exam-btn:active { background: var(--accent-color); color: #000; }
 
         #examCanvas {
             background: #000;
@@ -441,7 +443,7 @@
         .loader {
             text-align: center;
             padding: 50px;
-            color: var(--text-color);
+            color: var(--accent-color);
             width: 100%;
         }
 
@@ -464,8 +466,8 @@
             left: -9999px;
             top: 0;
             width: 400px;
-            background: black;
-            color: #d4af37;
+            background: #000;
+            color: #FFD700;
             padding: 20px;
         }
 
@@ -473,8 +475,8 @@
             position: absolute;
             left: 15px;
             background: none;
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
+            border: 1px solid var(--hint-color);
+            color: var(--accent-color);
             padding: 5px 10px;
             border-radius: 8px;
             font-size: 14px;
@@ -514,7 +516,7 @@
         <div class="menu-item" onclick="openSection('fizika_savollari')">
             <div class="label">Fizika bo'limi</div>
             <div class="sub-label">70 ta nazariy va amaliy savollar</div>
-            <div class="description">Ushbu bo'limda fizika fanining asosiy qonuniyatlari va muhim mavzulari jamlangan. Bilimingizni mustahkamlash uchun har bir savolni diqqat bilan o'rganib chiqishingizni so'raymiz.</div>
+            <div class="description">Ushbu bo'limda fizika fanining asosiy qonuniyatlari va muhim mavzulari jamlangan.</div>
             <div class="timer-container">
                 <div class="exam-date-info" id="date-fizika_savollari">Sana: yuklanmoqda...</div>
                 <div class="countdown-timer" id="timer-fizika_savollari">Vaqt yuklanmoqda...</div>
@@ -524,7 +526,7 @@
         <div class="menu-item" onclick="openSection('Issiqlik_texnikasi')">
             <div class="label">Issiqlik texnikasi</div>
             <div class="sub-label">90 ta maxsus savollar to'plami</div>
-            <div class="description">Issiqlik energiyasining hosil bo'lishi va uzatilish jarayonlarini o'rganuvchi ushbu bo'lim mutaxassislar uchun muhim ahamiyatga ega.</div>
+            <div class="description">Issiqlik energiyasining hosil bo'lishi va uzatilish jarayonlarini o'rganuvchi bo'lim.</div>
             <div class="timer-container">
                 <div class="exam-date-info" id="date-Issiqlik_texnikasi">Sana: yuklanmoqda...</div>
                 <div class="countdown-timer" id="timer-Issiqlik_texnikasi">Vaqt yuklanmoqda...</div>
@@ -534,7 +536,7 @@
         <div class="menu-item" onclick="openExamFromMenu()">
             <div class="label">Imtihon topshirish</div>
             <div class="sub-label">O'z bilim darajangizni sinab ko'ring</div>
-            <div class="description">Haqiqiy imtihon muhitini his eting. Tasodifiy biletlar orqali o'z mahoratingizni namoyish qiling. Muvaffaqiyat kaliti — bu sizning tinimsiz harakatingizdir!</div>
+            <div class="description">Haqiqiy imtihon muhitini his eting. Tasodifiy biletlar orqali o'z mahoratingizni namoyish qiling.</div>
         </div>
     </div>
 </div>
@@ -611,8 +613,10 @@
                     const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
                     const secs = Math.floor((diff % (1000 * 60)) / 1000);
                     timerEl.innerHTML = `⏳ Imtihongacha: ${days}kun ${hours}soat ${mins}min ${secs}sek`;
+                    timerEl.style.color = "var(--accent-color)";
                 } else {
-                    timerEl.innerHTML = "🏁 Imtihon boshlangan yoki tugagan";
+                    timerEl.innerHTML = "🏁 Imtihon boshlangan";
+                    timerEl.style.color = "var(--danger-color)";
                 }
             } else {
                 dateEl.innerHTML = "📅 Sana: belgilanmagan";
@@ -695,7 +699,7 @@
 
     function loadQuestions(path) {
         const app = document.getElementById('app');
-        app.innerHTML = '<div class="loader">Bilimlar yuklanmoqda, kuting...</div>';
+        app.innerHTML = '<div class="loader">Bilimlar yuklanmoqda...</div>';
 
         db.ref(path).once('value', (snap) => {
             const data = snap.val();
@@ -793,17 +797,15 @@
             const c = i % cols;
             const x = (canvas.width/(cols+1)) * (c+1) - w/2;
             const y = (canvas.height/(rows+1)) * (r+1) - h/2;
-            const angle = (Math.random() - 0.5) * 0.4;
             ticketPositions.push({x, y, w, h, id: i+1});
             ctx.save();
             ctx.translate(x+w/2, y+h/2);
-            ctx.rotate(angle);
-            ctx.fillStyle = "#d4af37";
-            ctx.shadowBlur = 4;
-            ctx.shadowColor = "#000";
+            ctx.fillStyle = "#FFD700";
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "#FFD700";
             ctx.fillRect(-w/2, -h/2, w, h);
             ctx.fillStyle = "#000";
-            ctx.font = "bold 10px sans-serif";
+            ctx.font = "bold 12px sans-serif";
             ctx.textAlign = "center";
             ctx.fillText(i+1, 0, 5);
             ctx.restore();
@@ -845,16 +847,16 @@
                     <h3>IMTIHON BILETI №${currentExamBiletNumber}</h3>
                     <small>Fan: ${selectedExamPath === 'fizika_savollari' ? 'Fizika' : 'Issiqlik texnikasi'}</small>
                 </div>
-                <span style="font-weight:bold; margin-top:15px; display:block;">1-SAVOL:</span>
+                <span style="font-weight:bold; margin-top:15px; display:block; color:var(--accent-color)">1-SAVOL:</span>
                 <p>${examQuestions[0].savol}</p>
-                <textarea class="exam-input" id="ans0" placeholder="1-savol javobini kiriting..."></textarea>
-                <span style="font-weight:bold; margin-top:15px; display:block;">2-SAVOL:</span>
+                <textarea class="exam-input" id="ans0" placeholder="Javobni kiriting..."></textarea>
+                <span style="font-weight:bold; margin-top:15px; display:block; color:var(--accent-color)">2-SAVOL:</span>
                 <p>${examQuestions[1].savol}</p>
-                <textarea class="exam-input" id="ans1" placeholder="2-savol javobini kiriting..."></textarea>
-                <span style="font-weight:bold; margin-top:15px; display:block;">3-SAVOL:</span>
+                <textarea class="exam-input" id="ans1" placeholder="Javobni kiriting..."></textarea>
+                <span style="font-weight:bold; margin-top:15px; display:block; color:var(--accent-color)">3-SAVOL:</span>
                 <p>${examQuestions[2].savol}</p>
-                <textarea class="exam-input" id="ans2" placeholder="3-savol javobini kiriting..."></textarea>
-                <div style="margin-top:30px;"><button class="exam-btn" style="width:100%" id="finishExamBtn" onclick="evaluateBilet()">Natijani hisoblash</button></div>
+                <textarea class="exam-input" id="ans2" placeholder="Javobni kiriting..."></textarea>
+                <div style="margin-top:30px;"><button class="exam-btn" style="width:100%" id="finishExamBtn" onclick="evaluateBilet()">Yakunlash</button></div>
             </div>
             <div id="examFinalResult" style="display:none"></div>
         `;
@@ -866,7 +868,7 @@
         btn.innerText = "Tekshirilmoqda...";
 
         let totalScore = 0;
-        let detailsHtml = `<div class="card"><h2 style="text-align:center">Imtihon Natijasi</h2>`;
+        let detailsHtml = `<div class="card"><h2 style="text-align:center">Natija</h2>`;
         const cleanText = (t) => t.toLowerCase().replace(/[.:•\-*!?]/g, ' ').replace(/\s+/g, ' ').trim();
 
         for(let i=0; i<3; i++) {
@@ -880,13 +882,13 @@
                 else photoData.append('photo', originalAnsRaw);
                 photoData.append('caption', `Savol ${i+1}: ${examQuestions[i].savol}\nAsl javob rasmda.`);
             } else {
-                photoData.append('photo', 'https://placehold.co/600x400/d4af37/000000/png?text=Matnli+Javob');
+                photoData.append('photo', 'https://placehold.co/600x400/000000/FFD700/png?text=Matnli+Javob');
                 photoData.append('caption', `Savol ${i+1}: ${examQuestions[i].savol}\n✅ Asl javob:\n${originalAnsRaw}`);
             }
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: photoData });
 
             if(userAnsRaw.length < 5) {
-                detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1} (0 ball):</b><details class="exam-ans-details"><summary>Asl javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
+                detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1} (0 ball)</b><details class="exam-ans-details"><summary>Asl javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
                 continue;
             }
             const uWords = cleanText(userAnsRaw).split(' ');
@@ -898,7 +900,7 @@
             const lenPerc = Math.min(userAnsRaw.length / originalAnsRaw.length, 1.2) * 100;
             let score = parseFloat((((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10).toFixed(1));
             totalScore += Math.min(score, 10);
-            detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${Math.min(score,10)} ball):</b><details class="exam-ans-details"><summary>Asl javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
+            detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${Math.min(score,10)} ball)</b><details class="exam-ans-details"><summary>Asl javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
         }
 
         const passed = totalScore >= 18;
@@ -906,7 +908,7 @@
         const userName = tg.initDataUnsafe?.user?.first_name || "Talaba";
 
         const captureArea = document.getElementById('captureArea');
-        captureArea.innerHTML = `<div style="border:10px double #d4af37; padding:20px; text-align:center;"><h1>SERTIFIKAT</h1><hr><p>Talaba: <b>${userName}</b></p><p>Ball: ${totalScore.toFixed(1)}</p><h2>${resultLabel}</h2></div>`;
+        captureArea.innerHTML = `<div style="border:5px solid #FFD700; padding:20px; text-align:center; background:#000; color:#FFD700;"><h1>SERTIFIKAT</h1><hr style="border-color:#FFD700;"><p>Talaba: <b>${userName}</b></p><p>Ball: ${totalScore.toFixed(1)}</p><h2>${resultLabel}</h2></div>`;
 
         setTimeout(() => {
             html2canvas(captureArea).then(canvas => {
@@ -920,7 +922,7 @@
             tg.showAlert("Natijalar yuborildi!");
         }, 500);
 
-        detailsHtml += `<div style="text-align:center; margin-top:20px;"><h1 style="color:var(--text-color)">${totalScore.toFixed(1)} BALL</h1><button class="exam-btn" style="width:100%" onclick="goHome()">Asosiy sahifaga</button></div></div>`;
+        detailsHtml += `<div style="text-align:center; margin-top:20px;"><h1 style="color:var(--accent-color)">${totalScore.toFixed(1)} BALL</h1><button class="exam-btn" style="width:100%" onclick="goHome()">Bosh sahifa</button></div></div>`;
         document.getElementById('biletPaper').style.display = 'none';
         const resDiv = document.getElementById('examFinalResult');
         resDiv.innerHTML = detailsHtml;
@@ -963,12 +965,12 @@
         const qImg = q.image && q.image.length > 20 ? `<img src="${q.image}" class="q-image">` : '';
         card.innerHTML = `
             <span class="q-id">#SAVOL ${currentIndex + 1} / ${allQuestions.length}</span>
-            <div class="q-text">${q.savol || "Matn yo'q"}</div>
+            <div class="q-text">${q.savol || "..."}</div>
             ${qImg}
             <div class="answer-wrapper">${formatAnswer(q.javob)}</div>
             <div class="tag-actions">
-                <button class="tag-btn" onclick="prevQuestion()" ${currentIndex === 0 ? 'style="opacity:0.5; pointer-events:none;"' : ''}>Ortga</button>
-                <button class="tag-btn" onclick="nextQuestion()" ${currentIndex === allQuestions.length - 1 ? 'style="opacity:0.5; pointer-events:none;"' : ''}>Keyingisi</button>
+                <button class="tag-btn" onclick="prevQuestion()" ${currentIndex === 0 ? 'style="opacity:0.3; pointer-events:none;"' : ''}>Ortga</button>
+                <button class="tag-btn" onclick="nextQuestion()" ${currentIndex === allQuestions.length - 1 ? 'style="opacity:0.3; pointer-events:none;"' : ''}>Oldinga</button>
             </div>
         `;
         app.appendChild(card);
