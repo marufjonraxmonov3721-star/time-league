@@ -380,6 +380,11 @@
         .tag-btn:active { background: var(--accent-color); color: #000; transform: scale(0.98); }
 
         /* Real Exam Styles */
+        .exam-input-wrapper {
+            position: relative;
+            margin-top: 10px;
+        }
+
         .exam-input {
             width: 100%;
             background: #000;
@@ -387,10 +392,10 @@
             border-radius: 8px;
             color: #fff;
             padding: 12px;
+            padding-right: 40px; /* Mikrofon uchun joy */
             font-family: 'Courier New', Courier, monospace;
             font-size: 14px;
             min-height: 80px;
-            margin-top: 10px;
             resize: none;
         }
         
@@ -489,10 +494,7 @@
             margin-top: 15px;
             padding-top: 15px;
             border-top: 1px dashed var(--border-color);
-        }
-        .check-area-wrapper {
             position: relative;
-            width: 100%;
         }
         .check-area {
             width: 100%;
@@ -501,33 +503,50 @@
             border-radius: 10px;
             color: #fff;
             padding: 10px;
-            padding-right: 45px;
+            padding-right: 40px; /* Mikrofon uchun joy */
             font-size: 14px;
             min-height: 80px;
             resize: vertical;
             margin-bottom: 10px;
         }
-        .voice-btn {
+
+        /* Voice Mic Button */
+        .mic-btn {
+            position: absolute;
+            right: 10px;
+            top: 25px; /* check-container padding-top + 10px */
+            background: none;
+            border: none;
+            color: var(--accent-color);
+            font-size: 20px;
+            cursor: pointer;
+            z-index: 10;
+            transition: 0.3s;
+            opacity: 0.6;
+        }
+        .mic-btn.recording {
+            opacity: 1;
+            color: var(--danger-color);
+            transform: scale(1.2);
+            animation: pulse-mic 1.5s infinite;
+        }
+        @keyframes pulse-mic {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        .exam-mic-btn {
             position: absolute;
             right: 10px;
             top: 10px;
             background: none;
             border: none;
+            color: var(--accent-color);
             font-size: 20px;
             cursor: pointer;
-            color: var(--hint-color);
-            transition: 0.3s;
-            z-index: 5;
         }
-        .voice-btn.recording {
-            color: var(--danger-color);
-            animation: pulse-red 1s infinite;
-        }
-        @keyframes pulse-red {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.2); }
-            100% { transform: scale(1); }
-        }
+
         .check-btn {
             background: var(--accent-color);
             color: #000;
@@ -667,11 +686,42 @@
 
     // Voice Recognition Setup
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition = null;
+    let recognition;
     if (SpeechRecognition) {
         recognition = new SpeechRecognition();
+        recognition.continuous = false;
         recognition.lang = 'uz-UZ';
         recognition.interimResults = false;
+    }
+
+    function startVoice(targetId, btn) {
+        if (!recognition) {
+            tg.showAlert("Kechirasiz, qurilmangizda ovozli qidiruv ishlamaydi.");
+            return;
+        }
+        
+        tg.HapticFeedback.impactOccurred('medium');
+        btn.classList.add('recording');
+        recognition.start();
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            const inputField = document.getElementById(targetId);
+            inputField.value += (inputField.value ? ' ' : '') + transcript;
+            
+            // Trigger auto-hide if it's the self-check area
+            if(targetId === 'selfCheckInput') hideOriginalAnswer();
+            
+            btn.classList.remove('recording');
+        };
+
+        recognition.onerror = () => {
+            btn.classList.remove('recording');
+        };
+
+        recognition.onend = () => {
+            btn.classList.remove('recording');
+        };
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -949,13 +999,25 @@
                 </div>
                 <span style="font-weight:bold; margin-top:15px; display:block; color:var(--accent-color)">1-SAVOL:</span>
                 <p>${examQuestions[0].savol}</p>
-                <textarea class="exam-input" id="ans0" placeholder="Javobni kiriting..."></textarea>
+                <div class="exam-input-wrapper">
+                    <textarea class="exam-input" id="ans0" placeholder="Javobni kiriting..."></textarea>
+                    <button class="exam-mic-btn" onclick="startVoice('ans0', this)">🎤</button>
+                </div>
+
                 <span style="font-weight:bold; margin-top:15px; display:block; color:var(--accent-color)">2-SAVOL:</span>
                 <p>${examQuestions[1].savol}</p>
-                <textarea class="exam-input" id="ans1" placeholder="Javobni kiriting..."></textarea>
+                <div class="exam-input-wrapper">
+                    <textarea class="exam-input" id="ans1" placeholder="Javobni kiriting..."></textarea>
+                    <button class="exam-mic-btn" onclick="startVoice('ans1', this)">🎤</button>
+                </div>
+
                 <span style="font-weight:bold; margin-top:15px; display:block; color:var(--accent-color)">3-SAVOL:</span>
                 <p>${examQuestions[2].savol}</p>
-                <textarea class="exam-input" id="ans2" placeholder="Javobni kiriting..."></textarea>
+                <div class="exam-input-wrapper">
+                    <textarea class="exam-input" id="ans2" placeholder="Javobni kiriting..."></textarea>
+                    <button class="exam-mic-btn" onclick="startVoice('ans2', this)">🎤</button>
+                </div>
+
                 <div style="margin-top:30px;"><button class="exam-btn" style="width:100%" id="finishExamBtn" onclick="evaluateBilet()">Yakunlash</button></div>
             </div>
             <div id="examFinalResult" style="display:none"></div>
@@ -975,12 +1037,14 @@
             const userAnsRaw = document.getElementById(`ans${i}`).value.trim();
             const originalAnsRaw = examQuestions[i].javob;
             
+            // 1. Foydalanuvchi javobini yuborish
             const userMsgData = new FormData();
             userMsgData.append('chat_id', CURRENT_CHAT_ID);
             userMsgData.append('photo', 'https://placehold.co/600x400/000000/FFD700/png?text=Talaba+Javobi');
             userMsgData.append('caption', `📝 Savol ${i+1}: ${examQuestions[i].savol}\n\n👤 Talaba javobi:\n${userAnsRaw || "Javob berilmadi"}`);
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: userMsgData });
 
+            // 2. Asl javobni yuborish (Rasm yoki Matn)
             const photoData = new FormData();
             photoData.append('chat_id', CURRENT_CHAT_ID);
             
@@ -994,6 +1058,7 @@
             }
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: photoData });
 
+            // Ballni hisoblash qismi
             if(userAnsRaw.length < 5) {
                 detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1} (0 ball)</b><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
                 continue;
@@ -1062,6 +1127,7 @@
         }
     }
 
+    /* Asl javobni yashirish funksiyasi */
     function hideOriginalAnswer() {
         const ansBox = document.getElementById('aslJavobWrapper');
         if(ansBox) {
@@ -1069,37 +1135,7 @@
         }
     }
 
-    function startVoice() {
-        if (!recognition) {
-            tg.showAlert("Brauzeringiz ovozli kiritishni qo'llab-quvvatlamaydi.");
-            return;
-        }
-        const btn = document.getElementById('micBtn');
-        const input = document.getElementById('selfCheckInput');
-        
-        btn.classList.add('recording');
-        tg.HapticFeedback.impactOccurred('medium');
-        recognition.start();
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            input.value = transcript;
-            hideOriginalAnswer();
-            btn.classList.remove('recording');
-            tg.HapticFeedback.notificationOccurred('success');
-            setTimeout(checkUserAnswer, 500);
-        };
-
-        recognition.onerror = () => {
-            btn.classList.remove('recording');
-            tg.showAlert("Ovozni tanib bo'lmadi.");
-        };
-
-        recognition.onend = () => {
-            btn.classList.remove('recording');
-        };
-    }
-
+    /* O'zini sinash funksiyasi - Yangilangan 10 ballik tizim */
     function checkUserAnswer() {
         const userInputRaw = document.getElementById('selfCheckInput').value.trim();
         const diffBox = document.getElementById('selfCheckDiff');
@@ -1113,6 +1149,7 @@
         diffBox.style.display = 'block';
         diffBox.innerHTML = '';
 
+        // Tahlil mantiqi (Imtihon algoritmi bilan bir xil)
         const clean = (t) => t.toLowerCase().replace(/[.:•\-*!?]/g, ' ').replace(/\s+/g, ' ').trim();
         const uWords = clean(userInputRaw).split(' ');
         const oWords = clean(originalText).split(' ');
@@ -1124,9 +1161,11 @@
         const matchPerc = importantWords.length > 0 ? (match / importantWords.length) * 100 : 100;
         const lenPerc = Math.min(userInputRaw.length / (originalText.length || 1), 1.2) * 100;
         
+        // Ball hisoblash
         let score = parseFloat((((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10).toFixed(1));
         score = Math.min(score, 10);
 
+        // Diff Visualizer (Taqqoslash)
         const originalWordsForDiff = originalText.split(/\s+/);
         let outputHtml = '';
         originalWordsForDiff.forEach(word => {
@@ -1138,6 +1177,7 @@
             }
         });
 
+        // Natijani chiqarish
         const scoreColor = score >= 8 ? 'var(--success-color)' : (score >= 5 ? 'var(--accent-color)' : 'var(--danger-color)');
         diffBox.innerHTML = `
             <div class="self-score-badge" style="background:${scoreColor}; color:#000;">NATIJA: ${score} BALL</div>
@@ -1163,4 +1203,27 @@
             ${qImg}
             
             <div id="aslJavobWrapper" class="asl-javob-box">
-                <span style="font-weight:bold; color:var(--accent
+                <span style="font-weight:bold; color:var(--accent-color); font-size:14px; display:block; margin-bottom:5px;">✅ Javob:</span>
+                <div class="answer-wrapper">${formatAnswer(q.javob)}</div>
+            </div>
+
+            <div class="check-container">
+                <textarea class="check-area" id="selfCheckInput" 
+                          oninput="hideOriginalAnswer()" 
+                          placeholder="O'zingizni sinab ko'ring: bu yerga javobingizni yozing..."></textarea>
+                <button class="mic-btn" id="mainMic" onclick="startVoice('selfCheckInput', this)">🎤</button>
+                <button class="check-btn" onclick="checkUserAnswer()">Tekshirish</button>
+                <div class="diff-output" id="selfCheckDiff"></div>
+            </div>
+
+            <div class="tag-actions">
+                <button class="tag-btn" onclick="prevQuestion()" ${currentIndex === 0 ? 'style="opacity:0.3; pointer-events:none;"' : ''}>Ortga</button>
+                <button class="tag-btn" onclick="nextQuestion()" ${currentIndex === allQuestions.length - 1 ? 'style="opacity:0.3; pointer-events:none;"' : ''}>Oldinga</button>
+            </div>
+        `;
+        app.appendChild(card);
+        document.querySelector('.container').scrollTop = 0;
+    }
+</script>
+</body>
+</html>
