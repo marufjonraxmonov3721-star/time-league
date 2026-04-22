@@ -69,7 +69,7 @@
         }
 
         @keyframes spin {
-            0? { transform: rotate(0deg); }
+            0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
 
@@ -531,7 +531,7 @@
             animation: pulse-mic 1.5s infinite;
         }
         @keyframes pulse-mic {
-            0? { opacity: 1; }
+            0% { opacity: 1; }
             50% { opacity: 0.4; }
             100% { opacity: 1; }
         }
@@ -880,7 +880,7 @@
         startExamTab(document.getElementById('btn-imtihon'));
     }
 
-    /* --- TEZ YODLASH FUNKSIYALARI (YANGILANGAN) --- */
+    /* --- TEZ YODLASH FUNKSIYALARI --- */
     function openTezYodlash() {
         isTezYodlashMode = true;
         document.getElementById('dashboard-menu').style.display = 'none';
@@ -909,7 +909,6 @@
     }
 
     function loadTezYodlashQuestions() {
-        // Tez yodlash uchun ham Fizika_savollari bazasidan foydalanamiz
         const path = 'fizika_savollari';
         currentPath = path;
         const app = document.getElementById('app');
@@ -939,7 +938,6 @@
             displayId: data[key].id || parseInt(key.replace(/\D/g, '')) || 0
         })).sort((a, b) => a.displayId - b.displayId);
 
-        // Faqat yodlanmagan savollarni ko'rsatish
         allQuestions = rawItems.filter(q => !yodlanganSavollar.includes(q.firebaseKey));
         
         if(allQuestions.length === 0) {
@@ -958,7 +956,6 @@
             localStorage.setItem('yodlangan_savollar', JSON.stringify(yodlanganSavollar));
             tg.HapticFeedback.notificationOccurred('success');
             
-            // Keyingi savolga o'tish yoki dashboardga qaytish
             allQuestions = allQuestions.filter(q => q.firebaseKey !== firebaseKey);
             if(allQuestions.length > 0) {
                 if(currentIndex >= allQuestions.length) currentIndex = allQuestions.length - 1;
@@ -996,12 +993,70 @@
             tg.showAlert("Imtihon uchun kamida 3 ta savol yodlashingiz kerak!");
             return;
         }
+        
+        const app = document.getElementById('app');
+        app.innerHTML = `
+            <div class="card" style="text-align:center">
+                <h2 style="color:var(--accent-color)">Tez yodlash biletini tanlang</h2>
+                <canvas id="examCanvas"></canvas>
+            </div>
+        `;
+        
+        const biletCount = Math.floor(yodlanganSavollar.length / 3);
+        initExamTableManual(biletCount);
+    }
 
+    function initExamTableManual(count) {
+        const canvas = document.getElementById('examCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        
+        ticketPositions = [];
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const cols = 5;
+        const rows = Math.ceil(count / cols);
+        const w = 45, h = 30;
+
+        for(let i=0; i<count; i++) {
+            const r = Math.floor(i / cols);
+            const c = i % cols;
+            const x = (canvas.width/(cols+1)) * (c+1) - w/2;
+            const y = (canvas.height/(rows+1)) * (r+1) - h/2;
+            ticketPositions.push({x, y, w, h, id: i+1});
+            ctx.save();
+            ctx.translate(x+w/2, y+h/2);
+            ctx.fillStyle = "#FFD700";
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "#FFD700";
+            ctx.fillRect(-w/2, -h/2, w, h);
+            ctx.fillStyle = "#000";
+            ctx.font = "bold 12px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText(i+1, 0, 5);
+            ctx.restore();
+        }
+
+        canvas.onclick = (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
+            ticketPositions.forEach(p => {
+                if(mx > p.x && mx < p.x + p.w && my > p.y && my < p.y + p.h) {
+                    currentExamBiletNumber = p.id;
+                    tg.HapticFeedback.impactOccurred('heavy');
+                    generateTezYodlashBilet();
+                }
+            });
+        };
+    }
+
+    function generateTezYodlashBilet() {
         const cachedFizika = localStorage.getItem('cache_fizika_savollari');
         if(!cachedFizika) return;
 
         const data = JSON.parse(cachedFizika);
-        // Faqat yodlangan savollardan bilet tuzish
         const filtered = Object.keys(data)
             .filter(key => yodlanganSavollar.includes(key))
             .map(key => data[key]);
@@ -1014,7 +1069,6 @@
             examQuestions.push(tempArr.splice(rIdx, 1)[0]);
         }
         
-        currentExamBiletNumber = "Tezkor";
         isExamMode = true;
         renderPaperBilet();
     }
@@ -1277,7 +1331,6 @@
                 comparisonText = examQuestions[i].javob_matn || ""; 
             }
 
-            // Telegram bot orqali natijani yuborish
             const userMsgData = new FormData();
             userMsgData.append('chat_id', CURRENT_CHAT_ID);
             userMsgData.append('photo', 'https://placehold.co/600x400/000000/FFD700/png?text=Talaba+Javobi');
@@ -1412,7 +1465,6 @@
         card.className = 'card';
         const qImg = q.image && q.image.length > 20 ? `<img src="${q.image}" class="q-image">` : '';
         
-        // Tez yodlash uchun maxsus tugma
         const tezYodlashBtn = isTezYodlashMode ? `<button class="yodlash-btn" onclick="toggleYodladim('${q.firebaseKey}')">Yodladim</button>` : '';
 
         card.innerHTML = `
