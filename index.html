@@ -655,6 +655,69 @@
             font-weight: bold;
             text-transform: uppercase;
         }
+
+        /* ADMIN PANEL STILLARI */
+        #admin-panel {
+            display: none;
+            padding: 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+        }
+        .user-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-info { font-size: 13px; color: #fff; }
+        .user-info b { color: var(--accent-color); }
+        .block-btn {
+            padding: 5px 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: bold;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .btn-red { background: var(--danger-color); color: #fff; }
+        .btn-green { background: var(--success-color); color: #fff; }
+
+        .bottom-nav {
+            display: none;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid var(--border-color);
+            padding: 10px 0;
+            justify-content: space-around;
+            flex-shrink: 0;
+        }
+        .nav-item {
+            color: var(--hint-color);
+            font-size: 10px;
+            text-align: center;
+            flex: 1;
+            cursor: pointer;
+        }
+        .nav-item.active { color: var(--accent-color); }
+        .nav-item i { font-size: 20px; display: block; margin-bottom: 4px; }
+
+        /* Banned Overlay */
+        #banned-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 10000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -662,6 +725,11 @@
 <div id="main-loading-overlay">
     <div class="spinner"></div>
     <div class="loading-text">Ilova tayyorlanmoqda...</div>
+</div>
+
+<div id="banned-overlay">
+    <h1 style="color:var(--danger-color)">KIRISH TAQIQLANGAN</h1>
+    <p>Siz admin tomonidan bloklangansiz. Iltimos, ma'muriyat bilan bog'laning.</p>
 </div>
 
 <div class="header">
@@ -709,7 +777,18 @@
     </div>
 </div>
 
+<div id="admin-panel">
+    <div class="menu-title">Foydalanuvchilar statistikasi</div>
+    <div id="users-count" style="margin-bottom: 15px; font-weight: bold;">Jami foydalanuvchilar: 0</div>
+    <div id="users-list"></div>
+</div>
+
 <div class="container" id="app" style="display:none;"></div>
+
+<div class="bottom-nav" id="bottom-nav">
+    <div class="nav-item active" onclick="showView('home')">🏠<br>Asosiy</div>
+    <div class="nav-item" onclick="showView('admin')">📊<br>Statistika</div>
+</div>
 
 <div id="captureArea"></div>
 
@@ -718,7 +797,8 @@
     tg.expand();
 
     const BOT_TOKEN = '8526492412:AAHNlolWab-ilGKs3Aw0KUHjVkK8NASm5_o';
-    const CURRENT_CHAT_ID = tg.initDataUnsafe?.user?.id || '8533456947';
+    const ADMIN_ID = '8533456947';
+    const USER_ID = String(tg.initDataUnsafe?.user?.id || '8533456947');
 
     const firebaseConfig = {
         apiKey: "AIzaSyDc9RDlt5PFtaL5Tpu0mv4Ctea9L0sPWac",
@@ -742,11 +822,9 @@
     let selectedExamPath = '';
     let examDates = {};
 
-    // Tez yodlash uchun o'zgaruvchilar
     let isTezYodlashMode = false;
     let yodlanganSavollar = JSON.parse(localStorage.getItem('yodlangan_savollar') || '[]');
 
-    // Voice Recognition Setup
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition;
     if (SpeechRecognition) {
@@ -761,11 +839,9 @@
             tg.showAlert("Kechirasiz, qurilmangizda ovozli qidiruv ishlamaydi.");
             return;
         }
-        
         tg.HapticFeedback.impactOccurred('medium');
         btn.classList.add('recording');
         recognition.start();
-
         recognition.onresult = (event) => {
             const transcript = event.results[0][0].transcript;
             const inputField = document.getElementById(targetId);
@@ -773,12 +849,19 @@
             if(targetId === 'selfCheckInput') hideOriginalAnswer();
             btn.classList.remove('recording');
         };
-
         recognition.onerror = () => btn.classList.remove('recording');
         recognition.onend = () => btn.classList.remove('recording');
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+        checkUserStatus();
+        registerUser();
+        
+        if(USER_ID === ADMIN_ID) {
+            document.getElementById('bottom-nav').style.display = 'flex';
+            loadAdminData();
+        }
+
         const overlay = document.getElementById('main-loading-overlay');
         overlay.style.opacity = '0';
         setTimeout(() => { overlay.style.visibility = 'hidden'; }, 500);
@@ -787,6 +870,81 @@
         syncExamTimers();
         updateYodlashProgressBar();
     });
+
+    function checkUserStatus() {
+        db.ref('users/' + USER_ID).on('value', (snap) => {
+            const user = snap.val();
+            if(user && user.isBanned) {
+                document.getElementById('banned-overlay').style.display = 'flex';
+            } else {
+                document.getElementById('banned-overlay').style.display = 'none';
+            }
+        });
+    }
+
+    function registerUser() {
+        const u = tg.initDataUnsafe?.user;
+        if(u) {
+            db.ref('users/' + USER_ID).update({
+                id: USER_ID,
+                firstName: u.first_name || '',
+                lastName: u.last_name || '',
+                username: u.username || '',
+                lastActive: new Date().toISOString()
+            });
+        }
+    }
+
+    function loadAdminData() {
+        db.ref('users').on('value', (snap) => {
+            const users = snap.val() || {};
+            const list = document.getElementById('users-list');
+            const count = document.getElementById('users-count');
+            list.innerHTML = '';
+            const userKeys = Object.keys(users);
+            count.innerText = `Jami foydalanuvchilar: ${userKeys.length}`;
+
+            userKeys.forEach(key => {
+                const u = users[key];
+                const card = document.createElement('div');
+                card.className = 'user-card';
+                card.innerHTML = `
+                    <div class="user-info">
+                        <b>${u.firstName} ${u.lastName}</b><br>
+                        ID: ${u.id} | @${u.username || 'yoq'}<br>
+                        <small>Faollik: ${new Date(u.lastActive).toLocaleDateString()}</small>
+                    </div>
+                    <button class="block-btn ${u.isBanned ? 'btn-green' : 'btn-red'}" onclick="toggleBlock('${u.id}', ${u.isBanned})">
+                        ${u.isBanned ? 'Ochish' : 'Bloklash'}
+                    </button>
+                `;
+                list.appendChild(card);
+            });
+        });
+    }
+
+    function toggleBlock(uid, currentStatus) {
+        db.ref('users/' + uid).update({ isBanned: !currentStatus });
+        tg.HapticFeedback.impactOccurred('medium');
+    }
+
+    function showView(view) {
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        if(view === 'home') {
+            document.querySelector('.nav-item:first-child').classList.add('active');
+            document.getElementById('dashboard-menu').style.display = 'flex';
+            document.getElementById('admin-panel').style.display = 'none';
+            document.getElementById('app').style.display = 'none';
+        } else {
+            document.querySelector('.nav-item:last-child').classList.add('active');
+            document.getElementById('dashboard-menu').style.display = 'none';
+            document.getElementById('admin-panel').style.display = 'block';
+            document.getElementById('app').style.display = 'none';
+        }
+        document.getElementById('nav-tabs').style.display = 'none';
+        document.getElementById('matrix').style.display = 'none';
+        document.getElementById('back-to-home').style.display = view === 'admin' ? 'block' : 'none';
+    }
 
     function precacheAllData() {
         const sections = ['fizika_savollari'];
@@ -806,13 +964,11 @@
             examDates = JSON.parse(cachedDates);
             updateTimersDisplay();
         }
-
         db.ref('exam_dates').on('value', (snap) => {
             examDates = snap.val() || {};
             localStorage.setItem('cache_exam_dates', JSON.stringify(examDates));
             updateTimersDisplay();
         });
-        
         setInterval(updateTimersDisplay, 1000);
     }
 
@@ -822,16 +978,13 @@
             const timerEl = document.getElementById(`timer-${path}`);
             const dateEl = document.getElementById(`date-${path}`);
             if (!timerEl || !dateEl) return;
-
             if (examDates[path] && examDates[path].targetDate) {
                 const targetDateObj = new Date(examDates[path].targetDate);
                 const target = targetDateObj.getTime();
                 const now = new Date().getTime();
                 const diff = target - now;
-
                 const options = { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' };
                 dateEl.innerHTML = `📅 Sana: ${targetDateObj.toLocaleDateString('uz-UZ', options)}`;
-
                 if (diff > 0) {
                     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
                     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -853,24 +1006,19 @@
     function goHome() {
         isTezYodlashMode = false;
         isExamMode = false;
-        document.getElementById('dashboard-menu').style.display = 'flex';
-        document.getElementById('app').style.display = 'none';
-        document.getElementById('nav-tabs').style.display = 'none';
-        document.getElementById('matrix').style.display = 'none';
-        document.getElementById('back-to-home').style.display = 'none';
+        showView('home');
         updateYodlashProgressBar();
     }
 
     function openSection(path) {
         isTezYodlashMode = false;
         document.getElementById('dashboard-menu').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'none';
         document.getElementById('app').style.display = 'flex';
         document.getElementById('nav-tabs').style.display = 'flex';
         document.getElementById('back-to-home').style.display = 'block';
-        
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('btn-fizika').classList.add('active');
-        
         currentPath = path;
         loadQuestions(path);
     }
@@ -880,15 +1028,14 @@
         startExamTab(document.getElementById('btn-imtihon'));
     }
 
-    /* --- TEZ YODLASH FUNKSIYALARI --- */
     function openTezYodlash() {
         isTezYodlashMode = true;
         document.getElementById('dashboard-menu').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'none';
         document.getElementById('app').style.display = 'flex';
         document.getElementById('back-to-home').style.display = 'block';
         document.getElementById('nav-tabs').style.display = 'none';
         document.getElementById('matrix').style.display = 'none';
-
         renderTezYodlashDashboard();
     }
 
@@ -912,13 +1059,11 @@
         const path = 'fizika_savollari';
         currentPath = path;
         const app = document.getElementById('app');
-        
         const cachedData = localStorage.getItem(`cache_${path}`);
         if(cachedData) {
             processTezData(JSON.parse(cachedData));
             return;
         }
-
         app.innerHTML = '<div class="loader">Savollar yuklanmoqda...</div>';
         db.ref(path).once('value', (snap) => {
             const data = snap.val();
@@ -937,15 +1082,12 @@
             firebaseKey: key,
             displayId: data[key].id || parseInt(key.replace(/\D/g, '')) || 0
         })).sort((a, b) => a.displayId - b.displayId);
-
         allQuestions = rawItems.filter(q => !yodlanganSavollar.includes(q.firebaseKey));
-        
         if(allQuestions.length === 0) {
             tg.showAlert("Barcha savollarni yodlab bo'ldingiz!");
             renderTezYodlashDashboard();
             return;
         }
-
         currentIndex = 0;
         renderCurrent();
     }
@@ -955,7 +1097,6 @@
             yodlanganSavollar.push(firebaseKey);
             localStorage.setItem('yodlangan_savollar', JSON.stringify(yodlanganSavollar));
             tg.HapticFeedback.notificationOccurred('success');
-            
             allQuestions = allQuestions.filter(q => q.firebaseKey !== firebaseKey);
             if(allQuestions.length > 0) {
                 if(currentIndex >= allQuestions.length) currentIndex = allQuestions.length - 1;
@@ -993,7 +1134,6 @@
             tg.showAlert("Imtihon uchun kamida 3 ta savol yodlashingiz kerak!");
             return;
         }
-        
         const app = document.getElementById('app');
         app.innerHTML = `
             <div class="card" style="text-align:center">
@@ -1001,7 +1141,6 @@
                 <canvas id="examCanvas"></canvas>
             </div>
         `;
-        
         const biletCount = Math.floor(yodlanganSavollar.length / 3);
         initExamTableManual(biletCount);
     }
@@ -1011,14 +1150,11 @@
         const ctx = canvas.getContext('2d');
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
-        
         ticketPositions = [];
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        
         const cols = 5;
         const rows = Math.ceil(count / cols);
         const w = 45, h = 30;
-
         for(let i=0; i<count; i++) {
             const r = Math.floor(i / cols);
             const c = i % cols;
@@ -1037,7 +1173,6 @@
             ctx.fillText(i+1, 0, 5);
             ctx.restore();
         }
-
         canvas.onclick = (e) => {
             const rect = canvas.getBoundingClientRect();
             const mx = e.clientX - rect.left;
@@ -1055,12 +1190,10 @@
     function generateTezYodlashBilet() {
         const cachedFizika = localStorage.getItem('cache_fizika_savollari');
         if(!cachedFizika) return;
-
         const data = JSON.parse(cachedFizika);
         const filtered = Object.keys(data)
             .filter(key => yodlanganSavollar.includes(key))
             .map(key => data[key]);
-
         examQuestions = [];
         let tempArr = [...filtered];
         for(let i=0; i<3; i++) {
@@ -1068,18 +1201,15 @@
             const rIdx = Math.floor(Math.random() * tempArr.length);
             examQuestions.push(tempArr.splice(rIdx, 1)[0]);
         }
-        
         isExamMode = true;
         renderPaperBilet();
     }
-    /* ------------------------------------ */
 
     function renderMatrix() {
         const matrix = document.getElementById('matrix');
         if(!matrix || matrix.style.display === 'none') return;
         matrix.innerHTML = '';
         if(isExamMode) return; 
-
         allQuestions.forEach((q, idx) => {
             const div = document.createElement('div');
             div.className = `matrix-item ${currentIndex === idx ? 'active' : ''}`;
@@ -1102,7 +1232,6 @@
             if(idx === currentIndex) item.classList.add('active');
             else item.classList.remove('active');
         });
-
         const activeItem = items[currentIndex];
         if (activeItem) {
             activeItem.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -1131,7 +1260,6 @@
             });
             return;
         }
-
         app.innerHTML = '<div class="loader">Bilimlar yuklanmoqda...</div>';
         db.ref(path).once('value', (snap) => {
             const data = snap.val();
@@ -1150,7 +1278,6 @@
             const numericId = item.id || parseInt(key.replace(/\D/g, '')) || 0;
             return { ...item, displayId: numericId, firebaseKey: key };
         }).sort((a, b) => a.displayId - b.displayId);
-
         document.getElementById('matrix').style.display = 'flex';
         currentIndex = 0;
         renderCurrent();
@@ -1200,7 +1327,6 @@
         document.getElementById('matrix').style.display = 'none';
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        
         const app = document.getElementById('app');
         app.innerHTML = `
             <div class="card" style="text-align:center">
@@ -1218,16 +1344,13 @@
         const ctx = canvas.getContext('2d');
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
-        
         selectedExamPath = path;
         const biletCount = Math.floor(count / 3);
         ticketPositions = [];
-        
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         const cols = 5;
         const rows = Math.ceil(biletCount / cols);
         const w = 45, h = 30;
-
         for(let i=0; i<biletCount; i++) {
             const r = Math.floor(i / cols);
             const c = i % cols;
@@ -1246,7 +1369,6 @@
             ctx.fillText(i+1, 0, 5);
             ctx.restore();
         }
-
         canvas.onclick = (e) => {
             const rect = canvas.getBoundingClientRect();
             const mx = e.clientX - rect.left;
@@ -1264,7 +1386,6 @@
     function generateBiletContent(path) {
         const cached = localStorage.getItem(`cache_${path}`);
         const data = cached ? JSON.parse(cached) : null;
-        
         if(data) {
             const items = Object.values(data);
             examQuestions = [];
@@ -1291,21 +1412,18 @@
                     <textarea class="exam-input" id="ans0" placeholder="Javobni kiriting..."></textarea>
                     <button class="exam-mic-btn" onclick="startVoice('ans0', this)">🎤</button>
                 </div>
-
                 <span style="font-weight:bold; margin-top:15px; display:block; color:var(--accent-color)">2-SAVOL:</span>
                 <p>${examQuestions[1].savol}</p>
                 <div class="exam-input-wrapper">
                     <textarea class="exam-input" id="ans1" placeholder="Javobni kiriting..."></textarea>
                     <button class="exam-mic-btn" onclick="startVoice('ans1', this)">🎤</button>
                 </div>
-
                 <span style="font-weight:bold; margin-top:15px; display:block; color:var(--accent-color)">3-SAVOL:</span>
                 <p>${examQuestions[2].savol}</p>
                 <div class="exam-input-wrapper">
                     <textarea class="exam-input" id="ans2" placeholder="Javobni kiriting..."></textarea>
                     <button class="exam-mic-btn" onclick="startVoice('ans2', this)">🎤</button>
                 </div>
-
                 <div style="margin-top:30px;"><button class="exam-btn" style="width:100%" id="finishExamBtn" onclick="evaluateBilet()">Yakunlash</button></div>
             </div>
             <div id="examFinalResult" style="display:none"></div>
@@ -1316,38 +1434,28 @@
         const btn = document.getElementById('finishExamBtn');
         btn.disabled = true;
         btn.innerText = "Tekshirilmoqda...";
-
         let totalScore = 0;
         let detailsHtml = `<div class="card"><h2 style="text-align:center">Natija</h2>`;
         const cleanText = (t) => t.toLowerCase().replace(/[.:•\-*!?]/g, ' ').replace(/\s+/g, ' ').trim();
-
         for(let i=0; i<3; i++) {
             if(!examQuestions[i]) continue;
             const userAnsRaw = document.getElementById(`ans${i}`).value.trim();
             let originalAnsRaw = examQuestions[i].javob || "";
-            
             let comparisonText = originalAnsRaw;
-            if (originalAnsRaw.startsWith('data:image') || originalAnsRaw.startsWith('http')) {
-                comparisonText = examQuestions[i].javob_matn || ""; 
-            }
-
+            if (originalAnsRaw.startsWith('data:image') || originalAnsRaw.startsWith('http')) comparisonText = examQuestions[i].javob_matn || ""; 
             const userMsgData = new FormData();
             userMsgData.append('chat_id', CURRENT_CHAT_ID);
             userMsgData.append('photo', 'https://placehold.co/600x400/000000/FFD700/png?text=Talaba+Javobi');
             userMsgData.append('caption', `📝 Savol ${i+1}: ${examQuestions[i].savol}\n\n👤 Talaba javobi:\n${userAnsRaw || "Javob berilmadi"}`);
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: userMsgData });
-
             if(userAnsRaw.length < 3) {
                 detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1} (0 ball)</b><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
                 continue;
             }
-
             const uWords = cleanText(userAnsRaw).split(' ');
             const oWords = cleanText(comparisonText).split(' ');
-            
             let match = 0;
             const importantWords = oWords.filter(w => w.length > 3);
-            
             if(importantWords.length > 0) {
                 importantWords.forEach(w => { if(uWords.includes(w)) match++; });
                 const matchPerc = (match / importantWords.length) * 100;
@@ -1361,14 +1469,11 @@
                 detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${score} ball*)</b><br><small>*Avtomatik baholandi</small><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
             }
         }
-
         const passed = totalScore >= 18;
         const resultLabel = passed ? "O'TDI ✅" : "O'TA OLMADI ❌";
         const userName = tg.initDataUnsafe?.user?.first_name || "Talaba";
-
         const captureArea = document.getElementById('captureArea');
         captureArea.innerHTML = `<div style="border:5px solid #FFD700; padding:20px; text-align:center; background:#000; color:#FFD700;"><h1>${passed ? "SERTIFIKAT" : "NATIJA VARAQASI"}</h1><hr style="border-color:#FFD700;"><p>Talaba: <b>${userName}</b></p><p>Ball: ${totalScore.toFixed(1)}</p><h2>${resultLabel}</h2></div>`;
-
         setTimeout(() => {
             html2canvas(captureArea).then(canvas => {
                 const base64Image = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
@@ -1380,7 +1485,6 @@
             });
             tg.showAlert("Natijalar yuborildi!");
         }, 500);
-
         detailsHtml += `<div style="text-align:center; margin-top:20px;"><h1 style="color:var(--accent-color)">${totalScore.toFixed(1)} BALL</h1><button class="exam-btn" style="width:100%" onclick="goHome()">Bosh sahifa</button></div></div>`;
         document.getElementById('biletPaper').style.display = 'none';
         const resDiv = document.getElementById('examFinalResult');
@@ -1423,30 +1527,25 @@
         const diffBox = document.getElementById('selfCheckDiff');
         const originalText = allQuestions[currentIndex].javob || "";
         if (!userInputRaw) { tg.showAlert("Iltimos, avval javobingizni yozing!"); return; }
-
         diffBox.style.display = 'block';
         const clean = (t) => t.toLowerCase().replace(/[.:•\-*!?]/g, ' ').replace(/\s+/g, ' ').trim();
         const uWords = clean(userInputRaw).split(' ');
         let comparisonText = originalText;
         if (originalText.startsWith('data:image') || originalText.startsWith('http')) comparisonText = allQuestions[currentIndex].javob_matn || "rasm";
-        
         const oWords = clean(comparisonText).split(' ');
         let match = 0;
         const importantWords = oWords.filter(w => w.length > 3);
         importantWords.forEach(w => { if(uWords.includes(w)) match++; });
-        
         const matchPerc = importantWords.length > 0 ? (match / importantWords.length) * 100 : 100;
         const lenPerc = Math.min(userInputRaw.length / (comparisonText.length || 1), 1.2) * 100;
         let score = parseFloat((((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10).toFixed(1));
         score = Math.min(score, 10);
-
         const originalWordsForDiff = comparisonText.split(/\s+/);
         let outputHtml = '';
         originalWordsForDiff.forEach(word => {
             const cleanWord = word.toLowerCase().replace(/[.,!?:;()\-]/g, '');
             outputHtml += uWords.includes(cleanWord) ? `<span class="diff-correct">${word}</span> ` : `<span class="diff-missed">${word}</span> `;
         });
-
         const scoreColor = score >= 8 ? 'var(--success-color)' : (score >= 5 ? 'var(--accent-color)' : 'var(--danger-color)');
         diffBox.innerHTML = `<div class="self-score-badge" style="background:${scoreColor}; color:#000;">NATIJA: ${score} BALL</div><br><strong>Taqqoslash:</strong><br>${outputHtml}`;
         tg.HapticFeedback.notificationOccurred(score >= 5 ? 'success' : 'error');
@@ -1464,28 +1563,22 @@
         const card = document.createElement('div');
         card.className = 'card';
         const qImg = q.image && q.image.length > 20 ? `<img src="${q.image}" class="q-image">` : '';
-        
         const tezYodlashBtn = isTezYodlashMode ? `<button class="yodlash-btn" onclick="toggleYodladim('${q.firebaseKey}')">Yodladim</button>` : '';
-
         card.innerHTML = `
             <span class="q-id">#SAVOL ${currentIndex + 1} / ${allQuestions.length}</span>
             <div class="q-text">${q.savol || "..."}</div>
             ${qImg}
-            
             <div id="aslJavobWrapper" class="asl-javob-box">
                 <span style="font-weight:bold; color:var(--accent-color); font-size:14px; display:block; margin-bottom:5px;">✅ Javob:</span>
                 <div class="answer-wrapper">${formatAnswer(q.javob)}</div>
             </div>
-
             <div class="check-container">
                 <textarea class="check-area" id="selfCheckInput" oninput="hideOriginalAnswer()" placeholder="O'zingizni sinab ko'ring..."></textarea>
                 <button class="mic-btn" id="mainMic" onclick="startVoice('selfCheckInput', this)">🎤</button>
                 <button class="check-btn" onclick="checkUserAnswer()">Tekshirish</button>
                 <div class="diff-output" id="selfCheckDiff"></div>
             </div>
-
             ${tezYodlashBtn}
-
             <div class="tag-actions">
                 <button class="tag-btn" onclick="prevQuestion()" ${currentIndex === 0 ? 'style="opacity:0.3; pointer-events:none;"' : ''}>Ortga</button>
                 <button class="tag-btn" onclick="nextQuestion()" ${currentIndex === allQuestions.length - 1 ? 'style="opacity:0.3; pointer-events:none;"' : ''}>Oldinga</button>
