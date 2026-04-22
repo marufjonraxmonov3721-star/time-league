@@ -392,7 +392,7 @@
             border-radius: 8px;
             color: #fff;
             padding: 12px;
-            padding-right: 40px; /* Mikrofon uchun joy */
+            padding-right: 40px; 
             font-family: 'Courier New', Courier, monospace;
             font-size: 14px;
             min-height: 80px;
@@ -503,7 +503,7 @@
             border-radius: 10px;
             color: #fff;
             padding: 10px;
-            padding-right: 40px; /* Mikrofon uchun joy */
+            padding-right: 40px; 
             font-size: 14px;
             min-height: 80px;
             resize: vertical;
@@ -514,7 +514,7 @@
         .mic-btn {
             position: absolute;
             right: 10px;
-            top: 25px; /* check-container padding-top + 10px */
+            top: 25px; 
             background: none;
             border: none;
             color: var(--accent-color);
@@ -580,7 +580,6 @@
             font-size: 14px;
         }
 
-        /* Asl javob blokirovkasi uchun animatsiya va holat */
         .asl-javob-box {
             transition: all 0.3s ease;
             opacity: 1;
@@ -697,20 +696,12 @@
             const transcript = event.results[0][0].transcript;
             const inputField = document.getElementById(targetId);
             inputField.value += (inputField.value ? ' ' : '') + transcript;
-            
-            // Trigger auto-hide if it's the self-check area
             if(targetId === 'selfCheckInput') hideOriginalAnswer();
-            
             btn.classList.remove('recording');
         };
 
-        recognition.onerror = () => {
-            btn.classList.remove('recording');
-        };
-
-        recognition.onend = () => {
-            btn.classList.remove('recording');
-        };
+        recognition.onerror = () => btn.classList.remove('recording');
+        recognition.onend = () => btn.classList.remove('recording');
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -718,15 +709,29 @@
         overlay.style.opacity = '0';
         setTimeout(() => { overlay.style.visibility = 'hidden'; }, 500);
         
+        // Dastlabki keshni to'ldirish
+        precacheAllData();
         syncExamTimers();
     });
+
+    // Avtomatik keshlovchi funksiya
+    function precacheAllData() {
+        const sections = ['fizika_savollari'];
+        sections.forEach(path => {
+            db.ref(path).on('value', (snap) => {
+                const data = snap.val();
+                if(data) {
+                    localStorage.setItem(`cache_${path}`, JSON.stringify(data));
+                }
+            });
+        });
+    }
 
     function syncExamTimers() {
         db.ref('exam_dates').on('value', (snap) => {
             examDates = snap.val() || {};
             updateTimersDisplay();
         });
-
         setInterval(updateTimersDisplay, 1000);
     }
 
@@ -835,38 +840,53 @@
         tg.HapticFeedback.impactOccurred('light');
     }
 
+    // Keshdan yuklash funksiyasi
     function loadQuestions(path) {
         const app = document.getElementById('app');
-        app.innerHTML = '<div class="loader">Bilimlar yuklanmoqda...</div>';
+        
+        // 1. Avval keshni tekshirish
+        const cachedData = localStorage.getItem(`cache_${path}`);
+        if(cachedData) {
+            processData(JSON.parse(cachedData));
+            // Orqa fonda ma'lumotni yangilash
+            db.ref(path).once('value', (snap) => {
+                const data = snap.val();
+                if(data) localStorage.setItem(`cache_${path}`, JSON.stringify(data));
+            });
+            return;
+        }
 
+        // 2. Kesh bo'lmasa yuklash
+        app.innerHTML = '<div class="loader">Bilimlar yuklanmoqda...</div>';
         db.ref(path).once('value', (snap) => {
             const data = snap.val();
             if (!data) {
                 app.innerHTML = '<div class="loader">Ma\'lumot topilmadi</div>';
                 return;
             }
-
-            allQuestions = Object.keys(data).map(key => {
-                const item = data[key];
-                const numericId = item.id || parseInt(key.replace(/\D/g, '')) || 0;
-                return { ...item, displayId: numericId };
-            }).sort((a, b) => a.displayId - b.displayId);
-
-            document.getElementById('matrix').style.display = 'flex';
-            currentIndex = 0;
-            renderCurrent();
-            renderMatrix();
+            localStorage.setItem(`cache_${path}`, JSON.stringify(data));
+            processData(data);
         });
+    }
+
+    function processData(data) {
+        allQuestions = Object.keys(data).map(key => {
+            const item = data[key];
+            const numericId = item.id || parseInt(key.replace(/\D/g, '')) || 0;
+            return { ...item, displayId: numericId };
+        }).sort((a, b) => a.displayId - b.displayId);
+
+        document.getElementById('matrix').style.display = 'flex';
+        currentIndex = 0;
+        renderCurrent();
+        renderMatrix();
     }
 
     function formatAnswer(text) {
         if (!text || text.trim() === "") return "Javob rasmda ko'rsatilgan";
-        
-        // Rasm mantiqini tekshirish
         if (text.startsWith('data:image') || text.startsWith('http')) {
             return `<div class="ans-container"><img src="${text}" class="ans-image" alt="Javob rasmi"></div>`;
         }
-
         let html = '<div class="ans-container">';
         let lines = text.split('\n');
         let inList = false;
@@ -966,8 +986,10 @@
     }
 
     function generateBiletContent(path) {
-        db.ref(path).once('value', (snap) => {
-            const data = snap.val();
+        const cached = localStorage.getItem(`cache_${path}`);
+        const data = cached ? JSON.parse(cached) : null;
+        
+        if(data) {
             const items = Object.values(data);
             examQuestions = [];
             let tempArr = [...items];
@@ -976,7 +998,19 @@
                 examQuestions.push(tempArr.splice(rIdx, 1)[0]);
             }
             renderPaperBilet();
-        });
+        } else {
+            db.ref(path).once('value', (snap) => {
+                const liveData = snap.val();
+                const items = Object.values(liveData);
+                examQuestions = [];
+                let tempArr = [...items];
+                for(let i=0; i<3; i++) {
+                    const rIdx = Math.floor(Math.random() * tempArr.length);
+                    examQuestions.push(tempArr.splice(rIdx, 1)[0]);
+                }
+                renderPaperBilet();
+            });
+        }
     }
 
     function renderPaperBilet() {
@@ -1032,14 +1066,12 @@
                 comparisonText = examQuestions[i].javob_matn || ""; 
             }
 
-            // 1. Foydalanuvchi javobini yuborish
             const userMsgData = new FormData();
             userMsgData.append('chat_id', CURRENT_CHAT_ID);
             userMsgData.append('photo', 'https://placehold.co/600x400/000000/FFD700/png?text=Talaba+Javobi');
             userMsgData.append('caption', `📝 Savol ${i+1}: ${examQuestions[i].savol}\n\n👤 Talaba javobi:\n${userAnsRaw || "Javob berilmadi"}`);
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: userMsgData });
 
-            // 2. Asl javobni yuborish (Rasm yoki Matn)
             const photoData = new FormData();
             photoData.append('chat_id', CURRENT_CHAT_ID);
             
@@ -1080,11 +1112,10 @@
 
         const passed = totalScore >= 18;
         const resultLabel = passed ? "O'TDI ✅" : "O'TA OLMADI ❌";
-        const certificateTitle = passed ? "SERTIFIKAT" : "NATIJA VARAQASI";
         const userName = tg.initDataUnsafe?.user?.first_name || "Talaba";
 
         const captureArea = document.getElementById('captureArea');
-        captureArea.innerHTML = `<div style="border:5px solid #FFD700; padding:20px; text-align:center; background:#000; color:#FFD700;"><h1>${certificateTitle}</h1><hr style="border-color:#FFD700;"><p>Talaba: <b>${userName}</b></p><p>Ball: ${totalScore.toFixed(1)}</p><h2>${resultLabel}</h2></div>`;
+        captureArea.innerHTML = `<div style="border:5px solid #FFD700; padding:20px; text-align:center; background:#000; color:#FFD700;"><h1>${passed ? "SERTIFIKAT" : "NATIJA VARAQASI"}</h1><hr style="border-color:#FFD700;"><p>Talaba: <b>${userName}</b></p><p>Ball: ${totalScore.toFixed(1)}</p><h2>${resultLabel}</h2></div>`;
 
         setTimeout(() => {
             html2canvas(captureArea).then(canvas => {
@@ -1132,41 +1163,28 @@
 
     function hideOriginalAnswer() {
         const ansBox = document.getElementById('aslJavobWrapper');
-        if(ansBox) {
-            ansBox.classList.add('hidden-ans');
-        }
+        if(ansBox) ansBox.classList.add('hidden-ans');
     }
 
     function checkUserAnswer() {
         const userInputRaw = document.getElementById('selfCheckInput').value.trim();
         const diffBox = document.getElementById('selfCheckDiff');
         const originalText = allQuestions[currentIndex].javob || "";
-
-        if (!userInputRaw) {
-            tg.showAlert("Iltimos, avval javobingizni yozing!");
-            return;
-        }
+        if (!userInputRaw) { tg.showAlert("Iltimos, avval javobingizni yozing!"); return; }
 
         diffBox.style.display = 'block';
-        diffBox.innerHTML = '';
-
         const clean = (t) => t.toLowerCase().replace(/[.:•\-*!?]/g, ' ').replace(/\s+/g, ' ').trim();
         const uWords = clean(userInputRaw).split(' ');
-        
         let comparisonText = originalText;
-        if (originalText.startsWith('data:image') || originalText.startsWith('http')) {
-            comparisonText = allQuestions[currentIndex].javob_matn || "rasmda korsatilgan";
-        }
+        if (originalText.startsWith('data:image') || originalText.startsWith('http')) comparisonText = allQuestions[currentIndex].javob_matn || "rasm";
         
         const oWords = clean(comparisonText).split(' ');
-        
         let match = 0;
         const importantWords = oWords.filter(w => w.length > 3);
         importantWords.forEach(w => { if(uWords.includes(w)) match++; });
         
         const matchPerc = importantWords.length > 0 ? (match / importantWords.length) * 100 : 100;
         const lenPerc = Math.min(userInputRaw.length / (comparisonText.length || 1), 1.2) * 100;
-        
         let score = parseFloat((((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10).toFixed(1));
         score = Math.min(score, 10);
 
@@ -1174,19 +1192,11 @@
         let outputHtml = '';
         originalWordsForDiff.forEach(word => {
             const cleanWord = word.toLowerCase().replace(/[.,!?:;()\-]/g, '');
-            if (uWords.includes(cleanWord)) {
-                outputHtml += `<span class="diff-correct">${word}</span> `;
-            } else {
-                outputHtml += `<span class="diff-missed">${word}</span> `;
-            }
+            outputHtml += uWords.includes(cleanWord) ? `<span class="diff-correct">${word}</span> ` : `<span class="diff-missed">${word}</span> `;
         });
 
         const scoreColor = score >= 8 ? 'var(--success-color)' : (score >= 5 ? 'var(--accent-color)' : 'var(--danger-color)');
-        diffBox.innerHTML = `
-            <div class="self-score-badge" style="background:${scoreColor}; color:#000;">NATIJA: ${score} BALL</div>
-            <br><strong>Taqqoslash:</strong><br>${outputHtml}
-        `;
-        
+        diffBox.innerHTML = `<div class="self-score-badge" style="background:${scoreColor}; color:#000;">NATIJA: ${score} BALL</div><br><strong>Taqqoslash:</strong><br>${outputHtml}`;
         tg.HapticFeedback.notificationOccurred(score >= 5 ? 'success' : 'error');
     }
 
@@ -1211,9 +1221,7 @@
             </div>
 
             <div class="check-container">
-                <textarea class="check-area" id="selfCheckInput" 
-                          oninput="hideOriginalAnswer()" 
-                          placeholder="O'zingizni sinab ko'ring: bu yerga javobingizni yozing..."></textarea>
+                <textarea class="check-area" id="selfCheckInput" oninput="hideOriginalAnswer()" placeholder="O'zingizni sinab ko'ring..."></textarea>
                 <button class="mic-btn" id="mainMic" onclick="startVoice('selfCheckInput', this)">🎤</button>
                 <button class="check-btn" onclick="checkUserAnswer()">Tekshirish</button>
                 <div class="diff-output" id="selfCheckDiff"></div>
