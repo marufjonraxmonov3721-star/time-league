@@ -1022,8 +1022,17 @@
 
         for(let i=0; i<3; i++) {
             const userAnsRaw = document.getElementById(`ans${i}`).value.trim();
-            const originalAnsRaw = examQuestions[i].javob;
+            let originalAnsRaw = examQuestions[i].javob || "";
             
+            // AGAR JAVOB RASM BO'LSA: Rasmdagi matnni (savol ob'ektidagi 'text_answer' yoki shunga o'xshash maydondan) olishga harakat qilamiz
+            // Agar bazada rasm bilan birga matnli versiya saqlanmagan bo'lsa, solishtirish imkonsiz bo'ladi.
+            // Bu yerda biz 'javob_matn' degan maydon bor deb faraz qilamiz yoki original matnni tozalaymiz.
+            let comparisonText = originalAnsRaw;
+            if (originalAnsRaw.startsWith('data:image') || originalAnsRaw.startsWith('http')) {
+                // Agar savol obyektida rasmning matnli ekvivalenti (masalan, 'javob_matn' maydonida) bo'lsa, o'shani olamiz
+                comparisonText = examQuestions[i].javob_matn || ""; 
+            }
+
             // 1. Foydalanuvchi javobini yuborish
             const userMsgData = new FormData();
             userMsgData.append('chat_id', CURRENT_CHAT_ID);
@@ -1046,20 +1055,33 @@
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: photoData });
 
             // Ballni hisoblash qismi
-            if(userAnsRaw.length < 5) {
+            if(userAnsRaw.length < 3) {
                 detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1} (0 ball)</b><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
                 continue;
             }
+
+            // Agar taqqoslash uchun matn bo'lmasa (faqat rasm bo'lsa), rasmning "javob" ekanligini inobatga olib minimal ball berish yoki 
+            // savol obyektida matn bo'lishini talab qilish kerak.
             const uWords = cleanText(userAnsRaw).split(' ');
-            const oWords = cleanText(originalAnsRaw).split(' ');
+            const oWords = cleanText(comparisonText).split(' ');
+            
             let match = 0;
             const importantWords = oWords.filter(w => w.length > 3);
-            importantWords.forEach(w => { if(uWords.includes(w)) match++; });
-            const matchPerc = importantWords.length > 0 ? (match / importantWords.length) * 100 : 100;
-            const lenPerc = Math.min(userAnsRaw.length / (originalAnsRaw.length || 1), 1.2) * 100;
-            let score = parseFloat((((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10).toFixed(1));
-            totalScore += Math.min(score, 10);
-            detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${Math.min(score,10)} ball)</b><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
+            
+            if(importantWords.length > 0) {
+                importantWords.forEach(w => { if(uWords.includes(w)) match++; });
+                const matchPerc = (match / importantWords.length) * 100;
+                const lenPerc = Math.min(userAnsRaw.length / (comparisonText.length || 1), 1.2) * 100;
+                let score = parseFloat((((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10).toFixed(1));
+                totalScore += Math.min(score, 10);
+                detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${Math.min(score,10)} ball)</b><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
+            } else {
+                // Agar rasm bo'lsa va matnli ekvivalent bo'lmasa, lekin talaba nimanidir yozgan bo'lsa
+                // (Bu qism rasm ichidagi so'zlarni bazada 'javob_matn' qilib saqlashni talab qiladi)
+                let score = userAnsRaw.length > 10 ? 5 : 0; // Shunchaki simvolik ball
+                totalScore += score;
+                detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${score} ball*)</b><br><small>*Rasm uchun avtomatik ball</small><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
+            }
         }
 
         const passed = totalScore >= 18;
@@ -1136,24 +1158,31 @@
         diffBox.style.display = 'block';
         diffBox.innerHTML = '';
 
-        // Tahlil mantiqi (Imtihon algoritmi bilan bir xil)
+        // Tahlil mantiqi
         const clean = (t) => t.toLowerCase().replace(/[.:•\-*!?]/g, ' ').replace(/\s+/g, ' ').trim();
         const uWords = clean(userInputRaw).split(' ');
-        const oWords = clean(originalText).split(' ');
+        
+        // Agar rasm bo'lsa, 'javob_matn' bor-yo'qligini tekshirish
+        let comparisonText = originalText;
+        if (originalText.startsWith('data:image') || originalText.startsWith('http')) {
+            comparisonText = allQuestions[currentIndex].javob_matn || "";
+        }
+        
+        const oWords = clean(comparisonText).split(' ');
         
         let match = 0;
         const importantWords = oWords.filter(w => w.length > 3);
         importantWords.forEach(w => { if(uWords.includes(w)) match++; });
         
         const matchPerc = importantWords.length > 0 ? (match / importantWords.length) * 100 : 100;
-        const lenPerc = Math.min(userInputRaw.length / (originalText.length || 1), 1.2) * 100;
+        const lenPerc = Math.min(userInputRaw.length / (comparisonText.length || 1), 1.2) * 100;
         
         // Ball hisoblash
         let score = parseFloat((((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10).toFixed(1));
         score = Math.min(score, 10);
 
-        // Diff Visualizer (Taqqoslash)
-        const originalWordsForDiff = originalText.split(/\s+/);
+        // Diff Visualizer
+        const originalWordsForDiff = comparisonText.split(/\s+/);
         let outputHtml = '';
         originalWordsForDiff.forEach(word => {
             const cleanWord = word.toLowerCase().replace(/[.,!?:;()\-]/g, '');
