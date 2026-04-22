@@ -69,7 +69,7 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
+            0? { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
 
@@ -531,7 +531,7 @@
             animation: pulse-mic 1.5s infinite;
         }
         @keyframes pulse-mic {
-            0% { opacity: 1; }
+            0? { opacity: 1; }
             50% { opacity: 0.4; }
             100% { opacity: 1; }
         }
@@ -789,7 +789,7 @@
     });
 
     function precacheAllData() {
-        const sections = ['fizika_savollari', 'tez_yodlash'];
+        const sections = ['fizika_savollari'];
         sections.forEach(path => {
             db.ref(path).on('value', (snap) => {
                 const data = snap.val();
@@ -880,7 +880,7 @@
         startExamTab(document.getElementById('btn-imtihon'));
     }
 
-    /* --- TEZ YODLASH FUNKSIYALARI --- */
+    /* --- TEZ YODLASH FUNKSIYALARI (YANGILANGAN) --- */
     function openTezYodlash() {
         isTezYodlashMode = true;
         document.getElementById('dashboard-menu').style.display = 'none';
@@ -905,10 +905,12 @@
                 </div>
             </div>
         `;
+        updateYodlashProgressBar();
     }
 
     function loadTezYodlashQuestions() {
-        const path = 'tez_yodlash';
+        // Tez yodlash uchun ham Fizika_savollari bazasidan foydalanamiz
+        const path = 'fizika_savollari';
         currentPath = path;
         const app = document.getElementById('app');
         
@@ -931,7 +933,12 @@
     }
 
     function processTezData(data) {
-        const rawItems = Object.keys(data).map(key => ({ ...data[key], firebaseKey: key }));
+        const rawItems = Object.keys(data).map(key => ({ 
+            ...data[key], 
+            firebaseKey: key,
+            displayId: data[key].id || parseInt(key.replace(/\D/g, '')) || 0
+        })).sort((a, b) => a.displayId - b.displayId);
+
         // Faqat yodlanmagan savollarni ko'rsatish
         allQuestions = rawItems.filter(q => !yodlanganSavollar.includes(q.firebaseKey));
         
@@ -968,7 +975,6 @@
                 yodlanganSavollar = [];
                 localStorage.removeItem('yodlangan_savollar');
                 renderTezYodlashDashboard();
-                updateYodlashProgressBar();
             }
         });
     }
@@ -976,9 +982,9 @@
     function updateYodlashProgressBar() {
         const bar = document.getElementById('yodlashProgress');
         if(!bar) return;
-        const cachedTez = localStorage.getItem('cache_tez_yodlash');
-        if(cachedTez) {
-            const total = Object.keys(JSON.parse(cachedTez)).length;
+        const cachedFizika = localStorage.getItem('cache_fizika_savollari');
+        if(cachedFizika) {
+            const total = Object.keys(JSON.parse(cachedFizika)).length;
             const current = yodlanganSavollar.length;
             const perc = total > 0 ? (current / total) * 100 : 0;
             bar.style.width = `${perc}%`;
@@ -991,10 +997,10 @@
             return;
         }
 
-        const cachedTez = localStorage.getItem('cache_tez_yodlash');
-        if(!cachedTez) return;
+        const cachedFizika = localStorage.getItem('cache_fizika_savollari');
+        if(!cachedFizika) return;
 
-        const data = JSON.parse(cachedTez);
+        const data = JSON.parse(cachedFizika);
         // Faqat yodlangan savollardan bilet tuzish
         const filtered = Object.keys(data)
             .filter(key => yodlanganSavollar.includes(key))
@@ -1088,7 +1094,7 @@
         allQuestions = Object.keys(data).map(key => {
             const item = data[key];
             const numericId = item.id || parseInt(key.replace(/\D/g, '')) || 0;
-            return { ...item, displayId: numericId };
+            return { ...item, displayId: numericId, firebaseKey: key };
         }).sort((a, b) => a.displayId - b.displayId);
 
         document.getElementById('matrix').style.display = 'flex';
