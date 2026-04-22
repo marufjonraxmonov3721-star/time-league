@@ -860,14 +860,13 @@
     }
 
     function formatAnswer(text) {
-        if (!text) return "Javob mavjud emas";
-        // Agar matn base64 yoki rasm linki bo'lsa, uni rasm sifatida chiqaradi
-        if (text.startsWith('data:image') || text.startsWith('http') || text.length > 500) {
-             if(text.includes('data:image') || text.includes('http')) {
-                return `<div class="ans-container"><img src="${text}" class="ans-image" alt="Javob rasmi"></div>`;
-             }
-        }
+        if (!text || text.trim() === "") return "Javob rasmda ko'rsatilgan";
         
+        // Rasm mantiqini tekshirish
+        if (text.startsWith('data:image') || text.startsWith('http')) {
+            return `<div class="ans-container"><img src="${text}" class="ans-image" alt="Javob rasmi"></div>`;
+        }
+
         let html = '<div class="ans-container">';
         let lines = text.split('\n');
         let inList = false;
@@ -1054,7 +1053,6 @@
             }
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: photoData });
 
-            // Ballni hisoblash qismi
             if(userAnsRaw.length < 3) {
                 detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1} (0 ball)</b><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
                 continue;
@@ -1074,7 +1072,7 @@
                 totalScore += Math.min(score, 10);
                 detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${Math.min(score,10)} ball)</b><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
             } else {
-                let score = userAnsRaw.length > 10 ? 5 : 0; 
+                let score = userAnsRaw.length > 10 ? 5 : 0;
                 totalScore += score;
                 detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${score} ball*)</b><br><small>*Rasm uchun avtomatik ball</small><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
             }
@@ -1142,7 +1140,7 @@
     function checkUserAnswer() {
         const userInputRaw = document.getElementById('selfCheckInput').value.trim();
         const diffBox = document.getElementById('selfCheckDiff');
-        const originalText = allQuestions[currentIndex].javob;
+        const originalText = allQuestions[currentIndex].javob || "";
 
         if (!userInputRaw) {
             tg.showAlert("Iltimos, avval javobingizni yozing!");
@@ -1157,7 +1155,7 @@
         
         let comparisonText = originalText;
         if (originalText.startsWith('data:image') || originalText.startsWith('http')) {
-            comparisonText = allQuestions[currentIndex].javob_matn || "";
+            comparisonText = allQuestions[currentIndex].javob_matn || "rasmda korsatilgan";
         }
         
         const oWords = clean(comparisonText).split(' ');
@@ -1202,9 +1200,6 @@
         card.className = 'card';
         const qImg = q.image && q.image.length > 20 ? `<img src="${q.image}" class="q-image">` : '';
         
-        // Bu yerda formatAnswer funksiyasi rasm bo'lsa rasmni, matn bo'lsa matnni qaytaradi
-        const formattedJavob = formatAnswer(q.javob);
-
         card.innerHTML = `
             <span class="q-id">#SAVOL ${currentIndex + 1} / ${allQuestions.length}</span>
             <div class="q-text">${q.savol || "..."}</div>
@@ -1212,7 +1207,7 @@
             
             <div id="aslJavobWrapper" class="asl-javob-box">
                 <span style="font-weight:bold; color:var(--accent-color); font-size:14px; display:block; margin-bottom:5px;">✅ Javob:</span>
-                <div class="answer-wrapper">${formattedJavob}</div>
+                <div class="answer-wrapper">${formatAnswer(q.javob)}</div>
             </div>
 
             <div class="check-container">
