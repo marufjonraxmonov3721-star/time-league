@@ -728,10 +728,20 @@
     }
 
     function syncExamTimers() {
+        // Keshdan darhol o'qish
+        const cachedDates = localStorage.getItem('cache_exam_dates');
+        if(cachedDates) {
+            examDates = JSON.parse(cachedDates);
+            updateTimersDisplay();
+        }
+
         db.ref('exam_dates').on('value', (snap) => {
             examDates = snap.val() || {};
+            localStorage.setItem('cache_exam_dates', JSON.stringify(examDates));
             updateTimersDisplay();
         });
+        
+        // Taymerni har soniyada yangilab turish
         setInterval(updateTimersDisplay, 1000);
     }
 
