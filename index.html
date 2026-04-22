@@ -592,6 +592,69 @@
             overflow: hidden;
             margin: 0;
         }
+
+        /* --- TEZ YODLASH BO'LIMI STILLARI --- */
+        .yodlash-btn {
+            background: #000;
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: bold;
+            margin-top: 10px;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        .yodlash-btn.active {
+            background: var(--success-color);
+            color: #000;
+        }
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: #111;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-color);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .tez-yodlash-card {
+            background: #080808;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 25px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .tez-yodlash-card h2 { color: var(--accent-color); font-size: 22px; margin: 0; }
+        .tez-yodlash-info { color: #fff; font-size: 14px; }
+        .tez-yodlash-grid { display: flex; flex-direction: column; gap: 10px; }
+        .tez-btn-main {
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--accent-color);
+            background: none;
+            color: var(--accent-color);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .tez-btn-danger {
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--danger-color);
+            background: none;
+            color: var(--danger-color);
+            font-weight: bold;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
@@ -629,6 +692,13 @@
                 <div class="exam-date-info" id="date-fizika_savollari">Sana: yuklanmoqda...</div>
                 <div class="countdown-timer" id="timer-fizika_savollari">Vaqt yuklanmoqda...</div>
             </div>
+        </div>
+
+        <div class="menu-item" onclick="openTezYodlash()">
+            <div class="label">Tez yodlash</div>
+            <div class="sub-label">Savollarni filtrlang va yodlang</div>
+            <div class="description">Savollarni "yodladim" deb belgilang va ular asosida maxsus imtihon topshiring.</div>
+            <div class="progress-container"><div id="yodlashProgress" class="progress-bar"></div></div>
         </div>
         
         <div class="menu-item" onclick="openExamFromMenu()">
@@ -672,6 +742,10 @@
     let selectedExamPath = '';
     let examDates = {};
 
+    // Tez yodlash uchun o'zgaruvchilar
+    let isTezYodlashMode = false;
+    let yodlanganSavollar = JSON.parse(localStorage.getItem('yodlangan_savollar') || '[]');
+
     // Voice Recognition Setup
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     let recognition;
@@ -709,14 +783,13 @@
         overlay.style.opacity = '0';
         setTimeout(() => { overlay.style.visibility = 'hidden'; }, 500);
         
-        // Dastlabki keshni to'ldirish
         precacheAllData();
         syncExamTimers();
+        updateYodlashProgressBar();
     });
 
-    // Avtomatik keshlovchi funksiya
     function precacheAllData() {
-        const sections = ['fizika_savollari'];
+        const sections = ['fizika_savollari', 'tez_yodlash'];
         sections.forEach(path => {
             db.ref(path).on('value', (snap) => {
                 const data = snap.val();
@@ -728,7 +801,6 @@
     }
 
     function syncExamTimers() {
-        // Keshdan darhol o'qish
         const cachedDates = localStorage.getItem('cache_exam_dates');
         if(cachedDates) {
             examDates = JSON.parse(cachedDates);
@@ -741,7 +813,6 @@
             updateTimersDisplay();
         });
         
-        // Taymerni har soniyada yangilab turish
         setInterval(updateTimersDisplay, 1000);
     }
 
@@ -780,14 +851,18 @@
     }
 
     function goHome() {
+        isTezYodlashMode = false;
+        isExamMode = false;
         document.getElementById('dashboard-menu').style.display = 'flex';
         document.getElementById('app').style.display = 'none';
         document.getElementById('nav-tabs').style.display = 'none';
         document.getElementById('matrix').style.display = 'none';
         document.getElementById('back-to-home').style.display = 'none';
+        updateYodlashProgressBar();
     }
 
     function openSection(path) {
+        isTezYodlashMode = false;
         document.getElementById('dashboard-menu').style.display = 'none';
         document.getElementById('app').style.display = 'flex';
         document.getElementById('nav-tabs').style.display = 'flex';
@@ -804,6 +879,140 @@
         openSection('fizika_savollari');
         startExamTab(document.getElementById('btn-imtihon'));
     }
+
+    /* --- TEZ YODLASH FUNKSIYALARI --- */
+    function openTezYodlash() {
+        isTezYodlashMode = true;
+        document.getElementById('dashboard-menu').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        document.getElementById('back-to-home').style.display = 'block';
+        document.getElementById('nav-tabs').style.display = 'none';
+        document.getElementById('matrix').style.display = 'none';
+
+        renderTezYodlashDashboard();
+    }
+
+    function renderTezYodlashDashboard() {
+        const app = document.getElementById('app');
+        app.innerHTML = `
+            <div class="tez-yodlash-card">
+                <h2>Tez yodlash bo'limi</h2>
+                <div class="tez-yodlash-info">Sizda ${yodlanganSavollar.length} ta yodlangan savol bor.</div>
+                <div class="tez-yodlash-grid">
+                    <button class="tez-btn-main" onclick="loadTezYodlashQuestions()">Savollarni qayta ko'rish</button>
+                    <button class="tez-btn-main" onclick="startTezYodlashExam()">Imtihonga tayyorlanish</button>
+                    <button class="tez-btn-danger" onclick="clearYodlashFilter()">Filtrni tozalash</button>
+                </div>
+            </div>
+        `;
+    }
+
+    function loadTezYodlashQuestions() {
+        const path = 'tez_yodlash';
+        currentPath = path;
+        const app = document.getElementById('app');
+        
+        const cachedData = localStorage.getItem(`cache_${path}`);
+        if(cachedData) {
+            processTezData(JSON.parse(cachedData));
+            return;
+        }
+
+        app.innerHTML = '<div class="loader">Savollar yuklanmoqda...</div>';
+        db.ref(path).once('value', (snap) => {
+            const data = snap.val();
+            if (!data) {
+                app.innerHTML = '<div class="loader">Hali savollar kiritilmagan</div>';
+                return;
+            }
+            localStorage.setItem(`cache_${path}`, JSON.stringify(data));
+            processTezData(data);
+        });
+    }
+
+    function processTezData(data) {
+        const rawItems = Object.keys(data).map(key => ({ ...data[key], firebaseKey: key }));
+        // Faqat yodlanmagan savollarni ko'rsatish
+        allQuestions = rawItems.filter(q => !yodlanganSavollar.includes(q.firebaseKey));
+        
+        if(allQuestions.length === 0) {
+            tg.showAlert("Barcha savollarni yodlab bo'ldingiz!");
+            renderTezYodlashDashboard();
+            return;
+        }
+
+        currentIndex = 0;
+        renderCurrent();
+    }
+
+    function toggleYodladim(firebaseKey) {
+        if(!yodlanganSavollar.includes(firebaseKey)) {
+            yodlanganSavollar.push(firebaseKey);
+            localStorage.setItem('yodlangan_savollar', JSON.stringify(yodlanganSavollar));
+            tg.HapticFeedback.notificationOccurred('success');
+            
+            // Keyingi savolga o'tish yoki dashboardga qaytish
+            allQuestions = allQuestions.filter(q => q.firebaseKey !== firebaseKey);
+            if(allQuestions.length > 0) {
+                if(currentIndex >= allQuestions.length) currentIndex = allQuestions.length - 1;
+                renderCurrent();
+            } else {
+                renderTezYodlashDashboard();
+            }
+        }
+    }
+
+    function clearYodlashFilter() {
+        tg.showConfirm("Barcha yodlangan savollar filtrini tozalashni xohlaysizmi?", (ok) => {
+            if(ok) {
+                yodlanganSavollar = [];
+                localStorage.removeItem('yodlangan_savollar');
+                renderTezYodlashDashboard();
+                updateYodlashProgressBar();
+            }
+        });
+    }
+
+    function updateYodlashProgressBar() {
+        const bar = document.getElementById('yodlashProgress');
+        if(!bar) return;
+        const cachedTez = localStorage.getItem('cache_tez_yodlash');
+        if(cachedTez) {
+            const total = Object.keys(JSON.parse(cachedTez)).length;
+            const current = yodlanganSavollar.length;
+            const perc = total > 0 ? (current / total) * 100 : 0;
+            bar.style.width = `${perc}%`;
+        }
+    }
+
+    function startTezYodlashExam() {
+        if(yodlanganSavollar.length < 3) {
+            tg.showAlert("Imtihon uchun kamida 3 ta savol yodlashingiz kerak!");
+            return;
+        }
+
+        const cachedTez = localStorage.getItem('cache_tez_yodlash');
+        if(!cachedTez) return;
+
+        const data = JSON.parse(cachedTez);
+        // Faqat yodlangan savollardan bilet tuzish
+        const filtered = Object.keys(data)
+            .filter(key => yodlanganSavollar.includes(key))
+            .map(key => data[key]);
+
+        examQuestions = [];
+        let tempArr = [...filtered];
+        for(let i=0; i<3; i++) {
+            if(tempArr.length === 0) break;
+            const rIdx = Math.floor(Math.random() * tempArr.length);
+            examQuestions.push(tempArr.splice(rIdx, 1)[0]);
+        }
+        
+        currentExamBiletNumber = "Tezkor";
+        isExamMode = true;
+        renderPaperBilet();
+    }
+    /* ------------------------------------ */
 
     function renderMatrix() {
         const matrix = document.getElementById('matrix');
@@ -842,6 +1051,7 @@
 
     function changeTab(btn, path) {
         isExamMode = false;
+        isTezYodlashMode = false;
         document.getElementById('matrix').style.display = 'flex';
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -850,15 +1060,11 @@
         tg.HapticFeedback.impactOccurred('light');
     }
 
-    // Keshdan yuklash funksiyasi
     function loadQuestions(path) {
         const app = document.getElementById('app');
-        
-        // 1. Avval keshni tekshirish
         const cachedData = localStorage.getItem(`cache_${path}`);
         if(cachedData) {
             processData(JSON.parse(cachedData));
-            // Orqa fonda ma'lumotni yangilash
             db.ref(path).once('value', (snap) => {
                 const data = snap.val();
                 if(data) localStorage.setItem(`cache_${path}`, JSON.stringify(data));
@@ -866,7 +1072,6 @@
             return;
         }
 
-        // 2. Kesh bo'lmasa yuklash
         app.innerHTML = '<div class="loader">Bilimlar yuklanmoqda...</div>';
         db.ref(path).once('value', (snap) => {
             const data = snap.val();
@@ -931,6 +1136,7 @@
 
     function startExamTab(btn) {
         isExamMode = true;
+        isTezYodlashMode = false;
         document.getElementById('matrix').style.display = 'none';
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -1008,18 +1214,6 @@
                 examQuestions.push(tempArr.splice(rIdx, 1)[0]);
             }
             renderPaperBilet();
-        } else {
-            db.ref(path).once('value', (snap) => {
-                const liveData = snap.val();
-                const items = Object.values(liveData);
-                examQuestions = [];
-                let tempArr = [...items];
-                for(let i=0; i<3; i++) {
-                    const rIdx = Math.floor(Math.random() * tempArr.length);
-                    examQuestions.push(tempArr.splice(rIdx, 1)[0]);
-                }
-                renderPaperBilet();
-            });
         }
     }
 
@@ -1029,7 +1223,7 @@
             <div class="real-bilet" id="biletPaper">
                 <div class="bilet-header">
                     <h3>IMTIHON BILETI №${currentExamBiletNumber}</h3>
-                    <small>Fan: Fizika</small>
+                    <small>Fan: ${isTezYodlashMode ? 'Tez Yodlash' : 'Fizika'}</small>
                 </div>
                 <span style="font-weight:bold; margin-top:15px; display:block; color:var(--accent-color)">1-SAVOL:</span>
                 <p>${examQuestions[0].savol}</p>
@@ -1068,6 +1262,7 @@
         const cleanText = (t) => t.toLowerCase().replace(/[.:•\-*!?]/g, ' ').replace(/\s+/g, ' ').trim();
 
         for(let i=0; i<3; i++) {
+            if(!examQuestions[i]) continue;
             const userAnsRaw = document.getElementById(`ans${i}`).value.trim();
             let originalAnsRaw = examQuestions[i].javob || "";
             
@@ -1076,24 +1271,12 @@
                 comparisonText = examQuestions[i].javob_matn || ""; 
             }
 
+            // Telegram bot orqali natijani yuborish
             const userMsgData = new FormData();
             userMsgData.append('chat_id', CURRENT_CHAT_ID);
             userMsgData.append('photo', 'https://placehold.co/600x400/000000/FFD700/png?text=Talaba+Javobi');
             userMsgData.append('caption', `📝 Savol ${i+1}: ${examQuestions[i].savol}\n\n👤 Talaba javobi:\n${userAnsRaw || "Javob berilmadi"}`);
             await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: userMsgData });
-
-            const photoData = new FormData();
-            photoData.append('chat_id', CURRENT_CHAT_ID);
-            
-            if (originalAnsRaw && (originalAnsRaw.startsWith('data:image') || originalAnsRaw.startsWith('http'))) {
-                if (originalAnsRaw.startsWith('data:')) photoData.append('photo', base64ToBlob(originalAnsRaw.split(',')[1]), `answer_${i+1}.png`);
-                else photoData.append('photo', originalAnsRaw);
-                photoData.append('caption', `✅ Savol ${i+1} uchun javob (Rasmda).`);
-            } else {
-                photoData.append('photo', 'https://placehold.co/600x400/000000/00C853/png?text=Asl+Javob');
-                photoData.append('caption', `✅ Savol ${i+1} uchun javob:\n${originalAnsRaw}`);
-            }
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: photoData });
 
             if(userAnsRaw.length < 3) {
                 detailsHtml += `<div class="score-box" style="border-color:red"><b>Savol ${i+1} (0 ball)</b><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
@@ -1116,7 +1299,7 @@
             } else {
                 let score = userAnsRaw.length > 10 ? 5 : 0;
                 totalScore += score;
-                detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${score} ball*)</b><br><small>*Rasm uchun avtomatik ball</small><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
+                detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${score} ball*)</b><br><small>*Avtomatik baholandi</small><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
             }
         }
 
@@ -1214,12 +1397,18 @@
         const app = document.getElementById('app');
         if(!app) return;
         app.innerHTML = '';
-        if (allQuestions.length === 0) return;
+        if (allQuestions.length === 0) {
+            if(isTezYodlashMode) renderTezYodlashDashboard();
+            return;
+        }
         const q = allQuestions[currentIndex];
         const card = document.createElement('div');
         card.className = 'card';
         const qImg = q.image && q.image.length > 20 ? `<img src="${q.image}" class="q-image">` : '';
         
+        // Tez yodlash uchun maxsus tugma
+        const tezYodlashBtn = isTezYodlashMode ? `<button class="yodlash-btn" onclick="toggleYodladim('${q.firebaseKey}')">Yodladim</button>` : '';
+
         card.innerHTML = `
             <span class="q-id">#SAVOL ${currentIndex + 1} / ${allQuestions.length}</span>
             <div class="q-text">${q.savol || "..."}</div>
@@ -1236,6 +1425,8 @@
                 <button class="check-btn" onclick="checkUserAnswer()">Tekshirish</button>
                 <div class="diff-output" id="selfCheckDiff"></div>
             </div>
+
+            ${tezYodlashBtn}
 
             <div class="tag-actions">
                 <button class="tag-btn" onclick="prevQuestion()" ${currentIndex === 0 ? 'style="opacity:0.3; pointer-events:none;"' : ''}>Ortga</button>
