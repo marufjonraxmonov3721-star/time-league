@@ -609,7 +609,6 @@
 
 <div class="nav-tabs" id="nav-tabs">
     <button class="nav-btn active" id="btn-fizika" onclick="changeTab(this, 'fizika_savollari')">Fizika</button>
-    <button class="nav-btn" id="btn-issiqlik" onclick="changeTab(this, 'Issiqlik_texnikasi')">Issiqlik</button>
     <button class="nav-btn" id="btn-imtihon" onclick="startExamTab(this)">Imtihon</button>
 </div>
 
@@ -630,16 +629,6 @@
             <div class="timer-container">
                 <div class="exam-date-info" id="date-fizika_savollari">Sana: yuklanmoqda...</div>
                 <div class="countdown-timer" id="timer-fizika_savollari">Vaqt yuklanmoqda...</div>
-            </div>
-        </div>
-        
-        <div class="menu-item" onclick="openSection('Issiqlik_texnikasi')">
-            <div class="label">Issiqlik texnikasi</div>
-            <div class="sub-label">90 ta maxsus savollar to'plami</div>
-            <div class="description">Issiqlik energiyasining hosil bo'lishi va uzatilish jarayonlarini o'rganuvchi bo'lim.</div>
-            <div class="timer-container">
-                <div class="exam-date-info" id="date-Issiqlik_texnikasi">Sana: yuklanmoqda...</div>
-                <div class="countdown-timer" id="timer-Issiqlik_texnikasi">Vaqt yuklanmoqda...</div>
             </div>
         </div>
         
@@ -742,7 +731,7 @@
     }
 
     function updateTimersDisplay() {
-        const paths = ['fizika_savollari', 'Issiqlik_texnikasi'];
+        const paths = ['fizika_savollari'];
         paths.forEach(path => {
             const timerEl = document.getElementById(`timer-${path}`);
             const dateEl = document.getElementById(`date-${path}`);
@@ -790,8 +779,7 @@
         document.getElementById('back-to-home').style.display = 'block';
         
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        if(path === 'fizika_savollari') document.getElementById('btn-fizika').classList.add('active');
-        else document.getElementById('btn-issiqlik').classList.add('active');
+        document.getElementById('btn-fizika').classList.add('active');
         
         currentPath = path;
         loadQuestions(path);
@@ -918,9 +906,8 @@
         app.innerHTML = `
             <div class="card" style="text-align:center">
                 <h2 style="color:var(--accent-color)">Fan yo'nalishini tanlang</h2>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
+                <div style="display:grid; grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
                     <button class="exam-btn" onclick="initExamTable('fizika_savollari', 70)">Fizika</button>
-                    <button class="exam-btn" onclick="initExamTable('Issiqlik_texnikasi', 90)">Issiqlik</button>
                 </div>
                 <canvas id="examCanvas"></canvas>
             </div>
@@ -995,7 +982,7 @@
             <div class="real-bilet" id="biletPaper">
                 <div class="bilet-header">
                     <h3>IMTIHON BILETI №${currentExamBiletNumber}</h3>
-                    <small>Fan: ${selectedExamPath === 'fizika_savollari' ? 'Fizika' : 'Issiqlik texnikasi'}</small>
+                    <small>Fan: Fizika</small>
                 </div>
                 <span style="font-weight:bold; margin-top:15px; display:block; color:var(--accent-color)">1-SAVOL:</span>
                 <p>${examQuestions[0].savol}</p>
