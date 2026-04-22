@@ -861,9 +861,13 @@
 
     function formatAnswer(text) {
         if (!text) return "Javob mavjud emas";
-        if (text.startsWith('data:image') || text.startsWith('http')) {
-            return `<div class="ans-container"><img src="${text}" class="ans-image" alt="Javob rasmi"></div>`;
+        // Agar matn base64 yoki rasm linki bo'lsa, uni rasm sifatida chiqaradi
+        if (text.startsWith('data:image') || text.startsWith('http') || text.length > 500) {
+             if(text.includes('data:image') || text.includes('http')) {
+                return `<div class="ans-container"><img src="${text}" class="ans-image" alt="Javob rasmi"></div>`;
+             }
         }
+        
         let html = '<div class="ans-container">';
         let lines = text.split('\n');
         let inList = false;
@@ -1024,12 +1028,8 @@
             const userAnsRaw = document.getElementById(`ans${i}`).value.trim();
             let originalAnsRaw = examQuestions[i].javob || "";
             
-            // AGAR JAVOB RASM BO'LSA: Rasmdagi matnni (savol ob'ektidagi 'text_answer' yoki shunga o'xshash maydondan) olishga harakat qilamiz
-            // Agar bazada rasm bilan birga matnli versiya saqlanmagan bo'lsa, solishtirish imkonsiz bo'ladi.
-            // Bu yerda biz 'javob_matn' degan maydon bor deb faraz qilamiz yoki original matnni tozalaymiz.
             let comparisonText = originalAnsRaw;
             if (originalAnsRaw.startsWith('data:image') || originalAnsRaw.startsWith('http')) {
-                // Agar savol obyektida rasmning matnli ekvivalenti (masalan, 'javob_matn' maydonida) bo'lsa, o'shani olamiz
                 comparisonText = examQuestions[i].javob_matn || ""; 
             }
 
@@ -1060,8 +1060,6 @@
                 continue;
             }
 
-            // Agar taqqoslash uchun matn bo'lmasa (faqat rasm bo'lsa), rasmning "javob" ekanligini inobatga olib minimal ball berish yoki 
-            // savol obyektida matn bo'lishini talab qilish kerak.
             const uWords = cleanText(userAnsRaw).split(' ');
             const oWords = cleanText(comparisonText).split(' ');
             
@@ -1076,9 +1074,7 @@
                 totalScore += Math.min(score, 10);
                 detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${Math.min(score,10)} ball)</b><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
             } else {
-                // Agar rasm bo'lsa va matnli ekvivalent bo'lmasa, lekin talaba nimanidir yozgan bo'lsa
-                // (Bu qism rasm ichidagi so'zlarni bazada 'javob_matn' qilib saqlashni talab qiladi)
-                let score = userAnsRaw.length > 10 ? 5 : 0; // Shunchaki simvolik ball
+                let score = userAnsRaw.length > 10 ? 5 : 0; 
                 totalScore += score;
                 detailsHtml += `<div class="score-box"><b>Savol ${i+1} (${score} ball*)</b><br><small>*Rasm uchun avtomatik ball</small><details class="exam-ans-details"><summary>Javob</summary>${formatAnswer(originalAnsRaw)}</details></div>`;
             }
@@ -1136,7 +1132,6 @@
         }
     }
 
-    /* Asl javobni yashirish funksiyasi */
     function hideOriginalAnswer() {
         const ansBox = document.getElementById('aslJavobWrapper');
         if(ansBox) {
@@ -1144,7 +1139,6 @@
         }
     }
 
-    /* O'zini sinash funksiyasi - Yangilangan 10 ballik tizim */
     function checkUserAnswer() {
         const userInputRaw = document.getElementById('selfCheckInput').value.trim();
         const diffBox = document.getElementById('selfCheckDiff');
@@ -1158,11 +1152,9 @@
         diffBox.style.display = 'block';
         diffBox.innerHTML = '';
 
-        // Tahlil mantiqi
         const clean = (t) => t.toLowerCase().replace(/[.:•\-*!?]/g, ' ').replace(/\s+/g, ' ').trim();
         const uWords = clean(userInputRaw).split(' ');
         
-        // Agar rasm bo'lsa, 'javob_matn' bor-yo'qligini tekshirish
         let comparisonText = originalText;
         if (originalText.startsWith('data:image') || originalText.startsWith('http')) {
             comparisonText = allQuestions[currentIndex].javob_matn || "";
@@ -1177,11 +1169,9 @@
         const matchPerc = importantWords.length > 0 ? (match / importantWords.length) * 100 : 100;
         const lenPerc = Math.min(userInputRaw.length / (comparisonText.length || 1), 1.2) * 100;
         
-        // Ball hisoblash
         let score = parseFloat((((matchPerc * 0.8) + (Math.min(lenPerc, 100) * 0.2)) / 10).toFixed(1));
         score = Math.min(score, 10);
 
-        // Diff Visualizer
         const originalWordsForDiff = comparisonText.split(/\s+/);
         let outputHtml = '';
         originalWordsForDiff.forEach(word => {
@@ -1193,7 +1183,6 @@
             }
         });
 
-        // Natijani chiqarish
         const scoreColor = score >= 8 ? 'var(--success-color)' : (score >= 5 ? 'var(--accent-color)' : 'var(--danger-color)');
         diffBox.innerHTML = `
             <div class="self-score-badge" style="background:${scoreColor}; color:#000;">NATIJA: ${score} BALL</div>
@@ -1213,6 +1202,9 @@
         card.className = 'card';
         const qImg = q.image && q.image.length > 20 ? `<img src="${q.image}" class="q-image">` : '';
         
+        // Bu yerda formatAnswer funksiyasi rasm bo'lsa rasmni, matn bo'lsa matnni qaytaradi
+        const formattedJavob = formatAnswer(q.javob);
+
         card.innerHTML = `
             <span class="q-id">#SAVOL ${currentIndex + 1} / ${allQuestions.length}</span>
             <div class="q-text">${q.savol || "..."}</div>
@@ -1220,7 +1212,7 @@
             
             <div id="aslJavobWrapper" class="asl-javob-box">
                 <span style="font-weight:bold; color:var(--accent-color); font-size:14px; display:block; margin-bottom:5px;">✅ Javob:</span>
-                <div class="answer-wrapper">${formatAnswer(q.javob)}</div>
+                <div class="answer-wrapper">${formattedJavob}</div>
             </div>
 
             <div class="check-container">
