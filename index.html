@@ -431,7 +431,7 @@
                     document.getElementById('navBar').style.display = 'flex';
                     document.getElementById('navBarImport').style.display = 'none';
                 } else {
-                    document.getElementById('navBar').style.none = 'none';
+                    document.getElementById('navBar').style.display = 'none';
                     document.getElementById('navBarImport').style.display = 'flex';
                     document.getElementById('navItemHelpImport').classList.add('active');
                 }
@@ -1442,8 +1442,7 @@
         body.light-theme .opt-item.selected-exam { background: #E5E5EA !important; border-color: var(--gold); }
         body.light-theme .q-text { color: #000; }
         body.light-theme .mode-card { background: #F2F2F7; border-color: #D1D1D6; }
-        body.light-theme .mode-card .mode-title { color: #000; }
-        body.light-theme .mode-card .arrow-icon { color: #8E8E93; }
+        body.light-theme .mode-card h3 { color: #000; }
         body.light-theme .section-title { color: #000; }
         body.light-theme .info-box { background: #F2F2F7; border-color: #D1D1D6; }
         body.light-theme .nav-bar { background: #FFFFFF; border-top-color: #D1D1D6; }
@@ -1532,59 +1531,102 @@
             display: none;
         }
 
+        /* 4 ta Rejim uchun yangi chiroyli vizual dizayn stil tizimi */
         .mode-card { 
             background: var(--card-bg); 
-            padding: 16px; 
+            padding: 22px 20px; 
             border-radius: 16px; 
             margin-bottom: 14px; 
             border: 1px solid var(--border); 
-            border-left: 5px solid var(--gold);
             display: flex;
             flex-direction: row;
             align-items: center;
-            justify-content: space-between;
-            transition: transform 0.2s ease, background-color 0.2s ease;
-            cursor: pointer;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
         .mode-card:active {
             transform: scale(0.98);
-            background-color: rgba(255, 184, 0, 0.05);
+        }
+        .mode-icon-wrapper {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         .mode-info {
             display: flex;
             flex-direction: column;
             flex: 1;
-            padding-right: 10px;
         }
-        .mode-title-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 4px;
-        }
-        .mode-icon {
-            font-size: 20px;
-        }
-        .mode-title {
-            margin: 0;
-            font-size: 17px;
-            font-weight: 700;
+        .mode-card h3 { 
+            margin: 0 0 4px 0; 
+            font-size: 17px; 
+            font-weight: 700; 
             color: var(--text);
         }
-        .mode-desc {
-            color: #8E8E93;
-            margin: 0;
-            font-size: 12px;
+        .mode-card p { 
+            color: #8E8E93; 
+            margin: 0; 
+            font-size: 12px; 
             line-height: 1.4;
         }
-        .arrow-icon {
-            color: var(--gold);
-            font-size: 16px;
+        .mode-arrow {
+            font-size: 14px;
+            color: #444;
             font-weight: bold;
-            opacity: 0.7;
-            padding-left: 4px;
+            margin-left: auto;
         }
-        
+
+        /* Har bir rejim uchun o'ziga xos gradient va neon chegaralar */
+        .mode-study-style {
+            border-left: 5px solid #FFB800;
+            box-shadow: inset 5px 0 15px rgba(255, 184, 0, 0.03);
+        }
+        .mode-study-style .mode-icon-wrapper {
+            background: linear-gradient(135deg, rgba(255,184,0,0.2), rgba(255,184,0,0.05));
+            border: 1px solid rgba(255, 184, 0, 0.3);
+        }
+
+        .mode-exam-style {
+            border-left: 5px solid #32d74b;
+            box-shadow: inset 5px 0 15px rgba(50, 215, 75, 0.03);
+        }
+        .mode-exam-style .mode-icon-wrapper {
+            background: linear-gradient(135deg, rgba(50,215,75,0.2), rgba(50,215,75,0.05));
+            border: 1px solid rgba(50, 215, 75, 0.3);
+        }
+
+        .mode-answers-style {
+            border-left: 5px solid #5856d6;
+            box-shadow: inset 5px 0 15px rgba(88, 86, 214, 0.03);
+        }
+        .mode-answers-style .mode-icon-wrapper {
+            background: linear-gradient(135deg, rgba(88,86,214,0.2), rgba(88,86,214,0.05));
+            border: 1px solid rgba(88, 86, 214, 0.3);
+        }
+
+        .mode-range-style {
+            border-left: 5px solid #ff9500;
+            box-shadow: inset 5px 0 15px rgba(255, 149, 0, 0.03);
+        }
+        .mode-range-style .mode-icon-wrapper {
+            background: linear-gradient(135deg, rgba(255,149,0,0.2), rgba(255,149,0,0.05));
+            border: 1px solid rgba(255, 149, 0, 0.3);
+        }
+
+        body.light-theme .mode-study-style { background: #FFFBF0; border-color: #FFB800; }
+        body.light-theme .mode-exam-style { background: #F5FBF6; border-color: #32d74b; }
+        body.light-theme .mode-answers-style { background: #F6F6FC; border-color: #5856d6; }
+        body.light-theme .mode-range-style { background: #FFF7EE; border-color: #ff9500; }
+        body.light-theme .mode-arrow { color: #ccc; }
+
         .timer { font-family: monospace; font-size: 24px; color: var(--gold); text-align: center; margin-bottom: 10px; }
         
         .text-item { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
@@ -1757,49 +1799,42 @@
         <div class="header-label">ASSISTANT PRO</div>
         <div class="section-title" id="activeFileLabel" style="color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Kerakli rejimni tanlang</div>
         <div class="content-scrollable">
-            <div class="mode-card" onclick="openMode('study')" style="border-left-color: #FFB800;">
+            <div class="mode-card mode-study-style" onclick="openMode('study')">
+                <div class="mode-icon-wrapper">📖</div>
                 <div class="mode-info">
-                    <div class="mode-title-wrapper">
-                        <span class="mode-icon">📖</span>
-                        <h3 class="mode-title">Tayyorlanish</h3>
-                    </div>
-                    <p class="mode-desc">Savollarni erkin ishlab chiqish va javoblarni o‘rganish rejimi</p>
+                    <h3>Tayyorlanish</h3>
+                    <p>Savollarni erkin ishlab chiqish va javoblarni o‘rganish</p>
                 </div>
-                <div class="arrow-icon">❯</div>
+                <div class="mode-arrow">❯</div>
             </div>
             
-            <div class="mode-card" onclick="openMode('exam')" style="border-left-color: #32d74b;">
+            <div class="mode-card mode-exam-style" onclick="openMode('exam')">
+                <div class="mode-icon-wrapper">⏱️</div>
                 <div class="mode-info">
-                    <div class="mode-title-wrapper">
-                        <span class="mode-icon">⏱️</span>
-                        <h3 class="mode-title">Real Imtihon</h3>
-                    </div>
-                    <p class="mode-desc">Vaqt cheklovi va ball tizimi asosidagi haqiqiy imtihon sinovi</p>
+                    <h3>Real Imtihon</h3>
+                    <p>Vaqt va ball tizimi asosidagi haqiqiy imtihon rejimi</p>
                 </div>
-                <div class="arrow-icon">❯</div>
+                <div class="mode-arrow">❯</div>
             </div>
             
-            <div class="mode-card" onclick="openMode('answers')" style="border-left-color: #5856d6;">
+            <div class="mode-card mode-answers-style" onclick="openMode('answers')">
+                <div class="mode-icon-wrapper">🛡️</div>
                 <div class="mode-info">
-                    <div class="mode-title-wrapper">
-                        <span class="mode-icon">🎯</span>
-                        <h3 class="mode-title">Faqat to'g'ri javoblar</h3>
-                    </div>
-                    <p class="mode-desc">Testdagi barcha to‘g‘ri va noto'g'ri javoblarni ro'yxat ko'rinishida ko‘rish</p>
+                    <h3>Faqat to'g'ri javoblar</h3>
+                    <p>Testdagi barcha to‘g‘ri va noto'g'ri javoblarni ko‘rish</p>
                 </div>
-                <div class="arrow-icon">❯</div>
+                <div class="mode-arrow">❯</div>
             </div>
             
-            <div class="mode-card" onclick="openMode('range')" style="border-left-color: #ff9500;">
+            <div class="mode-card mode-range-style" onclick="openMode('range')">
+                <div class="mode-icon-wrapper">🎯</div>
                 <div class="mode-info">
-                    <div class="mode-title-wrapper">
-                        <span class="mode-icon">🔢</span>
-                        <h3 class="mode-title">Oraliqni tanlash</h3>
-                    </div>
-                    <p class="mode-desc">O'zingiz belgilagan muayyan savollar oralig‘ini ajratib ishlash</p>
+                    <h3>Oraliqni tanlash</h3>
+                    <p>Kerakli savollar oralig‘ini tanlab ishlash</p>
                 </div>
-                <div class="arrow-icon">❯</div>
+                <div class="mode-arrow">❯</div>
             </div>
+            
             <button class="btn-primary" style="background:var(--card-bg); border:1px solid var(--border); color:var(--gold)!important; margin-top:15px;" onclick="addNewFile()">YANGI TEST FAYL QO‘SHISH</button>
         </div>
     </div>
