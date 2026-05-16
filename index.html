@@ -1546,7 +1546,7 @@
         }
 
         /* LIGHT THEME ADJUSTMENTS */
-        body.light-theme .question-box { background: #F2F2F7; box-shadow: 0 4px 16px rgba(0,0,0,0.03); }
+        body.light-theme .question-box { background: #F2F2F7; border: 1px solid #E5E5EA; box-shadow: 0 4px 16px rgba(0,0,0,0.03); }
         body.light-theme .opt-item { background: #FFFFFF; border-color: #E5E5EA; color: #000; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
         body.light-theme .opt-item .opt-prefix { background: #F2F2F7; color: #666; border-color: #E5E5EA; }
         body.light-theme .opt-item.selected-exam { background: #FFF9E6 !important; border-color: var(--gold); }
@@ -1584,65 +1584,81 @@
         }
         .back-btn { color: var(--gold); font-weight: 700; cursor: pointer; font-size: 13px; letter-spacing: 0.5px; }
         
-        /* MODERN SAVOL QUTISI (QUESTION BOX) STILI */
+        /* MODERN SAVOL QUTISI (QUESTION BOX) STILI - JUDA IXCHAM VA VARIANTLARDAN AJRALIB TURUVCHI */
         .question-box {
-            background: linear-gradient(145deg, #0d0d0d, #070707);
-            border-radius: 20px; 
-            padding: 24px; 
-            margin-bottom: 24px;
-            border: 1px solid #161616;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.02);
-            transition: transform 0.2s ease;
+            background: linear-gradient(135deg, #111115, #070709);
+            border-radius: 14px; 
+            padding: 16px 18px; 
+            margin-bottom: 18px;
+            border: 1px dashed rgba(255, 184, 0, 0.25);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            position: relative;
+        }
+        .question-box::before {
+            content: "SAVOL MATNI";
+            position: absolute;
+            top: -8px;
+            left: 14px;
+            background: var(--bg);
+            color: var(--gold);
+            font-size: 9px;
+            font-weight: 800;
+            padding: 0 6px;
+            letter-spacing: 1px;
+            border-radius: 4px;
         }
         .q-text { 
-            font-size: 17px; 
-            line-height: 1.6; 
+            font-size: 15px; 
+            line-height: 1.5; 
             color: #ffffff; 
-            font-weight: 600;
-            letter-spacing: -0.2px;
+            font-weight: 700;
+            letter-spacing: -0.1px;
+            word-wrap: break-word;
         }
 
-        .options-grid { display: flex; flex-direction: column; gap: 12px; }
+        .options-grid { display: flex; flex-direction: column; gap: 10px; }
         
-        /* ZAMONAVIY VA CHIROYLI VARIANTLAR (OPT-ITEM) STILI */
+        /* ZAMONAVIY VA IXCHAM VARIANTLAR (OPT-ITEM) STILI - TELEFON EKRANIGA MOSLASHGAN */
         .opt-item {
-            background: #09090b; 
-            border: 1px solid #18181b;
-            border-radius: 16px; 
-            padding: 14px 18px; 
-            font-size: 15px; 
+            background: #0d0d11; 
+            border: 1px solid #1e1e24;
+            border-radius: 12px; 
+            padding: 10px 14px; 
+            font-size: 14px; 
             color: #e4e4e7;
-            min-height: 60px; 
+            min-height: 48px; 
             display: flex; 
             align-items: center; 
             justify-content: flex-start;
-            gap: 14px;
+            gap: 10px;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            word-wrap: break-word;
         }
         
         /* A, B, C, D HARFLARI UCHUN PREFIKS STILI */
         .opt-prefix {
-            width: 32px;
-            height: 32px;
-            border-radius: 10px;
-            background: #18181b;
-            border: 1px solid #27272a;
+            width: 26px;
+            height: 26px;
+            border-radius: 8px;
+            background: #18181c;
+            border: 1px solid #2a2a32;
             color: #a1a1aa;
             font-weight: 700;
-            font-size: 13px;
+            font-size: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            transition: all 0.25s ease;
+            transition: all 0.2s ease;
         }
         
         .opt-text-content {
             flex: 1;
-            line-height: 1.5;
+            line-height: 1.4;
             font-weight: 500;
+            font-size: 13.5px;
         }
 
         /* EFFEKTLAR VA HOLATLAR */
@@ -1651,9 +1667,9 @@
         }
         
         .opt-item.selected-exam { 
-            border: 2px solid var(--gold); 
-            background: rgba(255, 184, 0, 0.03);
-            box-shadow: 0 0 20px rgba(255, 184, 0, 0.1);
+            border: 1.5px solid var(--gold); 
+            background: rgba(255, 184, 0, 0.04);
+            box-shadow: 0 0 12px rgba(255, 184, 0, 0.12);
         }
         .opt-item.selected-exam .opt-prefix {
             background: var(--gold);
@@ -1663,9 +1679,9 @@
 
         .opt-item.correct { 
             background: rgba(46, 204, 113, 0.08) !important; 
-            border: 2px solid #2ecc71 !important; 
+            border: 1.5px solid #2ecc71 !important; 
             color: #fff !important; 
-            box-shadow: 0 0 20px rgba(46, 204, 113, 0.15);
+            box-shadow: 0 0 12px rgba(46, 204, 113, 0.15);
         }
         .opt-item.correct .opt-prefix {
             background: #2ecc71 !important;
@@ -1675,9 +1691,9 @@
 
         .opt-item.wrong { 
             background: rgba(231, 76, 60, 0.08) !important; 
-            border: 2px solid #e74c3c !important; 
+            border: 1.5px solid #e74c3c !important; 
             color: #fff !important;
-            box-shadow: 0 0 20px rgba(231, 76, 60, 0.1);
+            box-shadow: 0 0 12px rgba(231, 76, 60, 0.1);
         }
         .opt-item.wrong .opt-prefix {
             background: #e74c3c !important;
