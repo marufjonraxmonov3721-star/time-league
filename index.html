@@ -42,7 +42,6 @@
         const DB_NAME = 'AssistantProDB';
         const DB_VERSION = 2; 
         const STORE_NAME = 'activeExam';
-        const MISTAKES_STORE = 'mistakes';
 
         function openDB() {
             return new Promise((resolve, reject) => {
@@ -51,9 +50,6 @@
                     const db = e.target.result;
                     if (!db.objectStoreNames.contains(STORE_NAME)) {
                         db.createObjectStore(STORE_NAME);
-                    }
-                    if (!db.objectStoreNames.contains(MISTAKES_STORE)) {
-                        db.createObjectStore(MISTAKES_STORE, { keyPath: 'q' });
                     }
                 };
                 request.onsuccess = (e) => resolve(e.target.result);
@@ -79,30 +75,9 @@
 
         async function clearLocal() {
             const db = await openDB();
-            const tx = db.transaction([STORE_NAME, MISTAKES_STORE], 'readwrite');
+            const tx = db.transaction([STORE_NAME], 'readwrite');
             tx.objectStore(STORE_NAME).delete('current');
-            tx.objectStore(MISTAKES_STORE).clear();
             return tx.complete;
-        }
-
-        async function saveMistake(questionObj) {
-            const db = await openDB();
-            const tx = db.transaction(MISTAKES_STORE, 'readwrite');
-            tx.objectStore(MISTAKES_STORE).put(questionObj);
-        }
-
-        async function getMistakes() {
-            const db = await openDB();
-            return new Promise((resolve) => {
-                const request = db.transaction(MISTAKES_STORE).objectStore(MISTAKES_STORE).getAll();
-                request.onsuccess = () => resolve(request.result);
-            });
-        }
-
-        async function deleteMistake(qText) {
-            const db = await openDB();
-            const tx = db.transaction(MISTAKES_STORE, 'readwrite');
-            tx.objectStore(MISTAKES_STORE).delete(qText);
         }
 
         // Massivni haqiqiy chalkash qilish uchun funksiya
@@ -596,7 +571,7 @@
         window.openMode = async function(mode) {
             let data = await getFromLocal();
             
-            if (mode !== 'mistakes' && !data) {
+            if (!data) {
                 const uid = tg.initDataUnsafe?.user?.id || "dev_user";
                 const snap = await get(ref(db, `users/${uid}/exams/active`));
                 if (!snap.exists()) return alert("Avval fayl yuklang!");
@@ -613,23 +588,9 @@
                 const allQuestions = data.questions;
                 examData.mode = "study";
                 document.getElementById('studyUI').style.display = 'flex';
-                // Variantlarni aqlli aralashtirish
                 currentQuestions = allQuestions.map(q => ({...q, options: shuffleArray(q.options)}));
                 currentIndex = 0;
                 studyAnswers = {}; 
-                showStudyQuestion();
-            } else if (mode === 'mistakes') {
-                updateActivity("Xatolar ustida ishlamoqda");
-                const list = await getMistakes();
-                if (list.length === 0) {
-                    alert("Hozircha xatolar mavjud emas! Mukammal natija!");
-                    return checkExisting();
-                }
-                examData.mode = "mistakes";
-                document.getElementById('studyUI').style.display = 'flex';
-                currentQuestions = list.map(q => ({...q, options: shuffleArray(q.options)}));
-                currentIndex = 0;
-                studyAnswers = {};
                 showStudyQuestion();
             } else if (mode === 'answers') {
                 updateActivity("Javoblarni ko'rmoqda");
@@ -830,7 +791,6 @@
             const corrBase64 = btoa(unescape(encodeURIComponent(q.a)));
             const savedAns = studyAnswers[currentIndex];
             const isLast = (currentIndex === currentQuestions.length - 1);
-            const isMistakeMode = (examData.mode === 'mistakes');
 
             document.getElementById('studyHeader').innerHTML = `
                 <div class="top-nav">
@@ -857,17 +817,9 @@
                 </div>`;
             
             const studyActions = document.getElementById('studyActions');
-            
-            let showSuccessBtn = isMistakeMode;
-            if (isMistakeMode && savedAns) {
-                if (getPlainText(savedAns) !== getPlainText(q.a)) {
-                    showSuccessBtn = false;
-                }
-            }
 
             studyActions.innerHTML = `
                 <button id="studyPrevBtn" class="nav-btn animated-btn" onclick="moveStudy(-1)">OLDINGISI</button>
-                ${showSuccessBtn ? `<button class="nav-btn" id="successBtn" style="background:#32d74b; color:white; border:none; font-size:10px;" onclick="learnSuccess()">100% TAYYORMAN</button>` : ''}
                 ${isLast ? 
                     `<button class="nav-btn" style="background:#ff453a; color:white; border:none;" onclick="finalizeStudy()">TUGATISH</button>` : 
                     `<button id="studyNextBtn" class="nav-btn animated-btn" onclick="moveStudy(1)">KEYINGI SAVOL</button>`
@@ -884,24 +836,8 @@
             container.scrollTop = 0;
         }
 
-        window.learnSuccess = async function() {
-            const qObj = currentQuestions[currentIndex];
-            if(confirm("Ushbu savolni butunlay yod oldingizmi? U xatolar ro'yxatidan o'chiriladi.")) {
-                await deleteMistake(qObj.q);
-                currentQuestions.splice(currentIndex, 1);
-                if (currentQuestions.length === 0) {
-                    alert("Ajoyib! Barcha xatolar ustida ishlab chiqdingiz. Endi natijangiz yanada yuqori bo'ladi! 🚀");
-                    backToMain();
-                } else {
-                    if (currentIndex >= currentQuestions.length) currentIndex = currentQuestions.length - 1;
-                    showStudyQuestion();
-                }
-            }
-        };
-
         window.finalizeStudy = function() {
             updateActivity("Natija tahlilida");
-            const isMistakeMode = (examData.mode === 'mistakes');
             examData.total = currentQuestions.length;
             examData.correct = 0;
             examData.history = [];
@@ -923,7 +859,7 @@
             });
 
             examData.score = examData.correct;
-            showResultsUI(isMistakeMode ? "XATOLAR USTIDA ISHLASH YAKUNLANDI" : "TAYYORLANISH YAKUNLANDI");
+            showResultsUI("TAYYORLANISH YAKUNLANDI");
         };
 
         function showResultsUI(title) {
@@ -944,13 +880,8 @@
                 let percent = (examData.correct / totalQs) * 100;
                 let isPassed = (examData.mode === "exam") ? (examData.score >= examData.passScore) : (percent >= 60);
                 
-                if(examData.mode === "mistakes") {
-                    resStatusEl.innerText = percent === 100 ? "🏆 Mukammal!" : "📈 O'sish bor!";
-                    resSubEl.innerText = percent === 100 ? "Barcha xatolaringizni to'g'irladingiz!" : "Xatolar ustida ishlashda davom eting.";
-                } else {
-                    resStatusEl.innerText = isPassed ? "🎉 Tabriklaymiz!" : "❌ Afsuski";
-                    resSubEl.innerText = isPassed ? "Siz muvaffaqiyatli o'tdingiz." : "Natijangiz yetarli emas.";
-                }
+                resStatusEl.innerText = isPassed ? "🎉 Tabriklaymiz!" : "❌ Afsuski";
+                resSubEl.innerText = isPassed ? "Siz muvaffaqiyatli o'tdingiz." : "Natijangiz yetarli emas.";
                 resStatusEl.className = isPassed ? "res-pass" : "res-fail";
             }
             
@@ -1011,8 +942,6 @@
                     tg.HapticFeedback.notificationOccurred('error');
                     
                     if (examData.mode === 'study') {
-                        saveMistake(currentQuestions[currentIndex]);
-                        
                         if (currentIndex >= 4) {
                             setTimeout(() => {
                                 alert("Xato qildingiz! Bilimingizni mustahkamlash uchun 5 ta savol orqaga qaytarilasiz. Qaytarilgan savollarni diqqat bilan qayta ishlang.");
@@ -1042,11 +971,6 @@
                             }, 1500); 
                             return; 
                         }
-                    }
-
-                    if (examData.mode === 'mistakes') {
-                        const successBtn = document.getElementById('successBtn');
-                        if(successBtn) successBtn.remove();
                     }
                 }
             } else {
@@ -1097,7 +1021,6 @@
             currentIndex = 0;
             examUserAnswers = {};
             
-            // Savollarni va variantlarni aqlli aralashtirish
             currentQuestions = [...currentQuestions].sort(() => Math.random() - 0.5).slice(0, count).map(q => ({
                 ...q, options: shuffleArray(q.options)
             }));
@@ -1204,18 +1127,12 @@
         function renderAnalysis() {
             const container = document.getElementById('analysisContainer');
             let analysisTitle = "Javoblar tahlili";
-            if(examData.mode === "mistakes") analysisTitle = "Xatolar ustida tahlil";
 
             container.innerHTML = `<h3 style="margin:20px 0 15px 0; color:var(--gold); font-size:16px;">${analysisTitle}</h3>` + 
             examData.history.map((h, i) => {
-                let msg = "";
-                if(examData.mode === "mistakes") {
-                    msg = h.isCorrect ? "<span style='font-size:10px; color:#32d74b;'>[TUZATILDI]</span>" : "<span style='font-size:10px; color:#ff453a;'>[HANOZ XATO]</span>";
-                }
-
                 return `
                 <div class="analysis-item ${h.isCorrect ? 'a-correct' : 'a-wrong'}" style="background: var(--card-bg);">
-                    <div class="a-q" style="color: var(--text);"><b>${i+1}.</b> ${h.q} ${msg}</div>
+                    <div class="a-q" style="color: var(--text);"><b>${i+1}.</b> ${h.q}</div>
                     <div class="a-ans">
                         <div class="a-row">
                             <span>Sizning javob:</span> 
@@ -1229,12 +1146,10 @@
 
         async function updateProfileInfo() {
             const data = await getFromLocal();
-            const mistakes = await getMistakes();
             if (data) {
                 document.getElementById('profStats').innerHTML = `
                     <div style="color:var(--gold); font-weight:bold; font-size:18px;">${data.name}</div>
                     <div style="color:#888; font-size:14px; margin-top:5px;">Savollar soni: ${data.questions.length} ta</div>
-                    <div style="color:#ff453a; font-size:14px; margin-top:5px;">Xatolar ro'yxatida: ${mistakes.length} ta savol</div>
                     <div style="color:#888; font-size:12px; margin-top:10px;">Holat: Qurilma xotirasida (Oflayn tayyor)</div>
                     <div style="color:#888; font-size:12px; margin-top:5px;">Dizayn: ${data.isLight ? "Oq (Rasmlar uchun)" : "Qora"}</div>
                 `;
@@ -1710,6 +1625,80 @@
             border-radius: 10px; padding: 10px; font-size: 14px; min-height: 80px; margin-bottom: 15px;
         }
 
+        .info-box { background: var(--card-bg); border-radius: 15px; padding: 15px; border: 1px solid var(--border); text-align: left; }
+        .info-box h4 { color: var(--gold); margin: 0 0 8px 0; font-size: 14px; display: flex; align-items: center; gap: 5px;}
+        .info-box p { font-size: 11px; color: #8E8E93; margin: 0; line-height: 1.4; }
+
+        .res-container { text-align: center; padding: 10px 0; }
+        #resStatus { font-size: 32px; font-weight: 900; margin: 5px 0; display: block; }
+        #resSub { font-size: 15px; color: #8E8E93; display: block; margin-bottom: 20px; line-height: 1.3; padding: 0 10px; }
+        .res-pass { color: #32d74b; text-shadow: 0 0 10px rgba(50, 215, 75, 0.2); }
+        .res-fail { color: #ff453a; text-shadow: 0 0 10px rgba(255, 69, 58, 0.2); }
+
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 20px 0; }
+        .stat-card { background: var(--card-bg); border: 1px solid var(--border); padding: 12px 5px; border-radius: 12px; text-align: center;}
+        .stat-card span { display: block; font-size: 10px; color: #8E8E93; margin-bottom: 5px; text-transform: uppercase; }
+        .stat-card b { font-size: 16px; color: var(--gold); }
+
+        .analysis-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 15px; padding: 15px; margin-bottom: 12px; }
+        .a-correct { border-left: 4px solid #32d74b; }
+        .a-wrong { border-left: 4px solid #ff453a; }
+        .a-q { font-size: 14px; margin-bottom: 10px; line-height: 1.4; }
+        .a-ans { font-size: 12px; margin-top: 5px; display: flex; flex-direction: column; }
+        .a-row { font-size: 12px; margin-top: 5px; display: flex; flex-direction: column; }
+        .a-row span { color: #8E8E93; font-size: 10px; }
+        .a-row div { margin: 2px 0; color: #ff453a; }
+        .a-row div.c-txt { color: #32d74b !important; font-weight: bold; }
+        
+        .range-row { display: flex; gap: 10px; margin-bottom: 15px; }
+        .range-row div { flex: 1; }
+
+        .setup-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--gold);
+        }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { color: #8E8E93; font-size: 11px; display: block; margin-bottom: 5px; text-transform: uppercase; }
+        .styled-input {
+            width: 100%; 
+            background: var(--bg); 
+            color: var(--text); 
+            border: 1px solid var(--border); 
+            padding: 14px; 
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
+        .admin-user-card {
+            background: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 12px; padding: 15px; margin-bottom: 10px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .block-btn {
+            padding: 8px 12px; border-radius: 8px; font-size: 10px; font-weight: bold;
+            border: none; background: #ff453a; color: white; cursor: pointer;
+        }
+        .block-btn.unblock { background: #32d74b; }
+
+        .rating-overlay {
+            position: fixed; top:0; left:0; right:0; bottom:0;
+            background: rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center;
+            z-index: 10000; padding:20px;
+        }
+        .rating-box {
+            background: #1c1c1e; border: 1px solid #333; border-radius: 20px;
+            padding: 25px; width: 100%; max-width: 320px; text-align: center;
+        }
+        .stars-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
+        .star { font-size: 35px; color: #333; cursor: pointer; }
+        #feedbackText {
+            width: 100%; background: #000; border: 1px solid #333; color: #fff;
+            border-radius: 10px; padding: 10px; font-size: 14px; min-height: 80px; margin-bottom: 15px;
+        }
+
         .chat-input-container {
             display: flex; gap: 10px; padding: 10px;
             background: var(--card-bg); border-top: 1px solid var(--border);
@@ -1802,10 +1791,6 @@
             <div class="mode-card" onclick="openMode('study')">
                 <h3 style="margin:0 0 5px 0;">Tayyorlanish</h3>
                 <p style="color:#8E8E93; margin:0; font-size:13px;">Savollarni erkin ishlab chiqish va javoblarni o‘rganish</p>
-            </div>
-            <div class="mode-card" onclick="openMode('mistakes')" style="border-left-color: #ff453a;">
-                <h3 style="margin:0 0 5px 0;">Xatolar ustida ishlash</h3>
-                <p style="color:#8E8E93; margin:0; font-size:13px;">Faqat tayyorlanishda xato qilingan savollar bilan ishlash</p>
             </div>
             <div class="mode-card" onclick="openMode('exam')" style="border-left-color: #32d74b;">
                 <h3 style="margin:0 0 5px 0;">Real Imtihon</h3>
