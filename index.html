@@ -93,7 +93,7 @@
         const QUICK_REPLIES = [
             "Fikringiz uchun rahmat! 😊",
             "Sizning bahoingiz biz uchun muhim, rahmat! ✨",
-            "Xatolik haqica xabar berganingiz uchun rahmat, tez orada tuzatamiz! 🛠",
+            "Xatolik haqida xabar berganingiz uchun rahmat, tez orada tuzatamiz! 🛠",
             "Ilovadan foydalanishingiz uchun tashakkur! Omad! 🚀"
         ];
 
@@ -715,7 +715,7 @@
                     <div class="q-text">${q.q}</div>
                 </div>
                 <div class="options-grid ${savedAns ? 'done' : ''}">
-                    ${q.options.map((opt, idx) => {
+                    ${q.options.map((opt, oIdx) => {
                         let cls = "";
                         if (savedAns) {
                             const selTxt = getPlainText(opt);
@@ -724,10 +724,10 @@
                             if (selTxt === corTxt) cls = "correct";
                             else if (selTxt === savTxt) cls = "wrong";
                         }
-                        const labelPrefix = String.fromCharCode(65 + idx);
+                        const prefix = String.fromCharCode(65 + oIdx);
                         return `
                         <div class="opt-item ${cls}" data-ans="${corrBase64}" onclick="handleRangeSelect(this)">
-                            <span class="opt-badge">${labelPrefix}</span>
+                            <span class="opt-prefix">${prefix}</span>
                             <div class="opt-text-content">${opt}</div>
                         </div>`;
                     }).join('')}
@@ -756,13 +756,13 @@
             const optionsDiv = el.parentElement;
             if(optionsDiv.classList.contains('done')) return;
             
+            const textEl = el.querySelector('.opt-text-content');
             const corrEncoded = el.getAttribute('data-ans');
             const corrDecoded = decodeURIComponent(escape(atob(corrEncoded)));
-            const innerTextContainer = el.querySelector('.opt-text-content');
-            const selectedTxt = getPlainText(innerTextContainer ? innerTextContainer.innerHTML : el.innerHTML);
+            const selectedTxt = getPlainText(textEl.innerHTML);
             const corectTxt = getPlainText(corrDecoded);
 
-            examUserAnswers[currentIndex] = innerTextContainer ? innerTextContainer.innerHTML : el.innerHTML;
+            examUserAnswers[currentIndex] = textEl.innerHTML;
             optionsDiv.classList.add('done');
 
             if(selectedTxt === corectTxt) {
@@ -771,8 +771,8 @@
             } else {
                 el.classList.add('wrong');
                 Array.from(optionsDiv.children).forEach(child => {
-                    const childTextContainer = child.querySelector('.opt-text-content');
-                    if(getPlainText(childTextContainer ? childTextContainer.innerHTML : child.innerHTML) === corectTxt) child.classList.add('correct');
+                    const cTextEl = child.querySelector('.opt-text-content');
+                    if(getPlainText(cTextEl.innerHTML) === corectTxt) child.classList.add('correct');
                 });
                 tg.HapticFeedback.notificationOccurred('error');
             }
@@ -834,7 +834,7 @@
                     <div class="q-text">${q.q}</div>
                 </div>
                 <div class="options-grid ${savedAns ? 'done' : ''}">
-                    ${q.options.map((opt, idx) => {
+                    ${q.options.map((opt, oIdx) => {
                         let cls = "";
                         if (savedAns) {
                             const selTxt = getPlainText(opt);
@@ -843,10 +843,10 @@
                             if (selTxt === corTxt) cls = "correct";
                             else if (selTxt === savTxt) cls = "wrong";
                         }
-                        const labelPrefix = String.fromCharCode(65 + idx);
+                        const prefix = String.fromCharCode(65 + oIdx);
                         return `
                         <div class="opt-item ${cls}" data-ans="${corrBase64}" onclick="handleSelect(this, true)">
-                            <span class="opt-badge">${labelPrefix}</span>
+                            <span class="opt-prefix">${prefix}</span>
                             <div class="opt-text-content">${opt}</div>
                         </div>`;
                     }).join('')}
@@ -967,17 +967,17 @@
 
         window.handleSelect = function(el, isStudy) {
             const optionsDiv = el.parentElement;
+            const textEl = el.querySelector('.opt-text-content');
             
             if(isStudy) {
                 if(optionsDiv.classList.contains('done')) return;
                 
                 const corrEncoded = el.getAttribute('data-ans');
                 const corrDecoded = decodeURIComponent(escape(atob(corrEncoded)));
-                const innerTextContainer = el.querySelector('.opt-text-content');
-                const selectedTxt = getPlainText(innerTextContainer ? innerTextContainer.innerHTML : el.innerHTML);
+                const selectedTxt = getPlainText(textEl.innerHTML);
                 const corectTxt = getPlainText(corrDecoded);
 
-                studyAnswers[currentIndex] = innerTextContainer ? innerTextContainer.innerHTML : el.innerHTML;
+                studyAnswers[currentIndex] = textEl.innerHTML;
                 optionsDiv.classList.add('done');
 
                 if(selectedTxt === corectTxt) {
@@ -986,8 +986,8 @@
                 } else {
                     el.classList.add('wrong');
                     Array.from(optionsDiv.children).forEach(child => {
-                        const childTextContainer = child.querySelector('.opt-text-content');
-                        if(getPlainText(childTextContainer ? childTextContainer.innerHTML : child.innerHTML) === corectTxt) child.classList.add('correct');
+                        const cTextEl = child.querySelector('.opt-text-content');
+                        if(getPlainText(cTextEl.innerHTML) === corectTxt) child.classList.add('correct');
                     });
                     tg.HapticFeedback.notificationOccurred('error');
                     
@@ -1026,8 +1026,7 @@
             } else {
                 Array.from(optionsDiv.children).forEach(child => child.classList.remove('selected-exam'));
                 el.classList.add('selected-exam');
-                const innerTextContainer = el.querySelector('.opt-text-content');
-                examUserAnswers[currentIndex] = innerTextContainer ? innerTextContainer.innerHTML : el.innerHTML;
+                examUserAnswers[currentIndex] = textEl.innerHTML;
                 tg.HapticFeedback.impactOccurred('light');
             }
         };
@@ -1110,11 +1109,11 @@
                     <div class="q-text">${q.q}</div>
                 </div>
                 <div class="options-grid">
-                    ${q.options.map((opt, idx) => {
-                        const labelPrefix = String.fromCharCode(65 + idx);
+                    ${q.options.map((opt, oIdx) => {
+                        const prefix = String.fromCharCode(65 + oIdx);
                         return `
                         <div class="opt-item ${savedExamAns === opt ? 'selected-exam' : ''}" onclick="handleSelect(this, false)">
-                            <span class="opt-badge">${labelPrefix}</span>
+                            <span class="opt-prefix">${prefix}</span>
                             <div class="opt-text-content">${opt}</div>
                         </div>`;
                     }).join('')}
@@ -1456,8 +1455,10 @@
             --bg: #000000; 
             --gold: #FFB800; 
             --card-bg: #0a0a0a; 
-            --border: #1f1f1f; 
+            --border: #1a1a1a; 
             --text: #ffffff;
+            --accent-green: #32d74b;
+            --accent-red: #ff453a;
             --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
@@ -1544,11 +1545,13 @@
             50% { opacity: 1; color: #888888; }
         }
 
-        body.light-theme .question-box { background: #F2F2F7; border-left-color: var(--gold); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
-        body.light-theme .opt-item { background: #FFFFFF; border-color: #E5E5EA; color: #000; }
+        /* LIGHT THEME ADJUSTMENTS */
+        body.light-theme .question-box { background: #F2F2F7; box-shadow: 0 4px 16px rgba(0,0,0,0.03); }
+        body.light-theme .opt-item { background: #FFFFFF; border-color: #E5E5EA; color: #000; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        body.light-theme .opt-item .opt-prefix { background: #F2F2F7; color: #666; border-color: #E5E5EA; }
         body.light-theme .opt-item.selected-exam { background: #FFF9E6 !important; border-color: var(--gold); }
-        body.light-theme .opt-badge { background: #F2F2F7; color: #666; border-color: #E5E5EA; }
-        body.light-theme .q-text { color: #000; }
+        body.light-theme .opt-item.selected-exam .opt-prefix { background: var(--gold); color: #000; border-color: var(--gold); }
+        body.light-theme .q-text { color: #1C1C1E; }
         body.light-theme .mode-card { background: #F2F2F7; border-color: #D1D1D6; }
         body.light-theme .mode-card h3 { color: #000; }
         body.light-theme .section-title { color: #000; }
@@ -1581,58 +1584,59 @@
         }
         .back-btn { color: var(--gold); font-weight: 700; cursor: pointer; font-size: 13px; letter-spacing: 0.5px; }
         
-        /* ZAMONAVIY SAVOL VA VARIANTLAR STILI */
+        /* MODERN SAVOL QUTISI (QUESTION BOX) STILI */
         .question-box {
-            background: linear-gradient(135deg, #0d0d0d, #050505);
-            border-left: 4px solid var(--gold);
-            border-radius: 16px; 
-            padding: 22px; 
+            background: linear-gradient(145deg, #0d0d0d, #070707);
+            border-radius: 20px; 
+            padding: 24px; 
             margin-bottom: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.03);
+            border: 1px solid #161616;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.02);
             transition: transform 0.2s ease;
         }
         .q-text { 
-            font-size: 16px; 
+            font-size: 17px; 
             line-height: 1.6; 
-            color: var(--text); 
+            color: #ffffff; 
             font-weight: 600;
             letter-spacing: -0.2px;
         }
 
         .options-grid { display: flex; flex-direction: column; gap: 12px; }
         
+        /* ZAMONAVIY VA CHIROYLI VARIANTLAR (OPT-ITEM) STILI */
         .opt-item {
             background: #09090b; 
-            border: 1px solid var(--border);
-            border-radius: 14px; 
-            padding: 14px 16px; 
-            font-size: 14.5px; 
+            border: 1px solid #18181b;
+            border-radius: 16px; 
+            padding: 14px 18px; 
+            font-size: 15px; 
             color: #e4e4e7;
-            min-height: 56px; 
+            min-height: 60px; 
             display: flex; 
             align-items: center; 
             justify-content: flex-start;
             gap: 14px;
             cursor: pointer;
             transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         
-        .opt-badge {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
+        /* A, B, C, D HARFLARI UCHUN PREFIKS STILI */
+        .opt-prefix {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
             background: #18181b;
             border: 1px solid #27272a;
             color: #a1a1aa;
-            font-size: 12px;
             font-weight: 700;
+            font-size: 13px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            transition: all 0.2s ease;
+            transition: all 0.25s ease;
         }
         
         .opt-text-content {
@@ -1641,46 +1645,46 @@
             font-weight: 500;
         }
 
+        /* EFFEKTLAR VA HOLATLAR */
         .opt-item:active {
-            transform: scale(0.99);
+            transform: scale(0.98);
         }
-
+        
         .opt-item.selected-exam { 
-            border-color: var(--gold); 
-            background: rgba(255, 184, 0, 0.04); 
-            box-shadow: 0 0 20px rgba(255, 184, 0, 0.08);
+            border: 2px solid var(--gold); 
+            background: rgba(255, 184, 0, 0.03);
+            box-shadow: 0 0 20px rgba(255, 184, 0, 0.1);
         }
-        .opt-item.selected-exam .opt-badge {
+        .opt-item.selected-exam .opt-prefix {
             background: var(--gold);
-            border-color: var(--gold);
             color: #000000;
+            border-color: var(--gold);
         }
 
         .opt-item.correct { 
-            background: #10b981 !important; 
-            border-color: #10b981 !important; 
-            color: #ffffff !important; 
-            font-weight: 600;
-            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+            background: rgba(46, 204, 113, 0.08) !important; 
+            border: 2px solid #2ecc71 !important; 
+            color: #fff !important; 
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.15);
         }
-        .opt-item.correct .opt-badge {
-            background: #ffffff !important;
-            border-color: #ffffff !important;
-            color: #10b981 !important;
+        .opt-item.correct .opt-prefix {
+            background: #2ecc71 !important;
+            color: #ffffff !important;
+            border-color: #2ecc71 !important;
         }
 
         .opt-item.wrong { 
-            background: #ef4444 !important; 
-            border-color: #ef4444 !important; 
+            background: rgba(231, 76, 60, 0.08) !important; 
+            border: 2px solid #e74c3c !important; 
+            color: #fff !important;
+            box-shadow: 0 0 20px rgba(231, 76, 60, 0.1);
+        }
+        .opt-item.wrong .opt-prefix {
+            background: #e74c3c !important;
             color: #ffffff !important;
-            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.25);
+            border-color: #e74c3c !important;
         }
-        .opt-item.wrong .opt-badge {
-            background: #ffffff !important;
-            border-color: #ffffff !important;
-            color: #ef4444 !important;
-        }
-        
+
         .done .opt-item { cursor: default; }
 
         .bottom-actions {
@@ -1797,10 +1801,10 @@
             color: #000000;
         }
         body.light-theme .premium-upload-icon-pulse {
-            background: linear-gradient(135deg, rgba(255,184,0,0.1), rgba(255,184,0,0.02));
+            background: linear-gradient(135deg, rgba(255, 184, 0, 0.1), rgba(255, 184, 0, 0.02));
         }
         
-        .btn-primary { background: var(--gold); color: black !important; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: 800; font-size: 14px; margin-top: 10px; font-family: var(--font-main); cursor: pointer; }
+        .btn-primary { background: var(--gold); color: black !important; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: 800; font-size: 14px; margin-top: 10px; font-family: var(--font-main); }
         
         .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-top: 1px solid var(--border); display: none; justify-content: space-around; padding: 10px 0; z-index: 1000; }
         .nav-item { text-align: center; color: #8E8E93; font-size: 10px; font-weight: bold; flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; font-family: var(--font-main); }
@@ -1922,7 +1926,7 @@
         .text-item { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
         .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .t-num { color: var(--gold); font-weight: bold; font-size: 12px; }
-        .t-question { font-size: 14px; color: inherit; line-height: 1.4; margin-bottom: 10px; font-weight: 600; }
+        .t-question { font-size: 14px; color: inherit; line-height: 1.4; margin-bottom: 10px; }
         .t-option { font-size: 12px; color: #8E8E93; margin-bottom: 3px; }
         .action-icons span { margin-left: 15px; font-size: 16px; opacity: 0.8; }
 
@@ -1938,17 +1942,17 @@
 
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 20px 0; }
         .stat-card { background: var(--card-bg); border: 1px solid var(--border); padding: 12px 5px; border-radius: 12px; text-align: center;}
-        .stat-card span { display: block; font-size: 10px; color: #8E8E93; margin-bottom: 5px; text-transform: uppercase; font-weight: 600; }
+        .stat-card span { display: block; font-size: 10px; color: #8E8E93; margin-bottom: 5px; text-transform: uppercase; }
         .stat-card b { font-size: 16px; color: var(--gold); }
 
         .analysis-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 15px; padding: 15px; margin-bottom: 12px; }
         .a-correct { border-left: 4px solid #32d74b; }
         .a-wrong { border-left: 4px solid #ff453a; }
-        .a-q { font-size: 14px; margin-bottom: 10px; line-height: 1.4; font-weight: 600; }
-        .a-ans { font-size: 12px; margin-top: 5px; display: flex; flex-direction: column; }
-        .a-row { font-size: 12px; margin-top: 5px; display: flex; flex-direction: column; }
-        .a-row span { color: #8E8E93; font-size: 10px; font-weight: 500; }
-        .a-row div { margin: 2px 0; color: #ff453a; }
+        .a-q { font-size: 15px; margin-bottom: 10px; line-height: 1.5; font-weight: 600; }
+        .a-ans { font-size: 13px; margin-top: 5px; display: flex; flex-direction: column; }
+        .a-row { font-size: 13px; margin-top: 5px; display: flex; flex-direction: column; }
+        .a-row span { color: #8E8E93; font-size: 11px; text-transform: uppercase; margin-bottom: 2px; }
+        .a-row div { margin: 2px 0; color: #ff453a; font-weight: 500; }
         .a-row div.c-txt { color: #32d74b !important; font-weight: bold; }
         
         .range-row { display: flex; gap: 10px; margin-bottom: 15px; }
@@ -1962,7 +1966,7 @@
             border-left: 4px solid var(--gold);
         }
         .input-group { margin-bottom: 15px; }
-        .input-group label { color: #8E8E93; font-size: 11px; display: block; margin-bottom: 5px; text-transform: uppercase; font-weight: 600; }
+        .input-group label { color: #8E8E93; font-size: 11px; display: block; margin-bottom: 5px; text-transform: uppercase; }
         .styled-input {
             width: 100%; 
             background: var(--bg); 
@@ -1981,7 +1985,7 @@
         }
         .block-btn {
             padding: 8px 12px; border-radius: 8px; font-size: 10px; font-weight: bold;
-            border: none; background: #ff453a; color: white; cursor: pointer; font-family: var(--font-main);
+            border: none; background: #ff453a; color: white; cursor: pointer;
         }
         .block-btn.unblock { background: #32d74b; }
 
@@ -2014,7 +2018,7 @@
         }
         .send-btn {
             background: var(--gold); color: #000; border: none;
-            width: 40px; height: 40px; border-radius: 50%; font-weight: bold; cursor: pointer;
+            width: 40px; height: 40px; border-radius: 50%; font-weight: bold;
         }
     </style>
 </head>
