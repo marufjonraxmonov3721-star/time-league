@@ -1215,7 +1215,7 @@
             setTimeout(() => {
                 loadingScreen.style.opacity = '0';
                 setTimeout(() => { loadingScreen.style.display = 'none'; }, 500);
-            }, 800);
+            }, 1200);
         }
 
         let selectedStars = 0;
@@ -1414,28 +1414,76 @@
             transition: background 0.3s ease, color 0.3s ease;
         }
 
+        /* YANGILANGAN MAHSUS VA SILIQ PREMIYUM LOADING EKRANI */
         .global-loading {
             position: fixed; top:0; left:0; right:0; bottom:0;
-            background: #000; z-index: 99999;
+            background: #000000; z-index: 99999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .loading-pulse-core {
+            position: relative;
+            width: 80px; height: 80px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 25px;
+        }
+        .loading-circle-outer {
+            position: absolute;
+            width: 100%; height: 100%;
+            border: 2px solid transparent;
+            border-top-color: var(--gold);
+            border-bottom-color: var(--gold);
+            border-radius: 50%;
+            animation: spinGlow 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+            will-change: transform;
+        }
+        .loading-circle-inner {
+            position: absolute;
+            width: 70%; height: 70%;
+            border: 2px solid transparent;
+            border-left-color: rgba(255, 184, 0, 0.4);
+            border-right-color: rgba(255, 184, 0, 0.4);
+            border-radius: 50%;
+            animation: spinGlowReverse 1.5s linear infinite;
+            will-change: transform;
+        }
+        .loading-center-dot {
+            width: 14px; height: 14px;
+            background: var(--gold);
+            border-radius: 50%;
+            box-shadow: 0 0 15px var(--gold);
+            animation: corePulse 1.5s ease-in-out infinite;
+            will-change: transform, opacity;
         }
         .loading-logo {
-            font-size: 24px; font-weight: 900; color: var(--gold);
-            letter-spacing: 5px; margin-bottom: 20px;
-            animation: pulse 1.5s infinite ease-in-out;
+            font-size: 22px; font-weight: 900; color: #ffffff;
+            letter-spacing: 6px; margin-bottom: 8px; text-transform: uppercase;
+            text-shadow: 0 2px 10px rgba(255,255,255,0.1);
         }
-        .loading-bar-container {
-            width: 200px; height: 3px; background: #111;
-            border-radius: 10px; overflow: hidden; position: relative;
+        .loading-logo span {
+            color: var(--gold);
         }
-        .loading-bar-fill {
-            position: absolute; left: -100%; top: 0; width: 100%; height: 100%;
-            background: var(--gold); border-radius: 10px;
-            animation: loadingMove 2s infinite linear;
+        .loading-subtitle {
+            color: #555555; font-size: 10px; font-weight: 700; 
+            letter-spacing: 2px; text-transform: uppercase;
+            animation: textFade 1.5s ease-in-out infinite;
         }
-        @keyframes pulse { 0%, 100% { opacity: 0.5; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1); } }
-        @keyframes loadingMove { 0% { left: -100%; } 100% { left: 100%; } }
+        @keyframes spinGlow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes spinGlowReverse {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+        @keyframes corePulse {
+            0%, 100% { transform: scale(0.85); opacity: 0.6; }
+            50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 25px var(--gold); }
+        }
+        @keyframes textFade {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; color: #888888; }
+        }
 
         body.light-theme .question-box { background: #F2F2F7; border-left-color: var(--gold); }
         body.light-theme .opt-item { background: #FFFFFF; border-color: #D1D1D6; color: #000; }
@@ -1512,6 +1560,7 @@
         
         .btn-primary { background: var(--gold); color: black !important; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: 800; font-size: 14px; margin-top: 10px; }
         
+        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-top: 1px solid var(--border); display: none; justify-content: space-around; padding: 10px 0; z-index: 1000; }
         .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-top: 1px solid var(--border); display: none; justify-content: space-around; padding: 10px 0; z-index: 1000; }
         .nav-item { text-align: center; color: #8E8E93; font-size: 10px; font-weight: bold; flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; }
         .nav-item.active { color: var(--gold); }
@@ -1728,11 +1777,13 @@
 <body>
 
     <div id="globalLoading" class="global-loading">
-        <div class="loading-logo">EXAM ASSISTANT</div>
-        <div class="loading-bar-container">
-            <div class="loading-bar-fill"></div>
+        <div class="loading-pulse-core">
+            <div class="loading-circle-outer"></div>
+            <div class="loading-circle-inner"></div>
+            <div class="loading-center-dot"></div>
         </div>
-        <div style="color:#555; font-size:10px; margin-top:15px; font-weight:bold; letter-spacing:1px;">MA'LUMOTLAR YUKLANMOQDA...</div>
+        <div class="loading-logo">Assistant <span>Pro</span></div>
+        <div class="loading-subtitle">Tizim yuklanmoqda...</div>
     </div>
 
     <div id="ratingOverlay" class="rating-overlay">
