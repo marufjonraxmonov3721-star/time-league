@@ -93,7 +93,7 @@
         const QUICK_REPLIES = [
             "Fikringiz uchun rahmat! 😊",
             "Sizning bahoingiz biz uchun muhim, rahmat! ✨",
-            "Xatolik haqida xabar berganingiz uchun rahmat, tez orada tuzatamiz! 🛠",
+            "Xatolik haqica xabar berganingiz uchun rahmat, tez orada tuzatamiz! 🛠",
             "Ilovadan foydalanishingiz uchun tashakkur! Omad! 🚀"
         ];
 
@@ -715,7 +715,7 @@
                     <div class="q-text">${q.q}</div>
                 </div>
                 <div class="options-grid ${savedAns ? 'done' : ''}">
-                    ${q.options.map(opt => {
+                    ${q.options.map((opt, idx) => {
                         let cls = "";
                         if (savedAns) {
                             const selTxt = getPlainText(opt);
@@ -724,7 +724,12 @@
                             if (selTxt === corTxt) cls = "correct";
                             else if (selTxt === savTxt) cls = "wrong";
                         }
-                        return `<div class="opt-item ${cls}" data-ans="${corrBase64}" onclick="handleRangeSelect(this)">${opt}</div>`;
+                        const labelPrefix = String.fromCharCode(65 + idx);
+                        return `
+                        <div class="opt-item ${cls}" data-ans="${corrBase64}" onclick="handleRangeSelect(this)">
+                            <span class="opt-badge">${labelPrefix}</span>
+                            <div class="opt-text-content">${opt}</div>
+                        </div>`;
                     }).join('')}
                 </div>`;
             
@@ -753,10 +758,11 @@
             
             const corrEncoded = el.getAttribute('data-ans');
             const corrDecoded = decodeURIComponent(escape(atob(corrEncoded)));
-            const selectedTxt = getPlainText(el.innerHTML);
+            const innerTextContainer = el.querySelector('.opt-text-content');
+            const selectedTxt = getPlainText(innerTextContainer ? innerTextContainer.innerHTML : el.innerHTML);
             const corectTxt = getPlainText(corrDecoded);
 
-            examUserAnswers[currentIndex] = el.innerHTML;
+            examUserAnswers[currentIndex] = innerTextContainer ? innerTextContainer.innerHTML : el.innerHTML;
             optionsDiv.classList.add('done');
 
             if(selectedTxt === corectTxt) {
@@ -765,7 +771,8 @@
             } else {
                 el.classList.add('wrong');
                 Array.from(optionsDiv.children).forEach(child => {
-                    if(getPlainText(child.innerHTML) === corectTxt) child.classList.add('correct');
+                    const childTextContainer = child.querySelector('.opt-text-content');
+                    if(getPlainText(childTextContainer ? childTextContainer.innerHTML : child.innerHTML) === corectTxt) child.classList.add('correct');
                 });
                 tg.HapticFeedback.notificationOccurred('error');
             }
@@ -827,7 +834,7 @@
                     <div class="q-text">${q.q}</div>
                 </div>
                 <div class="options-grid ${savedAns ? 'done' : ''}">
-                    ${q.options.map(opt => {
+                    ${q.options.map((opt, idx) => {
                         let cls = "";
                         if (savedAns) {
                             const selTxt = getPlainText(opt);
@@ -836,7 +843,12 @@
                             if (selTxt === corTxt) cls = "correct";
                             else if (selTxt === savTxt) cls = "wrong";
                         }
-                        return `<div class="opt-item ${cls}" data-ans="${corrBase64}" onclick="handleSelect(this, true)">${opt}</div>`;
+                        const labelPrefix = String.fromCharCode(65 + idx);
+                        return `
+                        <div class="opt-item ${cls}" data-ans="${corrBase64}" onclick="handleSelect(this, true)">
+                            <span class="opt-badge">${labelPrefix}</span>
+                            <div class="opt-text-content">${opt}</div>
+                        </div>`;
                     }).join('')}
                 </div>`;
             
@@ -961,10 +973,11 @@
                 
                 const corrEncoded = el.getAttribute('data-ans');
                 const corrDecoded = decodeURIComponent(escape(atob(corrEncoded)));
-                const selectedTxt = getPlainText(el.innerHTML);
+                const innerTextContainer = el.querySelector('.opt-text-content');
+                const selectedTxt = getPlainText(innerTextContainer ? innerTextContainer.innerHTML : el.innerHTML);
                 const corectTxt = getPlainText(corrDecoded);
 
-                studyAnswers[currentIndex] = el.innerHTML;
+                studyAnswers[currentIndex] = innerTextContainer ? innerTextContainer.innerHTML : el.innerHTML;
                 optionsDiv.classList.add('done');
 
                 if(selectedTxt === corectTxt) {
@@ -973,7 +986,8 @@
                 } else {
                     el.classList.add('wrong');
                     Array.from(optionsDiv.children).forEach(child => {
-                        if(getPlainText(child.innerHTML) === corectTxt) child.classList.add('correct');
+                        const childTextContainer = child.querySelector('.opt-text-content');
+                        if(getPlainText(childTextContainer ? childTextContainer.innerHTML : child.innerHTML) === corectTxt) child.classList.add('correct');
                     });
                     tg.HapticFeedback.notificationOccurred('error');
                     
@@ -1012,7 +1026,8 @@
             } else {
                 Array.from(optionsDiv.children).forEach(child => child.classList.remove('selected-exam'));
                 el.classList.add('selected-exam');
-                examUserAnswers[currentIndex] = el.innerHTML;
+                const innerTextContainer = el.querySelector('.opt-text-content');
+                examUserAnswers[currentIndex] = innerTextContainer ? innerTextContainer.innerHTML : el.innerHTML;
                 tg.HapticFeedback.impactOccurred('light');
             }
         };
@@ -1095,9 +1110,14 @@
                     <div class="q-text">${q.q}</div>
                 </div>
                 <div class="options-grid">
-                    ${q.options.map(opt => `
-                        <div class="opt-item ${savedExamAns === opt ? 'selected-exam' : ''}" onclick="handleSelect(this, false)">${opt}</div>
-                    `).join('')}
+                    ${q.options.map((opt, idx) => {
+                        const labelPrefix = String.fromCharCode(65 + idx);
+                        return `
+                        <div class="opt-item ${savedExamAns === opt ? 'selected-exam' : ''}" onclick="handleSelect(this, false)">
+                            <span class="opt-badge">${labelPrefix}</span>
+                            <div class="opt-text-content">${opt}</div>
+                        </div>`;
+                    }).join('')}
                 </div>`;
             
             const actionContainer = document.getElementById('examActions');
@@ -1430,18 +1450,21 @@
     </script>
 
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
         :root { 
             --bg: #000000; 
             --gold: #FFB800; 
             --card-bg: #0a0a0a; 
-            --border: #222222; 
+            --border: #1f1f1f; 
             --text: #ffffff;
+            --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
 
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            font-family: var(--font-main); 
             background: var(--bg); 
             color: var(--text); 
             margin: 0; padding: 0;
@@ -1521,9 +1544,10 @@
             50% { opacity: 1; color: #888888; }
         }
 
-        body.light-theme .question-box { background: #F2F2F7; border-left-color: var(--gold); }
-        body.light-theme .opt-item { background: #FFFFFF; border-color: #D1D1D6; color: #000; }
-        body.light-theme .opt-item.selected-exam { background: #E5E5EA !important; border-color: var(--gold); }
+        body.light-theme .question-box { background: #F2F2F7; border-left-color: var(--gold); box-shadow: 0 4px 12px rgba(0,0,0,0.02); }
+        body.light-theme .opt-item { background: #FFFFFF; border-color: #E5E5EA; color: #000; }
+        body.light-theme .opt-item.selected-exam { background: #FFF9E6 !important; border-color: var(--gold); }
+        body.light-theme .opt-badge { background: #F2F2F7; color: #666; border-color: #E5E5EA; }
         body.light-theme .q-text { color: #000; }
         body.light-theme .mode-card { background: #F2F2F7; border-color: #D1D1D6; }
         body.light-theme .mode-card h3 { color: #000; }
@@ -1555,24 +1579,108 @@
             display: flex; justify-content: space-between; align-items: center;
             padding: 10px 0; margin-bottom: 20px;
         }
-        .back-btn { color: var(--gold); font-weight: 700; cursor: pointer; }
+        .back-btn { color: var(--gold); font-weight: 700; cursor: pointer; font-size: 13px; letter-spacing: 0.5px; }
         
+        /* ZAMONAVIY SAVOL VA VARIANTLAR STILI */
         .question-box {
-            background: var(--card-bg); border-left: 4px solid var(--gold);
-            border-radius: 12px; padding: 20px; margin-bottom: 20px;
+            background: linear-gradient(135deg, #0d0d0d, #050505);
+            border-left: 4px solid var(--gold);
+            border-radius: 16px; 
+            padding: 22px; 
+            margin-bottom: 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.03);
             transition: transform 0.2s ease;
         }
-        .q-text { font-size: 16px; line-height: 1.5; color: var(--text); }
-
-        .options-grid { display: flex; flex-direction: column; gap: 10px; }
-        .opt-item {
-            background: var(--card-bg); border: 1px solid var(--border);
-            border-radius: 12px; padding: 16px; font-size: 15px; color: var(--text);
-            min-height: 50px; display: flex; align-items: center; justify-content: flex-start;
+        .q-text { 
+            font-size: 16px; 
+            line-height: 1.6; 
+            color: var(--text); 
+            font-weight: 600;
+            letter-spacing: -0.2px;
         }
-        .opt-item.correct { background: #2ecc71 !important; border-color: #2ecc71; color: #fff !important; font-weight: bold; }
-        .opt-item.wrong { background: #e74c3c !important; border-color: #e74c3c; color: #fff !important; }
-        .opt-item.selected-exam { border: 2px solid var(--gold); background: var(--card-bg); opacity: 0.8; }
+
+        .options-grid { display: flex; flex-direction: column; gap: 12px; }
+        
+        .opt-item {
+            background: #09090b; 
+            border: 1px solid var(--border);
+            border-radius: 14px; 
+            padding: 14px 16px; 
+            font-size: 14.5px; 
+            color: #e4e4e7;
+            min-height: 56px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: flex-start;
+            gap: 14px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        
+        .opt-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
+            background: #18181b;
+            border: 1px solid #27272a;
+            color: #a1a1aa;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+        
+        .opt-text-content {
+            flex: 1;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .opt-item:active {
+            transform: scale(0.99);
+        }
+
+        .opt-item.selected-exam { 
+            border-color: var(--gold); 
+            background: rgba(255, 184, 0, 0.04); 
+            box-shadow: 0 0 20px rgba(255, 184, 0, 0.08);
+        }
+        .opt-item.selected-exam .opt-badge {
+            background: var(--gold);
+            border-color: var(--gold);
+            color: #000000;
+        }
+
+        .opt-item.correct { 
+            background: #10b981 !important; 
+            border-color: #10b981 !important; 
+            color: #ffffff !important; 
+            font-weight: 600;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+        }
+        .opt-item.correct .opt-badge {
+            background: #ffffff !important;
+            border-color: #ffffff !important;
+            color: #10b981 !important;
+        }
+
+        .opt-item.wrong { 
+            background: #ef4444 !important; 
+            border-color: #ef4444 !important; 
+            color: #ffffff !important;
+            box-shadow: 0 8px 24px rgba(239, 68, 68, 0.25);
+        }
+        .opt-item.wrong .opt-badge {
+            background: #ffffff !important;
+            border-color: #ffffff !important;
+            color: #ef4444 !important;
+        }
+        
         .done .opt-item { cursor: default; }
 
         .bottom-actions {
@@ -1582,6 +1690,7 @@
         .nav-btn {
             flex: 1; padding: 16px; border-radius: 12px; font-weight: 700;
             border: 1px solid var(--border); background: var(--card-bg); color: var(--gold);
+            font-family: var(--font-main); font-size: 13px; letter-spacing: 0.5px;
         }
 
         .animated-btn {
@@ -1589,7 +1698,7 @@
         }
 
         .header-label { text-align: center; color: var(--gold); font-weight: 900; letter-spacing: 2px; font-size: 10px; margin-bottom: 15px; opacity: 0.6; }
-        .section-title { font-size: 22px; font-weight: 800; margin-bottom: 15px; color: var(--text); }
+        .section-title { font-size: 22px; font-weight: 800; margin-bottom: 15px; color: var(--text); letter-spacing: -0.5px; }
         
         /* ZAMONAVIY PREMIUM FAÝL YUKLASH DIZAYNI STILLARI */
         .upload-container { 
@@ -1691,11 +1800,10 @@
             background: linear-gradient(135deg, rgba(255,184,0,0.1), rgba(255,184,0,0.02));
         }
         
-        .btn-primary { background: var(--gold); color: black !important; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: 800; font-size: 14px; margin-top: 10px; }
+        .btn-primary { background: var(--gold); color: black !important; border: none; width: 100%; padding: 18px; border-radius: 15px; font-weight: 800; font-size: 14px; margin-top: 10px; font-family: var(--font-main); cursor: pointer; }
         
         .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-top: 1px solid var(--border); display: none; justify-content: space-around; padding: 10px 0; z-index: 1000; }
-        .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg); border-top: 1px solid var(--border); display: none; justify-content: space-around; padding: 10px 0; z-index: 1000; }
-        .nav-item { text-align: center; color: #8E8E93; font-size: 10px; font-weight: bold; flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; }
+        .nav-item { text-align: center; color: #8E8E93; font-size: 10px; font-weight: bold; flex: 1; display: flex; flex-direction: column; align-items: center; position: relative; font-family: var(--font-main); }
         .nav-item.active { color: var(--gold); }
         .nav-icon { font-size: 18px; display: block; margin-bottom: 2px; }
         
@@ -1809,12 +1917,12 @@
         body.light-theme .mode-range-style { background: #FFF7EE; border-color: #ff9500; }
         body.light-theme .mode-arrow { color: #ccc; }
 
-        .timer { font-family: monospace; font-size: 24px; color: var(--gold); text-align: center; margin-bottom: 10px; }
+        .timer { font-family: monospace; font-size: 24px; color: var(--gold); text-align: center; margin-bottom: 10px; font-weight: bold; }
         
         .text-item { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
         .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
         .t-num { color: var(--gold); font-weight: bold; font-size: 12px; }
-        .t-question { font-size: 14px; color: inherit; line-height: 1.4; margin-bottom: 10px; }
+        .t-question { font-size: 14px; color: inherit; line-height: 1.4; margin-bottom: 10px; font-weight: 600; }
         .t-option { font-size: 12px; color: #8E8E93; margin-bottom: 3px; }
         .action-icons span { margin-left: 15px; font-size: 16px; opacity: 0.8; }
 
@@ -1823,23 +1931,23 @@
         .info-box p { font-size: 11px; color: #8E8E93; margin: 0; line-height: 1.4; }
 
         .res-container { text-align: center; padding: 10px 0; }
-        #resStatus { font-size: 32px; font-weight: 900; margin: 5px 0; display: block; }
+        #resStatus { font-size: 32px; font-weight: 900; margin: 5px 0; display: block; letter-spacing: -0.5px; }
         #resSub { font-size: 15px; color: #8E8E93; display: block; margin-bottom: 20px; line-height: 1.3; padding: 0 10px; }
         .res-pass { color: #32d74b; text-shadow: 0 0 10px rgba(50, 215, 75, 0.2); }
         .res-fail { color: #ff453a; text-shadow: 0 0 10px rgba(255, 69, 58, 0.2); }
 
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 20px 0; }
         .stat-card { background: var(--card-bg); border: 1px solid var(--border); padding: 12px 5px; border-radius: 12px; text-align: center;}
-        .stat-card span { display: block; font-size: 10px; color: #8E8E93; margin-bottom: 5px; text-transform: uppercase; }
+        .stat-card span { display: block; font-size: 10px; color: #8E8E93; margin-bottom: 5px; text-transform: uppercase; font-weight: 600; }
         .stat-card b { font-size: 16px; color: var(--gold); }
 
         .analysis-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 15px; padding: 15px; margin-bottom: 12px; }
         .a-correct { border-left: 4px solid #32d74b; }
         .a-wrong { border-left: 4px solid #ff453a; }
-        .a-q { font-size: 14px; margin-bottom: 10px; line-height: 1.4; }
+        .a-q { font-size: 14px; margin-bottom: 10px; line-height: 1.4; font-weight: 600; }
         .a-ans { font-size: 12px; margin-top: 5px; display: flex; flex-direction: column; }
         .a-row { font-size: 12px; margin-top: 5px; display: flex; flex-direction: column; }
-        .a-row span { color: #8E8E93; font-size: 10px; }
+        .a-row span { color: #8E8E93; font-size: 10px; font-weight: 500; }
         .a-row div { margin: 2px 0; color: #ff453a; }
         .a-row div.c-txt { color: #32d74b !important; font-weight: bold; }
         
@@ -1854,7 +1962,7 @@
             border-left: 4px solid var(--gold);
         }
         .input-group { margin-bottom: 15px; }
-        .input-group label { color: #8E8E93; font-size: 11px; display: block; margin-bottom: 5px; text-transform: uppercase; }
+        .input-group label { color: #8E8E93; font-size: 11px; display: block; margin-bottom: 5px; text-transform: uppercase; font-weight: 600; }
         .styled-input {
             width: 100%; 
             background: var(--bg); 
@@ -1863,6 +1971,7 @@
             padding: 14px; 
             border-radius: 10px;
             font-size: 14px;
+            font-family: var(--font-main);
         }
 
         .admin-user-card {
@@ -1872,7 +1981,7 @@
         }
         .block-btn {
             padding: 8px 12px; border-radius: 8px; font-size: 10px; font-weight: bold;
-            border: none; background: #ff453a; color: white; cursor: pointer;
+            border: none; background: #ff453a; color: white; cursor: pointer; font-family: var(--font-main);
         }
         .block-btn.unblock { background: #32d74b; }
 
@@ -1890,6 +1999,7 @@
         #feedbackText {
             width: 100%; background: #000; border: 1px solid #333; color: #fff;
             border-radius: 10px; padding: 10px; font-size: 14px; min-height: 80px; margin-bottom: 15px;
+            font-family: var(--font-main);
         }
 
         .chat-input-container {
@@ -1900,10 +2010,11 @@
         .chat-input {
             flex: 1; background: var(--bg); border: 1px solid var(--border);
             border-radius: 20px; padding: 10px 15px; color: #fff; font-size: 14px;
+            font-family: var(--font-main);
         }
         .send-btn {
             background: var(--gold); color: #000; border: none;
-            width: 40px; height: 40px; border-radius: 50%; font-weight: bold;
+            width: 40px; height: 40px; border-radius: 50%; font-weight: bold; cursor: pointer;
         }
     </style>
 </head>
