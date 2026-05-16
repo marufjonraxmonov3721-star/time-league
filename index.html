@@ -247,7 +247,13 @@
 
         window.handleFileUpload = async function(e) {
             const file = e.target.files[0];
-            const status = document.getElementById('status');
+            const playStatus = document.getElementById('playStatus');
+            const fileDetailsContainer = document.getElementById('fileDetailsContainer');
+            const playFileName = document.getElementById('playFileName');
+            const playFileSize = document.getElementById('playFileSize');
+            const playProgressFill = document.getElementById('playProgressFill');
+            const playPercentText = document.getElementById('playPercentText');
+            
             if (!file) return;
 
             let suggestedName = file.name.replace(/\.[^/.]+$/, "");
@@ -259,19 +265,38 @@
             }
             
             currentFileName = userChosenName.trim() || suggestedName;
-            status.innerText = `"${currentFileName}" tahlil qilinmoqda...`;
             
-            try {
-                if (file.name.toLowerCase().endsWith('.zip')) {
-                    alert("Rasmli savollar aniqlandi! Rasmlar sifatli ko'rinishi uchun ilova dizayni vaqtinchalik 'Oq rejim'ga o'tkaziladi. ✨");
-                    enableLightMode();
-                    await processZip(file);
+            // UI Play Market ko'rinishiga o'tadi
+            fileDetailsContainer.style.display = 'block';
+            playFileName.innerText = file.name;
+            playFileSize.innerText = (file.size / (1024 * 1024)).toFixed(2) + " MB";
+            playStatus.innerText = "Yuklab olinmoqda...";
+            
+            // Animatsiya simulyatsiyasi
+            let progress = 0;
+            const interval = setInterval(async () => {
+                progress += 15;
+                if(progress > 100) progress = 100;
+                playProgressFill.style.width = progress + '%';
+                playPercentText.innerText = progress + '%';
+                
+                if(progress >= 100) {
+                    clearInterval(interval);
+                    playStatus.innerText = "O'rnatilmoqda...";
+                    
+                    try {
+                        if (file.name.toLowerCase().endsWith('.zip')) {
+                            alert("Rasmli savollar aniqlandi! Rasmlar sifatli ko'rinishi uchun ilova dizayni vaqtinchalik 'Oq rejim'ga o'tkaziladi. ✨");
+                            enableLightMode();
+                            await processZip(file);
+                        }
+                        else if (file.name.toLowerCase().endsWith('.docx')) await processDocx(file);
+                    } catch (err) { 
+                        console.error(err);
+                        playStatus.innerText = "Xato yuz berdi!"; 
+                    }
                 }
-                else if (file.name.toLowerCase().endsWith('.docx')) await processDocx(file);
-            } catch (err) { 
-                console.error(err);
-                status.innerText = "Xato yuz berdi!"; 
-            }
+            }, 100);
         };
 
         async function processZip(file) {
@@ -325,7 +350,7 @@
             }).filter(r => r.length >= 2);
 
             if (rawTableData.length === 0) {
-                document.getElementById('status').innerText = "Jadval topilmadi!";
+                document.getElementById('playStatus').innerText = "Jadval topilmadi!";
             } else {
                 updatePreviewUI();
             }
@@ -912,7 +937,13 @@
             currentFileName = "";
             studyAnswers = {};
             examUserAnswers = {};
-            document.getElementById('status').innerText = "Kutilmoqda...";
+            
+            // Play Market UI elementlarini tozalash
+            const playStatus = document.getElementById('playStatus');
+            const fileDetailsContainer = document.getElementById('fileDetailsContainer');
+            if (playStatus) playStatus.innerText = "Fayl yuklanishini kutmoqda...";
+            if (fileDetailsContainer) fileDetailsContainer.style.display = 'none';
+            
             document.getElementById('fileInput').value = "";
             checkExisting();
         }
@@ -1400,6 +1431,9 @@
             --card-bg: #0a0a0a; 
             --border: #222222; 
             --text: #ffffff;
+            --play-green: #01875f;
+            --play-gray: #e3e3e3;
+            --play-dark-gray: #202124;
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; outline: none; }
@@ -1772,6 +1806,131 @@
             background: var(--gold); color: #000; border: none;
             width: 40px; height: 40px; border-radius: 50%; font-weight: bold;
         }
+
+        /* PLAY MARKET DESIGN SYSTEM FOR UPLOAD PAGE */
+        .play-card {
+            background: var(--card-bg);
+            border-radius: 24px;
+            padding: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            margin-bottom: 20px;
+        }
+        .play-app-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .play-app-icon {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, #4285f4, #34a853);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .play-app-info {
+            flex: 1;
+        }
+        .play-app-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin: 0 0 4px 0;
+            color: var(--text);
+        }
+        .play-app-vendor {
+            font-size: 14px;
+            color: var(--play-green);
+            font-weight: 600;
+            margin: 0;
+        }
+        .play-upload-btn-wrapper {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .play-btn-primary {
+            background: var(--play-green);
+            color: #ffffff !important;
+            border: none;
+            width: 100%;
+            padding: 14px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+            cursor: pointer;
+            display: inline-block;
+            transition: background 0.2s ease;
+        }
+        .play-btn-primary:active {
+            background: #016f4d;
+        }
+        .play-file-details {
+            display: none;
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 15px;
+            border: 1px solid var(--border);
+        }
+        .play-meta-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .play-filename {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            max-width: 70%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .play-filesize {
+            font-size: 12px;
+            color: #8e8e93;
+        }
+        .play-progress-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .play-progress-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .play-progress-fill {
+            width: 0%;
+            height: 100%;
+            background: var(--play-green);
+            border-radius: 2px;
+            transition: width 0.1s linear;
+        }
+        .play-percent-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--play-green);
+            min-width: 35px;
+            text-align: right;
+        }
+        .play-status-text {
+            font-size: 12px;
+            color: #8e8e93;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+        body.light-theme .play-card { background: #FFFFFF; }
+        body.light-theme .play-file-details { background: #F2F2F7; }
+        body.light-theme .play-progress-bar { background: #E5E5EA; }
     </style>
 </head>
 <body>
@@ -1804,17 +1963,40 @@
     </div>
 
     <div id="importUI" class="page">
-        <div class="header-label">ASSISTANT PRO</div>
-        <div class="section-title">Test faylini yuklang</div>
+        <div class="header-label">PLAY MARKET STYLE</div>
         <div class="content-scrollable">
-            <div class="upload-container">
-                <label for="fileInput" class="upload-area">
-                    <span style="font-size:35px; display:block; margin-bottom:10px;">📄</span>
-                    <span style="color:#888; font-weight: bold;">DOCX yoki ZIP fayl tanlang</span>
+            
+            <div class="play-card">
+                <div class="play-app-header">
+                    <div class="play-app-icon">📝</div>
+                    <div class="play-app-info">
+                        <h2 class="play-app-title">Exam Assistant Pro</h2>
+                        <p class="play-app-vendor">Google Play Professional Tools</p>
+                    </div>
+                </div>
+                
+                <div class="play-upload-btn-wrapper">
+                    <label for="fileInput" class="play-btn-primary">
+                        Faylni yuklash (DOCX / ZIP)
+                    </label>
                     <input type="file" id="fileInput" style="display:none" onchange="handleFileUpload(event)">
-                </label>
-                <div id="status" style="margin-top:15px; color:var(--gold); font-size:12px; font-weight: bold;">Fayl yuklanishini kutmoqda...</div>
+                </div>
+
+                <div class="play-file-details" id="fileDetailsContainer">
+                    <div class="play-meta-row">
+                        <span class="play-filename" id="playFileName">fayl_nomi.docx</span>
+                        <span class="play-filesize" id="playFileSize">0.00 MB</span>
+                    </div>
+                    <div class="play-progress-container">
+                        <div class="play-progress-bar">
+                            <div class="play-progress-fill" id="playProgressFill"></div>
+                        </div>
+                        <span class="play-percent-text" id="playPercentText">0%</span>
+                    </div>
+                    <div class="play-status-text" id="playStatus">Fayl yuklanishini kutmoqda...</div>
+                </div>
             </div>
+
             <div class="info-box">
                 <h4>Rasmlli savollar uchun qo‘llanma</h4>
                 <p style="margin-bottom: 10px;">Agar test faylingiz ichida<b> rasmlar, formulalar yoki matematik ifodalar</b> bo'lsa:</p>
