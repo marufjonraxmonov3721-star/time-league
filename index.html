@@ -431,7 +431,7 @@
                     document.getElementById('navBar').style.display = 'flex';
                     document.getElementById('navBarImport').style.display = 'none';
                 } else {
-                    document.getElementById('navBar').style.display = 'none';
+                    document.getElementById('navBar').style.none = 'none';
                     document.getElementById('navBarImport').style.display = 'flex';
                     document.getElementById('navItemHelpImport').classList.add('active');
                 }
@@ -1442,7 +1442,8 @@
         body.light-theme .opt-item.selected-exam { background: #E5E5EA !important; border-color: var(--gold); }
         body.light-theme .q-text { color: #000; }
         body.light-theme .mode-card { background: #F2F2F7; border-color: #D1D1D6; }
-        body.light-theme .mode-card h3 { color: #000; }
+        body.light-theme .mode-card .mode-title { color: #000; }
+        body.light-theme .mode-card .arrow-icon { color: #8E8E93; }
         body.light-theme .section-title { color: #000; }
         body.light-theme .info-box { background: #F2F2F7; border-color: #D1D1D6; }
         body.light-theme .nav-bar { background: #FFFFFF; border-top-color: #D1D1D6; }
@@ -1533,15 +1534,57 @@
 
         .mode-card { 
             background: var(--card-bg); 
-            padding: 20px; 
-            border-radius: 15px; 
-            margin-bottom: 12px; 
+            padding: 16px; 
+            border-radius: 16px; 
+            margin-bottom: 14px; 
             border: 1px solid var(--border); 
-            border-left: 4px solid var(--gold);
+            border-left: 5px solid var(--gold);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            cursor: pointer;
+        }
+        .mode-card:active {
+            transform: scale(0.98);
+            background-color: rgba(255, 184, 0, 0.05);
+        }
+        .mode-info {
             display: flex;
             flex-direction: column;
-            justify-content: center;
+            flex: 1;
+            padding-right: 10px;
         }
+        .mode-title-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .mode-icon {
+            font-size: 20px;
+        }
+        .mode-title {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .mode-desc {
+            color: #8E8E93;
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .arrow-icon {
+            color: var(--gold);
+            font-size: 16px;
+            font-weight: bold;
+            opacity: 0.7;
+            padding-left: 4px;
+        }
+        
         .timer { font-family: monospace; font-size: 24px; color: var(--gold); text-align: center; margin-bottom: 10px; }
         
         .text-item { margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; }
@@ -1550,80 +1593,6 @@
         .t-question { font-size: 14px; color: inherit; line-height: 1.4; margin-bottom: 10px; }
         .t-option { font-size: 12px; color: #8E8E93; margin-bottom: 3px; }
         .action-icons span { margin-left: 15px; font-size: 16px; opacity: 0.8; }
-
-        .info-box { background: var(--card-bg); border-radius: 15px; padding: 15px; border: 1px solid var(--border); text-align: left; }
-        .info-box h4 { color: var(--gold); margin: 0 0 8px 0; font-size: 14px; display: flex; align-items: center; gap: 5px;}
-        .info-box p { font-size: 11px; color: #8E8E93; margin: 0; line-height: 1.4; }
-
-        .res-container { text-align: center; padding: 10px 0; }
-        #resStatus { font-size: 32px; font-weight: 900; margin: 5px 0; display: block; }
-        #resSub { font-size: 15px; color: #8E8E93; display: block; margin-bottom: 20px; line-height: 1.3; padding: 0 10px; }
-        .res-pass { color: #32d74b; text-shadow: 0 0 10px rgba(50, 215, 75, 0.2); }
-        .res-fail { color: #ff453a; text-shadow: 0 0 10px rgba(255, 69, 58, 0.2); }
-
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 20px 0; }
-        .stat-card { background: var(--card-bg); border: 1px solid var(--border); padding: 12px 5px; border-radius: 12px; text-align: center;}
-        .stat-card span { display: block; font-size: 10px; color: #8E8E93; margin-bottom: 5px; text-transform: uppercase; }
-        .stat-card b { font-size: 16px; color: var(--gold); }
-
-        .analysis-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 15px; padding: 15px; margin-bottom: 12px; }
-        .a-correct { border-left: 4px solid #32d74b; }
-        .a-wrong { border-left: 4px solid #ff453a; }
-        .a-q { font-size: 14px; margin-bottom: 10px; line-height: 1.4; }
-        .a-ans { font-size: 12px; margin-top: 5px; display: flex; flex-direction: column; }
-        .a-row { font-size: 12px; margin-top: 5px; display: flex; flex-direction: column; }
-        .a-row span { color: #8E8E93; font-size: 10px; }
-        .a-row div { margin: 2px 0; color: #ff453a; }
-        .a-row div.c-txt { color: #32d74b !important; font-weight: bold; }
-        
-        .range-row { display: flex; gap: 10px; margin-bottom: 15px; }
-        .range-row div { flex: 1; }
-
-        .setup-card {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 15px;
-            border: 1px solid var(--border);
-            border-left: 4px solid var(--gold);
-        }
-        .input-group { margin-bottom: 15px; }
-        .input-group label { color: #8E8E93; font-size: 11px; display: block; margin-bottom: 5px; text-transform: uppercase; }
-        .styled-input {
-            width: 100%; 
-            background: var(--bg); 
-            color: var(--text); 
-            border: 1px solid var(--border); 
-            padding: 14px; 
-            border-radius: 10px;
-            font-size: 14px;
-        }
-
-        .admin-user-card {
-            background: var(--card-bg); border: 1px solid var(--border);
-            border-radius: 12px; padding: 15px; margin-bottom: 10px;
-            display: flex; align-items: center; justify-content: space-between;
-        }
-        .block-btn {
-            padding: 8px 12px; border-radius: 8px; font-size: 10px; font-weight: bold;
-            border: none; background: #ff453a; color: white; cursor: pointer;
-        }
-        .block-btn.unblock { background: #32d74b; }
-
-        .rating-overlay {
-            position: fixed; top:0; left:0; right:0; bottom:0;
-            background: rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center;
-            z-index: 10000; padding:20px;
-        }
-        .rating-box {
-            background: #1c1c1e; border: 1px solid #333; border-radius: 20px;
-            padding: 25px; width: 100%; max-width: 320px; text-align: center;
-        }
-        .stars-container { display: flex; justify-content: center; gap: 10px; margin: 15px 0; }
-        .star { font-size: 35px; color: #333; cursor: pointer; }
-        #feedbackText {
-            width: 100%; background: #000; border: 1px solid #333; color: #fff;
-            border-radius: 10px; padding: 10px; font-size: 14px; min-height: 80px; margin-bottom: 15px;
-        }
 
         .info-box { background: var(--card-bg); border-radius: 15px; padding: 15px; border: 1px solid var(--border); text-align: left; }
         .info-box h4 { color: var(--gold); margin: 0 0 8px 0; font-size: 14px; display: flex; align-items: center; gap: 5px;}
@@ -1788,21 +1757,48 @@
         <div class="header-label">ASSISTANT PRO</div>
         <div class="section-title" id="activeFileLabel" style="color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Kerakli rejimni tanlang</div>
         <div class="content-scrollable">
-            <div class="mode-card" onclick="openMode('study')">
-                <h3 style="margin:0 0 5px 0;">Tayyorlanish</h3>
-                <p style="color:#8E8E93; margin:0; font-size:13px;">Savollarni erkin ishlab chiqish va javoblarni o‘rganish</p>
+            <div class="mode-card" onclick="openMode('study')" style="border-left-color: #FFB800;">
+                <div class="mode-info">
+                    <div class="mode-title-wrapper">
+                        <span class="mode-icon">📖</span>
+                        <h3 class="mode-title">Tayyorlanish</h3>
+                    </div>
+                    <p class="mode-desc">Savollarni erkin ishlab chiqish va javoblarni o‘rganish rejimi</p>
+                </div>
+                <div class="arrow-icon">❯</div>
             </div>
+            
             <div class="mode-card" onclick="openMode('exam')" style="border-left-color: #32d74b;">
-                <h3 style="margin:0 0 5px 0;">Real Imtihon</h3>
-                <p style="color:#8E8E93; margin:0; font-size:13px;">Vaqt va ball tizimi asosidagi haqiqiy imtihon rejimi</p>
+                <div class="mode-info">
+                    <div class="mode-title-wrapper">
+                        <span class="mode-icon">⏱️</span>
+                        <h3 class="mode-title">Real Imtihon</h3>
+                    </div>
+                    <p class="mode-desc">Vaqt cheklovi va ball tizimi asosidagi haqiqiy imtihon sinovi</p>
+                </div>
+                <div class="arrow-icon">❯</div>
             </div>
+            
             <div class="mode-card" onclick="openMode('answers')" style="border-left-color: #5856d6;">
-                <h3 style="margin:0 0 5px 0;">Faqat to'g'ri javoblar</h3>
-                <p style="color:#8E8E93; margin:0; font-size:13px;">Testdagi barcha to‘g‘ri va noto'g'ri javoblarni ko‘rish</p>
+                <div class="mode-info">
+                    <div class="mode-title-wrapper">
+                        <span class="mode-icon">🎯</span>
+                        <h3 class="mode-title">Faqat to'g'ri javoblar</h3>
+                    </div>
+                    <p class="mode-desc">Testdagi barcha to‘g‘ri va noto'g'ri javoblarni ro'yxat ko'rinishida ko‘rish</p>
+                </div>
+                <div class="arrow-icon">❯</div>
             </div>
+            
             <div class="mode-card" onclick="openMode('range')" style="border-left-color: #ff9500;">
-                <h3 style="margin:0 0 5px 0;">Oraliqni tanlash</h3>
-                <p style="color:#8E8E93; margin:0; font-size:13px;">Kerakli savollar oralig‘ini tanlab ishlash</p>
+                <div class="mode-info">
+                    <div class="mode-title-wrapper">
+                        <span class="mode-icon">🔢</span>
+                        <h3 class="mode-title">Oraliqni tanlash</h3>
+                    </div>
+                    <p class="mode-desc">O'zingiz belgilagan muayyan savollar oralig‘ini ajratib ishlash</p>
+                </div>
+                <div class="arrow-icon">❯</div>
             </div>
             <button class="btn-primary" style="background:var(--card-bg); border:1px solid var(--border); color:var(--gold)!important; margin-top:15px;" onclick="addNewFile()">YANGI TEST FAYL QO‘SHISH</button>
         </div>
