@@ -39,6 +39,14 @@
         let userHasRated = false;
         let currentChatUserId = null; 
 
+        // Tayyorlanish rejimi uchun yangi sozlamalar o'zgaruvchilari
+        let studySettings = {
+            autoReverse: true,
+            maxErrors: 1,
+            reverseCount: 5
+        };
+        let continuousErrors = 0; // Ketma-ket qilingan xatolar hisoblagichi
+
         const DB_NAME = 'AssistantProDB';
         const DB_VERSION = 2; 
         const STORE_NAME = 'activeExam';
@@ -608,14 +616,9 @@
             document.getElementById('navBarImport').style.display = 'none';
 
             if (mode === 'study') {
-                updateActivity("Tayyorlanish rejimida");
-                const allQuestions = data.questions;
-                examData.mode = "study";
-                document.getElementById('studyUI').style.display = 'flex';
-                currentQuestions = allQuestions.map(q => ({...q, options: shuffleArray(q.options)}));
-                currentIndex = 0;
-                studyAnswers = {}; 
-                showStudyQuestion();
+                updateActivity("Tayyorlanish sozlamalarida");
+                document.getElementById('studySetupUI').style.display = 'flex';
+                currentQuestions = data.questions;
             } else if (mode === 'answers') {
                 updateActivity("Javoblarni ko'rmoqda");
                 document.getElementById('answersUI').style.display = 'flex';
@@ -635,6 +638,32 @@
                 exCountInput.max = data.questions.length;
                 exCountInput.value = Math.min(20, data.questions.length);
             }
+        };
+
+        window.toggleStudyReverseOpt = function(el) {
+            const section = document.getElementById('studyReverseDetailsSection');
+            if(el.value === "true") {
+                section.style.display = "block";
+                studySettings.autoReverse = true;
+            } else {
+                section.style.display = "none";
+                studySettings.autoReverse = false;
+            }
+        };
+
+        window.beginStudyMode = function() {
+            studySettings.maxErrors = parseInt(document.getElementById('studyMaxErrors').value) || 1;
+            studySettings.reverseCount = parseInt(document.getElementById('studyReverseCount').value) || 5;
+
+            updateActivity("Tayyorlanish rejimida");
+            examData.mode = "study";
+            document.getElementById('studySetupUI').style.display = 'none';
+            document.getElementById('studyUI').style.display = 'flex';
+            currentQuestions = currentQuestions.map(q => ({...q, options: shuffleArray(q.options)}));
+            currentIndex = 0;
+            studyAnswers = {}; 
+            continuousErrors = 0; // Xatolar sonini nollash
+            showStudyQuestion();
         };
 
         function renderOnlyAnswers(questions) {
@@ -948,6 +977,7 @@
             currentFileName = "";
             studyAnswers = {};
             examUserAnswers = {};
+            continuousErrors = 0;
             document.getElementById('status').innerText = "Kutilmoqda...";
             document.getElementById('fileInput').value = "";
             
@@ -983,6 +1013,7 @@
                 if(selectedTxt === corectTxt) {
                     el.classList.add('correct');
                     tg.HapticFeedback.notificationOccurred('success');
+                    continuousErrors = 0; // To'g'ri bo'lsa xatolar zanjiri uziladi
                 } else {
                     el.classList.add('wrong');
                     Array.from(optionsDiv.children).forEach(child => {
@@ -992,34 +1023,55 @@
                     tg.HapticFeedback.notificationOccurred('error');
                     
                     if (examData.mode === 'study') {
-                        if (currentIndex >= 4) {
-                            setTimeout(() => {
-                                alert("Xato qildingiz! Bilimingizni mustahkamlash uchun 5 ta savol orqaga qaytarilasiz. Qaytarilgan savollarni diqqat bilan qayta ishlang.");
+                        // Agar avtomatik ortga qaytish yoqilgan bo'lsa
+                        if (studySettings.autoReverse) {
+                            continuousErrors++; // Xatolar sonini oshirish
+
+                            // Agar o'rnatilgan maksimal xatolar soniga yetsa
+                            if (continuousErrors >= studySettings.maxErrors) {
+                                let backCount = studySettings.reverseCount;
                                 
-                                let targetIndex = currentIndex - 5;
-                                
-                                const reverseAnimation = setInterval(() => {
-                                    if (currentIndex > targetIndex) {
-                                        delete studyAnswers[currentIndex];
-                                        currentIndex--;
-                                        showStudyQuestion();
+                                if (currentIndex >= backCount) {
+                                    setTimeout(() => {
+                                        alert(`Ketma-ket ${studySettings.maxErrors} ta xato qildingiz! Bilimingizni mustahkamlash uchun ${backCount} ta savol orqaga qaytarilasiz. Qaytarilgan savollarni diqqat bilan qayta ishlang.`);
                                         
-                                        const qBox = document.querySelector('.question-box');
-                                        if(qBox) {
-                                            qBox.style.transform = "translateX(-10px)";
-                                            setTimeout(() => { qBox.style.transform = "translateX(0)"; }, 100);
-                                        }
+                                        let targetIndex = currentIndex - backCount;
+                                        continuousErrors = 0; // Hisoblagichni nollash
                                         
-                                        tg.HapticFeedback.impactOccurred('light');
-                                    } else {
-                                        clearInterval(reverseAnimation);
-                                        delete studyAnswers[currentIndex];
+                                        const reverseAnimation = setInterval(() => {
+                                            if (currentIndex > targetIndex) {
+                                                delete studyAnswers[currentIndex];
+                                                currentIndex--;
+                                                showStudyQuestion();
+                                                
+                                                const qBox = document.querySelector('.question-box');
+                                                if(qBox) {
+                                                    qBox.style.transform = "translateX(-10px)";
+                                                    setTimeout(() => { qBox.style.transform = "translateX(0)"; }, 100);
+                                                }
+                                                
+                                                tg.HapticFeedback.impactOccurred('light');
+                                            } else {
+                                                clearInterval(reverseAnimation);
+                                                delete studyAnswers[currentIndex];
+                                                showStudyQuestion();
+                                            }
+                                        }, 1000); 
+                                        return; 
+                                    }, 1500); 
+                                    return; 
+                                } else if (currentIndex > 0) {
+                                    // Agar boshida bo'lsa va yetarlicha savol bo'lmasa, eng birinchi savolga qaytaradi
+                                    setTimeout(() => {
+                                        alert(`Ketma-ket xatolar tufayli eng birinchi savolga qaytarilasiz.`);
+                                        continuousErrors = 0;
+                                        currentIndex = 0;
+                                        studyAnswers = {};
                                         showStudyQuestion();
-                                    }
-                                }, 1000); 
-                                return; 
-                            }, 1500); 
-                            return; 
+                                    }, 1500);
+                                    return;
+                                }
+                            }
                         }
                     }
                 }
@@ -1595,7 +1647,6 @@
             position: relative;
         }
         .question-box::before {
-
             position: absolute;
             top: -8px;
             left: 14px;
@@ -2208,6 +2259,32 @@
         </div>
     </div>
 
+    <!-- TAYYORLANISH SOZLAMALARI SAHIFASI -->
+    <div id="studySetupUI" class="page">
+        <div class="section-title">Tayyorlanish sozlamalari</div>
+        <div class="setup-card">
+            <div class="input-group">
+                <label>Xato qilinganda avtomatik ortga qaytarish:</label>
+                <select id="studyAutoReverseOpt" class="styled-input" onchange="toggleStudyReverseOpt(this)">
+                    <option value="true">Yoqilgan ✅</option>
+                    <option value="false">O‘chirilgan ❌</option>
+                </select>
+            </div>
+            <div id="studyReverseDetailsSection">
+                <div class="input-group">
+                    <label>Nechta xato qilinganda qaytarilsin (Ketma-ket):</label>
+                    <input type="number" id="studyMaxErrors" value="1" min="1" class="styled-input">
+                </div>
+                <div class="input-group">
+                    <label>Nechta savol ortga qaytarilsin:</label>
+                    <input type="number" id="studyReverseCount" value="5" min="1" class="styled-input">
+                </div>
+            </div>
+            <button class="btn-primary" onclick="beginStudyMode()">TAYYORLANISHNI BOSHLASH</button>
+            <button class="btn-primary" style="background:transparent; border:1px solid var(--border); color:var(--text)!important; margin-top: 10px;" onclick="backToMain()">ORTGA QAYTISH</button>
+        </div>
+    </div>
+
     <div id="studyUI" class="page">
         <div id="studyHeader" style="flex-shrink:0;"></div>
         <div id="studyContent" class="content-scrollable"></div>
@@ -2315,5 +2392,3 @@
     </script>
 </body>
 </html>
-
-   
