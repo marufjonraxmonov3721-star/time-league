@@ -640,9 +640,9 @@
             }
         };
 
-        window.toggleStudyReverseOpt = function(el) {
+        window.toggleStudyReverseOpt = function(checkbox) {
             const section = document.getElementById('studyReverseDetailsSection');
-            if(el.value === "true") {
+            if(checkbox.checked) {
                 section.style.display = "block";
                 studySettings.autoReverse = true;
             } else {
@@ -2045,6 +2045,74 @@
             font-family: var(--font-main);
         }
 
+        /* PREMIUM SWITCH (TOGGLE) STILI */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            padding: 14px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        .switch-label-text {
+            color: #8E8E93;
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        .modern-switch {
+            position: relative;
+            display: inline-block;
+            width: 46px;
+            height: 26px;
+        }
+        .modern-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .switch-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #222;
+            transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 34px;
+            border: 1px solid var(--border);
+        }
+        .switch-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #8E8E93;
+            transition: .3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 50%;
+        }
+        .modern-switch input:checked + .switch-slider {
+            background-color: rgba(255, 184, 0, 0.15);
+            border-color: var(--gold);
+        }
+        .modern-switch input:checked + .switch-slider:before {
+            transform: translateX(20px);
+            background-color: var(--gold);
+            box-shadow: 0 0 8px var(--gold);
+        }
+        body.light-theme .switch-container {
+            background: #FFFFFF;
+            border-color: #E5E5EA;
+        }
+        body.light-theme .switch-slider {
+            background-color: #E5E5EA;
+        }
+        body.light-theme .switch-slider:before {
+            background-color: #FFFFFF;
+        }
+
         .admin-user-card {
             background: var(--card-bg); border: 1px solid var(--border);
             border-radius: 12px; padding: 15px; margin-bottom: 10px;
@@ -2259,17 +2327,18 @@
         </div>
     </div>
 
-    <!-- TAYYORLANISH SOZLAMALARI SAHIFASI -->
     <div id="studySetupUI" class="page">
         <div class="section-title">Tayyorlanish sozlamalari</div>
         <div class="setup-card">
-            <div class="input-group">
-                <label>Xato qilinganda avtomatik ortga qaytarish:</label>
-                <select id="studyAutoReverseOpt" class="styled-input" onchange="toggleStudyReverseOpt(this)">
-                    <option value="true">Yoqilgan ✅</option>
-                    <option value="false">O‘chirilgan ❌</option>
-                </select>
+            
+            <div class="switch-container">
+                <span class="switch-label-text">Xato qilinganda avtomatik ortga qaytarish:</span>
+                <label class="modern-switch">
+                    <input type="checkbox" id="studyAutoReverseOpt" checked onchange="toggleStudyReverseOpt(this)">
+                    <span class="switch-slider"></span>
+                </label>
             </div>
+
             <div id="studyReverseDetailsSection">
                 <div class="input-group">
                     <label>Nechta xato qilinganda qaytarilsin (Ketma-ket):</label>
