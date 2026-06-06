@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Tirnirofka</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1c1c27;
+      --surface3: #252535;
+      --border: #2a2a3a;
+      --accent: #6ee7b7;
+      --accent2: #10b981;
+      --accent3: #059669;
+      --morning: #fbbf24;
+      --morning2: #f59e0b;
+      --evening: #a78bfa;
+      --evening2: #7c3aed;
+      --text: #f1f5f9;
+      --text2: #94a3b8;
+      --text3: #475569;
+      --danger: #f87171;
+      --radius-sm: 10px;
+      --radius: 16px;
+      --radius-lg: 22px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── ONBOARDING ─────────────────────────────── */
+    .onboard {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      padding: 0 0 40px;
+    }
+    .onboard.show { display: flex; }
+
+    .onboard-hero {
+      background: linear-gradient(160deg, #0d2d1f 0%, #0a1628 100%);
+      padding: 56px 28px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .onboard-hero::before {
+      content: '';
+      position: absolute;
+      top: -60px; left: 50%;
+      transform: translateX(-50%);
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, #10b98120 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .onboard-logo {
+      font-size: 64px;
+      line-height: 1;
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .onboard-hero h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+    .onboard-hero h1 span { color: var(--accent); }
+    .onboard-hero p {
+      font-size: 15px;
+      color: var(--text2);
+      line-height: 1.6;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+
+    .onboard-body { flex: 1; padding: 28px 20px; }
+
+    .onboard-section {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border);
+    }
+    .onboard-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 16px;
+    }
+
+    .time-input-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+    }
+    .time-input-row + .time-input-row {
+      border-top: 1px solid var(--border);
+    }
+    .time-input-icon {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .time-input-icon.morning { background: #451a0320; }
+    .time-input-icon.evening { background: #2e1b4e20; }
+    .time-input-label { flex: 1; }
+    .time-input-label strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .time-input-label span { font-size: 12px; color: var(--text2); }
+    input[type="time"] {
+      background: var(--surface2);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 18px;
+      font-weight: 700;
+      padding: 8px 12px;
+      width: 110px;
+      text-align: center;
+      outline: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    input[type="time"]:focus { border-color: var(--accent2); }
+    input[type="time"].morning-focused { border-color: var(--morning); }
+    input[type="time"].evening-focused { border-color: var(--evening); }
+
+    .exercises-preview {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .ex-preview-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text2);
+    }
+    .ex-preview-item .ep-icon {
+      width: 28px; height: 28px;
+      background: var(--surface2);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .ex-preview-item .ep-name { flex: 1; }
+    .ex-preview-item .ep-val {
+      font-size: 12px;
+      color: var(--accent);
+      font-weight: 600;
+      background: #10b98115;
+      padding: 2px 8px;
+      border-radius: 20px;
+    }
+
+    .btn-start {
+      width: 100%;
+      padding: 17px;
+      background: linear-gradient(135deg, var(--accent3), var(--accent2));
+      color: #fff;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.2px;
+      margin-top: 4px;
+    }
+    .btn-start:active { transform: scale(0.98); opacity: 0.9; }
+
+
+    /* ─── MAIN APP ───────────────────────────────── */
+    .app { display: none; flex-direction: column; min-height: 100vh; }
+    .app.show { display: flex; }
+
+    /* Header */
+    .header {
+      background: linear-gradient(160deg, #0d2d1f 0%, #0a1628 60%);
+      padding: 20px 20px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      top: -80px; right: -40px;
+      width: 220px; height: 220px;
+      background: radial-gradient(circle, #10b98118 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .header-brand-icon {
+      width: 38px; height: 38px;
+      background: linear-gradient(135deg, var(--accent3), var(--accent2));
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+    }
+    .header-brand-text h1 { font-size: 18px; font-weight: 800; }
+    .header-brand-text p { font-size: 11px; color: #86efac; }
+    .btn-settings {
+      width: 36px; height: 36px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      color: var(--text2);
+      font-size: 17px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+    }
+    .btn-settings:active { background: rgba(255,255,255,0.14); }
+
+    /* Day & reminder strip */
+    .header-strip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 18px;
+    }
+    .day-chip {
+      background: rgba(110,231,183,0.12);
+      border: 1px solid rgba(110,231,183,0.25);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .reminder-chip {
+      flex: 1;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 5px 12px;
+      font-size: 11px;
+      color: var(--text2);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+    .reminder-chip.now {
+      background: rgba(251,191,36,0.12);
+      border-color: rgba(251,191,36,0.3);
+      color: var(--morning);
+    }
+
+    /* Session tabs */
+    .session-tabs {
+      display: flex;
+      margin: 14px 16px 0;
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 4px;
+      gap: 4px;
+      border: 1px solid var(--border);
+    }
+    .session-tab {
+      flex: 1;
+      padding: 10px 8px;
+      border: none;
+      border-radius: 12px;
+      background: transparent;
+      color: var(--text3);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-family: inherit;
+    }
+    .session-tab.morning.active {
+      background: linear-gradient(135deg, #451a03, #78350f);
+      color: var(--morning);
+      box-shadow: 0 2px 8px rgba(245,158,11,0.2);
+    }
+    .session-tab.evening.active {
+      background: linear-gradient(135deg, #1e1b4b, #312e81);
+      color: var(--evening);
+      box-shadow: 0 2px 8px rgba(167,139,250,0.2);
+    }
+    .tab-tick {
+      width: 15px; height: 15px;
+      border-radius: 50%;
+      border: 1.5px solid currentColor;
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      font-size: 8px;
+      opacity: 0.45;
+      font-weight: 900;
+    }
+    .tab-tick.done { background: currentColor; color: #000; opacity: 1; }
+
+    /* Session info bar */
+    .session-bar {
+      margin: 10px 16px 0;
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid transparent;
+    }
+    .session-bar.morning {
+      background: linear-gradient(135deg, #451a0340, #78350f20);
+      border-color: #92400e30;
+    }
+    .session-bar.evening {
+      background: linear-gradient(135deg, #1e1b4b40, #312e8120);
+      border-color: #4338ca30;
+    }
+    .session-bar-left { display: flex; align-items: center; gap: 10px; }
+    .session-bar-icon { font-size: 20px; }
+    .session-bar-name { font-size: 13px; font-weight: 700; }
+    .session-bar.morning .session-bar-name { color: var(--morning); }
+    .session-bar.evening .session-bar-name { color: var(--evening); }
+    .session-bar-time { font-size: 11px; color: var(--text2); margin-top: 1px; }
+    .session-done-tag {
+      background: var(--accent2);
+      color: #fff;
+      border-radius: 8px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* Progress */
+    .progress-wrap {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px 0;
+      gap: 14px;
+    }
+    .ring-box {
+      position: relative;
+      width: 80px; height: 80px;
+      flex-shrink: 0;
+    }
+    .ring-box svg { transform: rotate(-90deg); }
+    .ring-label {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .ring-label .rn { font-size: 20px; font-weight: 800; color: var(--accent); line-height: 1; }
+    .ring-label .rd { font-size: 10px; color: var(--text3); }
+    .progress-text h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .progress-text p { font-size: 12px; color: var(--text2); line-height: 1.5; }
+    .mini-bar {
+      margin-top: 8px;
+      height: 4px;
+      background: var(--surface3);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .mini-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent3), var(--accent));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    /* Exercise cards */
+    .exercises-wrap { padding: 14px 16px 0; }
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+      color: var(--text3);
+      margin-bottom: 10px;
+    }
+    .exercise-list { display: flex; flex-direction: column; gap: 8px; }
+    .ex-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 13px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1.5px solid var(--border);
+      cursor: pointer;
+      transition: all 0.22s ease;
+      user-select: none;
+    }
+    .ex-card:active { transform: scale(0.985); }
+    .ex-card.done {
+      background: #052e1680;
+      border-color: #15803d50;
+    }
+    .ex-icon {
+      width: 42px; height: 42px;
+      border-radius: 11px;
+      background: var(--surface2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+      transition: background 0.22s;
+    }
+    .ex-card.done .ex-icon { background: #15803d40; }
+    .ex-body { flex: 1; min-width: 0; }
+    .ex-body h3 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .ex-body p { font-size: 11px; color: var(--text3); transition: color 0.2s; }
+    .ex-card.done .ex-body p { color: #4ade8090; }
+    .ex-right { text-align: right; flex-shrink: 0; }
+    .ex-right .en { font-size: 20px; font-weight: 800; color: var(--accent); display: block; line-height: 1; }
+    .ex-card.done .ex-right .en { color: #4ade80; }
+    .ex-right .eu { font-size: 10px; color: var(--text3); }
+    .ex-check {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      border: 2px solid var(--surface3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      flex-shrink: 0;
+      transition: all 0.22s;
+      font-weight: 900;
+    }
+    .ex-card.done .ex-check {
+      background: var(--accent2);
+      border-color: var(--accent2);
+      color: #fff;
+    }
+
+    /* Day overview */
+    .overview-wrap {
+      margin: 16px 16px 0;
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 14px;
+      border: 1px solid var(--border);
+    }
+    .overview-title {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      color: var(--text3); margin-bottom: 12px;
+    }
+    .overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .ov-card {
+      border-radius: 12px;
+      padding: 11px 13px;
+    }
+    .ov-card.morning { background: linear-gradient(135deg, #451a0340, #78350f20); border: 1px solid #92400e20; }
+    .ov-card.evening { background: linear-gradient(135deg, #1e1b4b40, #312e8120); border: 1px solid #4338ca20; }
+    .ov-label { font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
+    .ov-card.morning .ov-label { color: var(--morning); }
+    .ov-card.evening .ov-label { color: var(--evening); }
+    .ov-status { font-size: 11px; color: var(--text3); margin-bottom: 6px; }
+    .ov-bar { height: 3px; background: var(--surface3); border-radius: 3px; overflow: hidden; }
+    .ov-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+    .ov-card.morning .ov-bar-fill { background: var(--morning); }
+    .ov-card.evening .ov-bar-fill { background: var(--evening); }
+
+    /* Streak */
+    .streak-wrap {
+      margin: 12px 16px 0;
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 14px;
+      border: 1px solid var(--border);
+    }
+    .streak-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px;
+    }
+    .streak-head h3 { font-size: 13px; font-weight: 600; }
+    .streak-count { font-size: 12px; font-weight: 700; color: var(--accent); }
+    .streak-dots { display: flex; gap: 5px; flex-wrap: wrap; }
+    .s-dot {
+      width: 26px; height: 26px;
+      border-radius: 7px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; color: var(--text3); font-weight: 700;
+    }
+    .s-dot.half { background: linear-gradient(135deg, #92400e 50%, var(--surface2) 50%); color: #fcd34d; border-color: #92400e40; }
+    .s-dot.full { background: var(--accent3); border-color: var(--accent2); color: #fff; }
+    .s-dot.today { background: var(--surface3); border: 1.5px solid var(--accent2); color: var(--text); }
+
+    /* Complete button */
+    .btn-complete {
+      display: block;
+      margin: 16px 16px 0;
+      width: calc(100% - 32px);
+      padding: 16px;
+      background: linear-gradient(135deg, var(--accent3), var(--accent2));
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.2px;
+      font-family: inherit;
+      box-shadow: 0 4px 16px rgba(16,185,129,0.25);
+    }
+    .btn-complete:disabled {
+      background: var(--surface2);
+      color: var(--text3);
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .btn-complete:active:not(:disabled) { transform: scale(0.98); }
+
+    /* Reset */
+    .reset-wrap { text-align: center; margin: 16px 0 8px; }
+    .reset-wrap button {
+      background: none; border: none;
+      color: var(--text3); font-size: 12px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .reset-wrap button:hover { color: var(--danger); }
+
+    /* ─── SETTINGS PANEL ─────────────────────────── */
+    .settings-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 50;
+      backdrop-filter: blur(4px);
+    }
+    .settings-overlay.show { display: block; }
+    .settings-panel {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: var(--surface);
+      border-radius: 24px 24px 0 0;
+      padding: 0 0 40px;
+      z-index: 51;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.32,0.72,0,1);
+      border-top: 1px solid var(--border);
+    }
+    .settings-panel.show { transform: translateY(0); }
+    .settings-handle {
+      width: 36px; height: 4px;
+      background: var(--surface3);
+      border-radius: 4px;
+      margin: 12px auto 16px;
+    }
+    .settings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .settings-header h2 { font-size: 17px; font-weight: 700; }
+    .btn-close {
+      width: 32px; height: 32px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--text2);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .settings-body { padding: 20px; }
+    .settings-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+    }
+    .settings-row + .settings-row { border-top: 1px solid var(--border); }
+    .settings-icon {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .settings-icon.morning { background: #451a0330; }
+    .settings-icon.evening { background: #2e1b4e30; }
+    .settings-label { flex: 1; }
+    .settings-label strong { display: block; font-size: 14px; font-weight: 600; }
+    .settings-label span { font-size: 12px; color: var(--text2); }
+    .btn-save-settings {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, var(--accent3), var(--accent2));
+      color: #fff;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      margin-top: 20px;
+      font-family: inherit;
+    }
+    .btn-save-settings:active { opacity: 0.9; transform: scale(0.99); }
+
+    /* ─── CELEBRATION ────────────────────────────── */
+    .celebration {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 100;
+      flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 32px;
+      backdrop-filter: blur(6px);
+    }
+    .celebration.show { display: flex; }
+    .celeb-emoji { font-size: 72px; margin-bottom: 16px; animation: pop 0.4s ease; }
+    @keyframes pop {
+      0% { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.15); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .celebration h2 { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
+    .celebration p {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.7;
+      margin-bottom: 28px;
+      white-space: pre-line;
+    }
+    .celebration p strong { color: var(--accent); }
+    .btn-celeb {
+      background: linear-gradient(135deg, var(--accent3), var(--accent2));
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: 15px 36px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════ ONBOARDING ══ -->
+<div class="onboard" id="onboard">
+  <div class="onboard-hero">
+    <div class="onboard-logo">💪</div>
+    <h1>Xush kelibsiz,<br><span>Tirnirofka</span>ga!</h1>
+    <p>Har kuni ikki mahal mashq qilib, sog'lig'ingizni mustahkamlang. Keling, boshlaylik!</p>
+  </div>
+
+  <div class="onboard-body">
+    <div class="onboard-section">
+      <div class="onboard-section-title">Mashq vaqtlaringizni belgilang</div>
+      <div class="time-input-row">
+        <div class="time-input-icon morning">🌅</div>
+        <div class="time-input-label">
+          <strong>Ertalabgi mashq</strong>
+          <span>Ertalab necha da boshlaysiz?</span>
+        </div>
+        <input type="time" id="onboardMorning" value="08:00" />
+      </div>
+      <div class="time-input-row">
+        <div class="time-input-icon evening">🌙</div>
+        <div class="time-input-label">
+          <strong>Kechki mashq</strong>
+          <span>Kechqurun necha da boshlaysiz?</span>
+        </div>
+        <input type="time" id="onboardEvening" value="20:00" />
+      </div>
+    </div>
+
+    <div class="onboard-section">
+      <div class="onboard-section-title">Birinchi kun mashqlari</div>
+      <div class="exercises-preview" id="exPreview"></div>
+    </div>
+
+    <button class="btn-start" onclick="finishOnboard()">
+      Boshlash →
+    </button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════ MAIN APP ══ -->
+<div class="app" id="app">
+
+  <div class="header">
+    <div class="header-top">
+      <div class="header-brand">
+        <div class="header-brand-icon">💪</div>
+        <div class="header-brand-text">
+          <h1>Tirnirofka</h1>
+          <p>Har kun kuchliroq bo'ling</p>
+        </div>
+      </div>
+      <button class="btn-settings" onclick="openSettings()" title="Sozlamalar">⚙️</button>
+    </div>
+    <div class="header-strip">
+      <div class="day-chip" id="dayChip">1-kun</div>
+      <div class="reminder-chip" id="reminderChip">
+        <span>⏰</span>
+        <span id="reminderText">Yuklanmoqda…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Session tabs -->
+  <div class="session-tabs">
+    <button class="session-tab morning" id="tabMorning" onclick="switchSession('morning')">
+      🌅 Ertalab
+      <span class="tab-tick" id="tickMorning"></span>
+    </button>
+    <button class="session-tab evening" id="tabEvening" onclick="switchSession('evening')">
+      🌙 Kechqurun
+      <span class="tab-tick" id="tickEvening"></span>
+    </button>
+  </div>
+
+  <!-- Session bar -->
+  <div class="session-bar morning" id="sessionBar">
+    <div class="session-bar-left">
+      <div class="session-bar-icon" id="sbIcon">🌅</div>
+      <div>
+        <div class="session-bar-name" id="sbName">Ertalabgi mashq</div>
+        <div class="session-bar-time" id="sbTime">08:00 da boshlanadi</div>
+      </div>
+    </div>
+    <div class="session-done-tag" id="sbDone" style="display:none">✓ Bajarildi</div>
+  </div>
+
+  <!-- Progress ring -->
+  <div class="progress-wrap">
+    <div class="ring-box">
+      <svg width="80" height="80" viewBox="0 0 80 80">
+        <circle cx="40" cy="40" r="32" fill="none" stroke="#1c1c27" stroke-width="6"/>
+        <circle cx="40" cy="40" r="32" fill="none" stroke="#10b981" stroke-width="6"
+          stroke-linecap="round"
+          stroke-dasharray="201.1"
+          stroke-dashoffset="201.1"
+          id="ringCircle"/>
+      </svg>
+      <div class="ring-label">
+        <span class="rn" id="ringNum">0</span>
+        <span class="rd">/ 5</span>
+      </div>
+    </div>
+    <div class="progress-text">
+      <h3 id="progressTitle">Bugungi maqsad</h3>
+      <p id="progressText">Mashqlaringizni boshlash vaqti keldi! 🔥</p>
+      <div class="mini-bar">
+        <div class="mini-bar-fill" id="progressBar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Exercises -->
+  <div class="exercises-wrap">
+    <div class="section-label">Mashqlar ro'yxati</div>
+    <div class="exercise-list" id="exerciseList"></div>
+  </div>
+
+  <!-- Day overview -->
+  <div class="overview-wrap">
+    <div class="overview-title">Bugungi ikki sessiya</div>
+    <div class="overview-grid">
+      <div class="ov-card morning">
+        <div class="ov-label">🌅 Ertalab</div>
+        <div class="ov-status" id="ovMorningStat">— bajarilmadi</div>
+        <div class="ov-bar"><div class="ov-bar-fill" id="ovMorningBar" style="width:0%"></div></div>
+      </div>
+      <div class="ov-card evening">
+        <div class="ov-label">🌙 Kechqurun</div>
+        <div class="ov-status" id="ovEveningStat">— bajarilmadi</div>
+        <div class="ov-bar"><div class="ov-bar-fill" id="ovEveningBar" style="width:0%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Streak -->
+  <div class="streak-wrap">
+    <div class="streak-head">
+      <h3>🔥 Ketma-ket kunlar</h3>
+      <span class="streak-count" id="streakCount">0 kun</span>
+    </div>
+    <div class="streak-dots" id="streakDots"></div>
+  </div>
+
+  <button class="btn-complete" id="btnComplete" onclick="completeSession()">
+    ✅ Sessiyani yakunlash
+  </button>
+
+  <div class="reset-wrap">
+    <button onclick="confirmReset()">Boshidan boshlash</button>
+  </div>
+
+</div><!-- /app -->
+
+
+<!-- ═══════════════════════════════════════ SETTINGS ══ -->
+<div class="settings-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-handle"></div>
+  <div class="settings-header">
+    <h2>⚙️ Sozlamalar</h2>
+    <button class="btn-close" onclick="closeSettings()">✕</button>
+  </div>
+  <div class="settings-body">
+    <div class="settings-row">
+      <div class="settings-icon morning">🌅</div>
+      <div class="settings-label">
+        <strong>Ertalabgi mashq vaqti</strong>
+        <span>Qachon boshlaysiz?</span>
+      </div>
+      <input type="time" id="settingsMorning" value="08:00" />
+    </div>
+    <div class="settings-row">
+      <div class="settings-icon evening">🌙</div>
+      <div class="settings-label">
+        <strong>Kechki mashq vaqti</strong>
+        <span>Qachon boshlaysiz?</span>
+      </div>
+      <input type="time" id="settingsEvening" value="20:00" />
+    </div>
+    <button class="btn-save-settings" onclick="saveSettings()">Saqlash</button>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════ CELEBRATION ══ -->
+<div class="celebration" id="celebration">
+  <div class="celeb-emoji" id="celebEmoji">🎉</div>
+  <h2 id="celebTitle">Zo'r!</h2>
+  <p id="celebText">Sessiya yakunlandi!</p>
+  <button class="btn-celeb" onclick="closeCelebration()">Davom etish →</button>
+</div>
+
+
+<script>
+  // ── Telegram init
+  const tg = window.Telegram?.WebApp;
+  if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#0d2d1f'); tg.setBackgroundColor('#0a0a0f'); }
+
+  const EXERCISES = [
+    { id: 'warmup',   icon: '🏃', name: 'Qizib olish',      base: 10, step: 0, unit: 'daqiqa' },
+    { id: 'squat',    icon: '🦵', name: 'O\'tirib turish',   base: 10, step: 5, unit: 'ta' },
+    { id: 'anchim',   icon: '🏋️', name: 'Anchimanya',       base: 10, step: 5, unit: 'ta' },
+    { id: 'gantel',   icon: '💪', name: 'Gantel ko\'tarish', base: 10, step: 5, unit: 'ta' },
+    { id: 'boyostir', icon: '🧍', name: 'Bo\'y o\'stirish',  base: 30, step: 5, unit: 'soniya' },
+  ];
+
+  let activeSession = 'morning';
+
+  // ── State helpers
+  function getState() {
+    try { return JSON.parse(localStorage.getItem('tirnoqchi_v4') || '{}'); }
+    catch { return {}; }
+  }
+  function saveState(s) { localStorage.setItem('tirnoqchi_v4', JSON.stringify(s)); }
+
+  function getSettings() {
+    try { return JSON.parse(localStorage.getItem('tirnoqchi_settings') || '{}'); }
+    catch { return {}; }
+  }
+  function saveSettings_store(obj) { localStorage.setItem('tirnoqchi_settings', JSON.stringify(obj)); }
+
+  function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+  function initState() {
+    let s = getState();
+    if (!s.startDate) { s.startDate = todayStr(); s.days = {}; saveState(s); }
+    return s;
+  }
+
+  function getDayNumber(s) {
+    const diff = Math.floor((new Date(todayStr()) - new Date(s.startDate)) / 86400000);
+    return diff + 1;
+  }
+
+  function getTargetCount(ex, dayNum) {
+    return ex.base + (dayNum - 1) * ex.step;
+  }
+
+  function getSessionData(s, date, sess) {
+    return s.days?.[date]?.[sess] || { done: [], completed: false };
+  }
+
+  function getCurrentSessionByTime(settings) {
+    const h = new Date().getHours();
+    const m = new Date().getMinutes();
+    const now = h * 60 + m;
+    const [eh, em] = (settings.eveningTime || '20:00').split(':').map(Number);
+    const eveningMin = eh * 60 + em;
+    return now >= eveningMin ? 'evening' : 'morning';
+  }
+
+  // ── Onboarding
+  function buildExPreview() {
+    const wrap = document.getElementById('exPreview');
+    wrap.innerHTML = '';
+    EXERCISES.forEach(ex => {
+      const div = document.createElement('div');
+      div.className = 'ex-preview-item';
+      div.innerHTML = `
+        <div class="ep-icon">${ex.icon}</div>
+        <span class="ep-name">${ex.name}</span>
+        <span class="ep-val">${ex.base} ${ex.unit}</span>
+      `;
+      wrap.appendChild(div);
+    });
+  }
+
+  function finishOnboard() {
+    const morning = document.getElementById('onboardMorning').value || '08:00';
+    const evening = document.getElementById('onboardEvening').value || '20:00';
+    saveSettings_store({ morningTime: morning, eveningTime: evening });
+    document.getElementById('onboard').classList.remove('show');
+    document.getElementById('app').classList.add('show');
+    activeSession = getCurrentSessionByTime({ eveningTime: evening });
+    render();
+  }
+
+  // ── Settings panel
+  function openSettings() {
+    const cfg = getSettings();
+    document.getElementById('settingsMorning').value = cfg.morningTime || '08:00';
+    document.getElementById('settingsEvening').value = cfg.eveningTime || '20:00';
+    document.getElementById('settingsOverlay').classList.add('show');
+    document.getElementById('settingsPanel').classList.add('show');
+  }
+  function closeSettings() {
+    document.getElementById('settingsOverlay').classList.remove('show');
+    document.getElementById('settingsPanel').classList.remove('show');
+  }
+  function saveSettings() {
+    const morning = document.getElementById('settingsMorning').value || '08:00';
+    const evening = document.getElementById('settingsEvening').value || '20:00';
+    saveSettings_store({ morningTime: morning, eveningTime: evening });
+    closeSettings();
+    render();
+  }
+
+  // ── Session switch
+  function switchSession(sess) {
+    activeSession = sess;
+    render();
+  }
+
+  // ── Reminder chip text
+  function getReminderText(cfg) {
+    const now = new Date();
+    const h = now.getHours(), m = now.getMinutes();
+    const nowMin = h * 60 + m;
+
+    const [mh, mm] = (cfg.morningTime || '08:00').split(':').map(Number);
+    const [eh, em] = (cfg.eveningTime || '20:00').split(':').map(Number);
+    const morMin = mh * 60 + mm;
+    const eveMin = eh * 60 + em;
+
+    const fmt = (h2, m2) => `${String(h2).padStart(2,'0')}:${String(m2).padStart(2,'0')}`;
+
+    if (nowMin >= morMin && nowMin < morMin + 30 && activeSession === 'morning') {
+      return { text: `🌅 Ertalab mashq vaqti! Hozir boshlang`, now: true };
+    }
+    if (nowMin >= eveMin && nowMin < eveMin + 30 && activeSession === 'evening') {
+      return { text: `🌙 Kechki mashq vaqti! Hozir boshlang`, now: true };
+    }
+
+    if (nowMin < morMin) {
+      const diff = morMin - nowMin;
+      if (diff <= 60) return { text: `${diff} daqiqadan so'ng ertalab mashq`, now: false };
+      return { text: `Ertalab mashq: ${fmt(mh, mm)}`, now: false };
+    }
+    if (nowMin < eveMin) {
+      const diff = eveMin - nowMin;
+      if (diff <= 60) return { text: `${diff} daqiqadan so'ng kechki mashq`, now: false };
+      return { text: `Kechki mashq: ${fmt(eh, em)}`, now: false };
+    }
+    return { text: `Ertaga ertalab: ${fmt(mh, mm)}`, now: false };
+  }
+
+  // ── Main render
+  function render() {
+    const s = initState();
+    const cfg = getSettings();
+    const dayNum = getDayNumber(s);
+    const today = todayStr();
+    const sess = activeSession;
+    const sessData = getSessionData(s, today, sess);
+    const done = sessData.done || [];
+    const sessCompleted = sessData.completed === true;
+    const total = EXERCISES.length;
+
+    // Day chip
+    document.getElementById('dayChip').textContent = `${dayNum}-kun`;
+
+    // Reminder chip
+    const rem = getReminderText(cfg);
+    const chip = document.getElementById('reminderChip');
+    chip.className = 'reminder-chip' + (rem.now ? ' now' : '');
+    document.getElementById('reminderText').textContent = rem.text;
+
+    // Session tabs
+    ['morning', 'evening'].forEach(t => {
+      const tab = document.getElementById(t === 'morning' ? 'tabMorning' : 'tabEvening');
+      const tick = document.getElementById(t === 'morning' ? 'tickMorning' : 'tickEvening');
+      const sd = getSessionData(s, today, t);
+      tab.classList.toggle('active', t === sess);
+      tick.className = 'tab-tick' + (sd.completed ? ' done' : '');
+      tick.textContent = sd.completed ? '✓' : '';
+    });
+
+    // Session bar
+    const bar = document.getElementById('sessionBar');
+    bar.className = 'session-bar ' + sess;
+    document.getElementById('sbIcon').textContent = sess === 'morning' ? '🌅' : '🌙';
+    document.getElementById('sbName').textContent = sess === 'morning' ? 'Ertalabgi mashq' : 'Kechki mashq';
+    const timeLabel = sess === 'morning'
+      ? (cfg.morningTime || '08:00') + ' da boshlanadi'
+      : (cfg.eveningTime || '20:00') + ' da boshlanadi';
+    document.getElementById('sbTime').textContent = timeLabel;
+    document.getElementById('sbDone').style.display = sessCompleted ? 'block' : 'none';
+
+    // Ring
+    const doneCount = done.length;
+    const pct = doneCount / total;
+    const circ = 201.1;
+    document.getElementById('ringCircle').style.strokeDashoffset = circ - pct * circ;
+    document.getElementById('ringNum').textContent = doneCount;
+
+    const msgs = [
+      'Mashqlaringizni boshlash vaqti keldi! 🔥',
+      'Yaxshi boshlash! Davom eting 💪',
+      'Zo\'r natija! Yana uchtasi qoldi 🎯',
+      'Yarmi bajarildi! Yana ikkitasi qoldi ⚡',
+      'Deyarli tugadi! Bitta qoldi 🏁',
+      'Barcha mashqlar bajarildi! 🏆',
+    ];
+    document.getElementById('progressText').textContent = msgs[doneCount];
+    document.getElementById('progressBar').style.width = (pct * 100) + '%';
+
+    // Exercise cards
+    const list = document.getElementById('exerciseList');
+    list.innerHTML = '';
+    EXERCISES.forEach(ex => {
+      const target = getTargetCount(ex, dayNum);
+      const isDone = done.includes(ex.id);
+      const card = document.createElement('div');
+      card.className = 'ex-card' + (isDone ? ' done' : '');
+      card.innerHTML = `
+        <div class="ex-icon">${ex.icon}</div>
+        <div class="ex-body">
+          <h3>${ex.name}</h3>
+          <p>${isDone ? '✓ Bajarildi' : 'Bosing — belgilang'}</p>
+        </div>
+        <div class="ex-right">
+          <span class="en">${target}</span>
+          <span class="eu">${ex.unit}</span>
+        </div>
+        <div class="ex-check">${isDone ? '✓' : ''}</div>
+      `;
+      if (!sessCompleted) card.onclick = () => toggleExercise(ex.id);
+      list.appendChild(card);
+    });
+
+    // Complete button
+    const btn = document.getElementById('btnComplete');
+    if (sessCompleted) {
+      btn.textContent = '✅ Bu sessiya yakunlangan!';
+      btn.disabled = true;
+    } else if (doneCount === total) {
+      btn.textContent = '🏆 Barcha mashqlar bajarildi — Yakunlash!';
+      btn.disabled = false;
+    } else {
+      const label = sess === 'morning' ? '🌅 Ertalab sessiyasini yakunlash' : '🌙 Kechki sessiyani yakunlash';
+      btn.textContent = `${label} (${doneCount}/${total})`;
+      btn.disabled = doneCount === 0;
+    }
+
+    // Overview
+    ['morning', 'evening'].forEach(t => {
+      const sd = getSessionData(s, today, t);
+      const dc = sd.done?.length || 0;
+      const comp = sd.completed;
+      document.getElementById(t === 'morning' ? 'ovMorningBar' : 'ovEveningBar').style.width = (dc / total * 100) + '%';
+      document.getElementById(t === 'morning' ? 'ovMorningStat' : 'ovEveningStat').textContent =
+        comp ? '✓ Yakunlandi' : dc > 0 ? `${dc}/${total} bajarildi` : '— bajarilmadi';
+    });
+
+    // Streak
+    const fullDays = Object.values(s.days || {}).filter(d => d.morning?.completed && d.evening?.completed).length;
+    document.getElementById('streakCount').textContent = fullDays + ' kun';
+    const dots = document.getElementById('streakDots');
+    dots.innerHTML = '';
+    const show = Math.min(dayNum, 14);
+    const start = new Date(s.startDate);
+    for (let i = 0; i < show; i++) {
+      const d2 = new Date(start);
+      d2.setDate(d2.getDate() + i);
+      const ds = d2.toISOString().slice(0, 10);
+      const dayData = s.days?.[ds];
+      const mC = dayData?.morning?.completed, eC = dayData?.evening?.completed;
+      const isToday = ds === today;
+      const dot = document.createElement('div');
+      dot.className = 'streak-dot s-dot' + (mC && eC ? ' full' : mC || eC ? ' half' : isToday ? ' today' : '');
+      dot.textContent = i + 1;
+      dot.title = ds;
+      dots.appendChild(dot);
+    }
+  }
+
+  function toggleExercise(id) {
+    const s = getState();
+    const today = todayStr();
+    if (!s.days) s.days = {};
+    if (!s.days[today]) s.days[today] = {};
+    if (!s.days[today][activeSession]) s.days[today][activeSession] = { done: [], completed: false };
+    const done = s.days[today][activeSession].done;
+    const idx = done.indexOf(id);
+    if (idx === -1) {
+      done.push(id);
+      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    } else {
+      done.splice(idx, 1);
+    }
+    saveState(s);
+    render();
+  }
+
+  function completeSession() {
+    const s = getState();
+    const today = todayStr();
+    if (!s.days) s.days = {};
+    if (!s.days[today]) s.days[today] = {};
+    if (!s.days[today][activeSession]) s.days[today][activeSession] = { done: [], completed: false };
+    const sd = s.days[today][activeSession];
+    if (!sd.done?.length) return;
+    sd.completed = true;
+    saveState(s);
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+
+    const cfg = getSettings();
+    const dayNum = getDayNumber(s);
+    const other = activeSession === 'morning' ? 'evening' : 'morning';
+    const bothDone = s.days[today]?.[other]?.completed;
+    const eveTime = cfg.eveningTime || '20:00';
+    const morTime = cfg.morningTime || '08:00';
+
+    document.getElementById('celebEmoji').textContent = bothDone ? '🏆' : (activeSession === 'morning' ? '🌅' : '🌙');
+    document.getElementById('celebTitle').textContent = bothDone ? 'Mukammal kun!' : 'Juda zo\'r!';
+
+    if (bothDone) {
+      const nextSqt = getTargetCount(EXERCISES[1], dayNum + 1);
+      document.getElementById('celebText').innerHTML =
+        `<strong>${dayNum}-kun</strong> to'liq yakunlandi!\n\nErtaga <strong>${dayNum + 1}-kun</strong>:\n${nextSqt} ta o'tirib turish va boshqalar. 💪`;
+    } else if (activeSession === 'morning') {
+      document.getElementById('celebText').innerHTML =
+        `Ertalab sessiya bajarildi! 🌅\n\nKechqurun <strong>${eveTime}</strong> da ikkinchi sessiya sizni kutadi. 🌙`;
+    } else {
+      document.getElementById('celebText').innerHTML =
+        `Kechki sessiya bajarildi! 🌙\n\nErtalab <strong>${morTime}</strong> da ertalab sessiyani unutmang. 🌅`;
+    }
+
+    document.getElementById('celebration').classList.add('show');
+    render();
+  }
+
+  function closeCelebration() {
+    document.getElementById('celebration').classList.remove('show');
+  }
+
+  function confirmReset() {
+    if (confirm('Barcha ma\'lumotlar o\'chiriladi va 1-kundan boshlanadi. Davom etasizmi?')) {
+      localStorage.removeItem('tirnoqchi_v4');
+      const cfg = getSettings();
+      activeSession = getCurrentSessionByTime(cfg);
+      render();
+    }
+  }
+
+  // Update reminder chip every minute
+  setInterval(() => {
+    const cfg = getSettings();
+    const rem = getReminderText(cfg);
+    const chip = document.getElementById('reminderChip');
+    if (chip) {
+      chip.className = 'reminder-chip' + (rem.now ? ' now' : '');
+      document.getElementById('reminderText').textContent = rem.text;
+    }
+  }, 60000);
+
+  // ── Boot
+  function boot() {
+    const cfg = getSettings();
+    if (!cfg.morningTime) {
+      // First launch — show onboarding
+      buildExPreview();
+      document.getElementById('onboard').classList.add('show');
+    } else {
+      // Returning user — show app
+      document.getElementById('app').classList.add('show');
+      activeSession = getCurrentSessionByTime(cfg);
+      render();
+    }
+  }
+
+  boot();
+</script>
+</body>
+</html>
