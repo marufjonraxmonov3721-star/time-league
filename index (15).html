@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Tirnirofka — Kunlik Mashqlar</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --card: #1a1a1a;
+      --card2: #222222;
+      --accent: #4ade80;
+      --accent2: #22c55e;
+      --text: #f0f0f0;
+      --muted: #888;
+      --radius: 16px;
+      --morning: #f59e0b;
+      --evening: #818cf8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0 0 40px 0;
+    }
+
+    /* ── Header ── */
+    .header {
+      padding: 24px 20px 20px;
+      text-align: center;
+      background: linear-gradient(135deg, #14532d 0%, #166534 100%);
+    }
+    .header h1 { font-size: 21px; font-weight: 800; }
+    .header-sub { margin-top: 4px; font-size: 12px; color: #86efac; }
+    .day-badge {
+      display: inline-block;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid #4ade8066;
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #bbf7d0;
+      margin-top: 10px;
+    }
+
+    /* ── Session tabs ── */
+    .session-tabs {
+      display: flex;
+      margin: 16px 16px 0;
+      background: var(--card);
+      border-radius: 14px;
+      padding: 4px;
+      gap: 4px;
+    }
+    .session-tab {
+      flex: 1;
+      padding: 10px 8px;
+      border: none;
+      border-radius: 10px;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .session-tab.morning.active {
+      background: #451a03;
+      color: var(--morning);
+    }
+    .session-tab.evening.active {
+      background: #1e1b4b;
+      color: var(--evening);
+    }
+    .session-tab .tick {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      border: 1.5px solid currentColor;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      opacity: 0.5;
+    }
+    .session-tab .tick.done { background: currentColor; color: #fff; opacity: 1; }
+    .session-tab .tick.done::after { content: '✓'; color: #000; font-weight: 900; font-size: 9px; }
+
+    /* ── Session header strip ── */
+    .session-strip {
+      margin: 12px 16px 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .session-strip.morning { background: #451a03; border: 1px solid #92400e44; }
+    .session-strip.evening { background: #1e1b4b; border: 1px solid #4338ca44; }
+    .session-strip-left { display: flex; align-items: center; gap: 10px; }
+    .session-strip-icon { font-size: 22px; }
+    .session-strip-title { font-size: 14px; font-weight: 700; }
+    .session-strip-time { font-size: 11px; opacity: 0.7; margin-top: 1px; }
+    .session-strip.morning .session-strip-title { color: var(--morning); }
+    .session-strip.evening .session-strip-title { color: var(--evening); }
+    .session-done-badge {
+      background: var(--accent2);
+      color: #052e16;
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* ── Progress ring ── */
+    .progress-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px 20px 4px;
+      gap: 16px;
+    }
+    .ring-container {
+      position: relative;
+      width: 88px;
+      height: 88px;
+      flex-shrink: 0;
+    }
+    .ring-container svg { transform: rotate(-90deg); }
+    .ring-label {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .ring-label .rnum { font-size: 20px; font-weight: 800; color: var(--accent); }
+    .ring-label .rdiv { font-size: 10px; color: var(--muted); }
+    .progress-info { flex: 1; }
+    .progress-info h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .progress-info p { font-size: 12px; color: var(--muted); line-height: 1.5; }
+    .progress-bar-wrap {
+      margin-top: 8px;
+      background: #333;
+      border-radius: 4px;
+      height: 5px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent2), var(--accent));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    /* ── Exercise cards ── */
+    .section-title {
+      padding: 16px 20px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .exercises { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+    .exercise-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border: 1.5px solid transparent;
+      transition: all 0.25s ease;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    .exercise-card:active { transform: scale(0.98); }
+    .exercise-card.done { background: #052e16; border-color: #166534; }
+    .exercise-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+      background: var(--card2);
+    }
+    .exercise-card.done .exercise-icon { background: #166534; }
+    .exercise-info { flex: 1; min-width: 0; }
+    .exercise-info h3 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+    .exercise-info p { font-size: 11px; color: var(--muted); }
+    .exercise-card.done .exercise-info p { color: #86efac; }
+    .exercise-count { text-align: right; flex-shrink: 0; }
+    .exercise-count .num {
+      font-size: 20px; font-weight: 800;
+      color: var(--accent); display: block; line-height: 1;
+    }
+    .exercise-card.done .exercise-count .num { color: #86efac; }
+    .exercise-count .unit { font-size: 11px; color: var(--muted); }
+    .check-icon {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      border: 2px solid #444;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: all 0.25s; font-size: 12px;
+    }
+    .exercise-card.done .check-icon {
+      border-color: var(--accent); background: var(--accent);
+      color: #052e16; font-weight: 900;
+    }
+
+    /* ── Day overview mini cards ── */
+    .day-overview {
+      margin: 20px 16px 0;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+    .day-overview-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .day-sessions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .mini-session {
+      border-radius: 10px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .mini-session.morning-card { background: #451a03; }
+    .mini-session.evening-card { background: #1e1b4b; }
+    .mini-session-top { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; }
+    .mini-session.morning-card .mini-session-top { color: var(--morning); }
+    .mini-session.evening-card .mini-session-top { color: var(--evening); }
+    .mini-session-status { font-size: 11px; color: var(--muted); }
+    .mini-session-bar {
+      height: 3px;
+      background: #333;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .mini-session-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.4s;
+    }
+    .morning-card .mini-session-bar-fill { background: var(--morning); }
+    .evening-card .mini-session-bar-fill { background: var(--evening); }
+
+    /* ── Streak ── */
+    .streak-section {
+      margin: 16px 16px 0;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px;
+    }
+    .streak-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px;
+    }
+    .streak-header h3 { font-size: 13px; font-weight: 600; }
+    .streak-header span { font-size: 12px; color: var(--accent); font-weight: 700; }
+    .streak-dots { display: flex; gap: 5px; flex-wrap: wrap; }
+    .streak-dot {
+      width: 26px; height: 26px;
+      border-radius: 7px;
+      background: #333;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: var(--muted); font-weight: 600;
+      position: relative; overflow: hidden;
+    }
+    .streak-dot.half {
+      background: linear-gradient(135deg, #ca8a04 50%, #333 50%);
+      color: #fff;
+    }
+    .streak-dot.full { background: var(--accent2); color: #052e16; }
+    .streak-dot.today { background: var(--card2); border: 2px solid var(--accent); color: var(--text); }
+
+    /* ── Complete button ── */
+    .btn-complete {
+      display: block;
+      margin: 20px 16px 0;
+      width: calc(100% - 32px);
+      padding: 15px;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      color: #052e16;
+      font-size: 15px;
+      font-weight: 700;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.2s;
+      letter-spacing: 0.3px;
+    }
+    .btn-complete:disabled { background: #333; color: var(--muted); cursor: not-allowed; }
+    .btn-complete:active:not(:disabled) { transform: scale(0.98); }
+
+    /* ── Reminder card ── */
+    .reminder-card {
+      margin: 16px 16px 0;
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+    }
+    .reminder-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .reminder-times {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .reminder-time-badge {
+      flex: 1;
+      border-radius: 10px;
+      padding: 10px;
+      text-align: center;
+    }
+    .reminder-time-badge.morning { background: #451a03; }
+    .reminder-time-badge.evening { background: #1e1b4b; }
+    .reminder-time-badge .rt-icon { font-size: 18px; }
+    .reminder-time-badge .rt-time { font-size: 16px; font-weight: 800; margin: 2px 0; }
+    .reminder-time-badge.morning .rt-time { color: var(--morning); }
+    .reminder-time-badge.evening .rt-time { color: var(--evening); }
+    .reminder-time-badge .rt-label { font-size: 10px; color: var(--muted); }
+    .reminder-btns { display: flex; flex-direction: column; gap: 8px; }
+    .btn-reminder {
+      width: 100%;
+      padding: 11px 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .btn-reminder:active { transform: scale(0.98); }
+    .btn-notif { background: #1c2a1c; color: var(--accent); border: 1px solid #166534; }
+    .btn-notif.granted { background: #052e16; border-color: var(--accent); }
+    .btn-notif.denied { background: #2a1c1c; color: #f87171; border-color: #7f1d1d; cursor: not-allowed; }
+    .btn-calendar { background: #1e1b4b; color: var(--evening); border: 1px solid #4338ca44; }
+    .notif-status { font-size: 11px; color: var(--muted); text-align: center; margin-top: 8px; }
+
+    /* ── Reset ── */
+    .reset-wrap { text-align: center; margin-top: 18px; }
+    .reset-wrap button {
+      background: none; border: none;
+      color: var(--muted); font-size: 12px;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    /* ── Celebration ── */
+    .celebration {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 100;
+      flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center; padding: 32px;
+    }
+    .celebration.show { display: flex; }
+    .celebration .emoji { font-size: 68px; margin-bottom: 14px; }
+    .celebration h2 { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+    .celebration p { font-size: 14px; color: #86efac; margin-bottom: 26px; line-height: 1.6; }
+    .celebration button {
+      background: var(--accent); color: #052e16;
+      border: none; border-radius: 12px;
+      padding: 14px 32px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>💪 Tirnirofka</h1>
+  <p class="header-sub">Har kun 2 mahal — ertalab va kechqurun</p>
+  <div class="day-badge" id="dayBadge">1-kun</div>
+</div>
+
+<!-- Session tabs -->
+<div class="session-tabs">
+  <button class="session-tab morning" id="tabMorning" onclick="switchSession('morning')">
+    🌅 Ertalab
+    <span class="tick" id="tickMorning"></span>
+  </button>
+  <button class="session-tab evening" id="tabEvening" onclick="switchSession('evening')">
+    🌙 Kechqurun
+    <span class="tick" id="tickEvening"></span>
+  </button>
+</div>
+
+<!-- Active session strip -->
+<div class="session-strip morning" id="sessionStrip">
+  <div class="session-strip-left">
+    <div class="session-strip-icon" id="stripIcon">🌅</div>
+    <div>
+      <div class="session-strip-title" id="stripTitle">Ertalab sessiyasi</div>
+      <div class="session-strip-time" id="stripTime">08:00 — mashq vaqti</div>
+    </div>
+  </div>
+  <div class="session-done-badge" id="sessionDoneBadge" style="display:none">✓ Bajarildi</div>
+</div>
+
+<!-- Progress ring -->
+<div class="progress-wrap">
+  <div class="ring-container">
+    <svg width="88" height="88" viewBox="0 0 88 88">
+      <circle cx="44" cy="44" r="36" fill="none" stroke="#333" stroke-width="7"/>
+      <circle cx="44" cy="44" r="36" fill="none" stroke="#4ade80" stroke-width="7"
+        stroke-linecap="round"
+        stroke-dasharray="226.1"
+        stroke-dashoffset="226.1"
+        id="ringCircle"/>
+    </svg>
+    <div class="ring-label">
+      <span class="rnum" id="ringNum">0</span>
+      <span class="rdiv">/ 5</span>
+    </div>
+  </div>
+  <div class="progress-info">
+    <h3 id="progressTitle">Bugungi maqsad</h3>
+    <p id="progressText">Boshlash vaqti! 🔥</p>
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressBar" style="width:0%"></div>
+    </div>
+  </div>
+</div>
+
+<div class="section-title" id="sectionLabel">MASHQLAR</div>
+<div class="exercises" id="exerciseList"></div>
+
+<!-- Day overview -->
+<div class="day-overview">
+  <div class="day-overview-title">Bugungi ikkala sessiya</div>
+  <div class="day-sessions">
+    <div class="mini-session morning-card">
+      <div class="mini-session-top">🌅 Ertalab</div>
+      <div class="mini-session-status" id="miniMorningStatus">— bajarilmadi</div>
+      <div class="mini-session-bar">
+        <div class="mini-session-bar-fill" id="miniMorningBar" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="mini-session evening-card">
+      <div class="mini-session-top">🌙 Kechqurun</div>
+      <div class="mini-session-status" id="miniEveningStatus">— bajarilmadi</div>
+      <div class="mini-session-bar">
+        <div class="mini-session-bar-fill" id="miniEveningBar" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Streak -->
+<div class="streak-section">
+  <div class="streak-header">
+    <h3>🔥 Silsila (to'liq kunlar)</h3>
+    <span id="streakCount">0 kun</span>
+  </div>
+  <div class="streak-dots" id="streakDots"></div>
+</div>
+
+<button class="btn-complete" id="btnComplete" onclick="completeSession()">
+  ✅ Sessiyani yakunla
+</button>
+
+<!-- Reminder card -->
+<div class="reminder-card">
+  <div class="reminder-title">⏰ Eslatmalar</div>
+  <div class="reminder-times">
+    <div class="reminder-time-badge morning">
+      <div class="rt-icon">🌅</div>
+      <div class="rt-time">08:00</div>
+      <div class="rt-label">Ertalab</div>
+    </div>
+    <div class="reminder-time-badge evening">
+      <div class="rt-icon">🌙</div>
+      <div class="rt-time">20:00</div>
+      <div class="rt-label">Kechqurun</div>
+    </div>
+  </div>
+  <div class="reminder-btns">
+    <button class="btn-reminder btn-notif" id="btnNotif" onclick="requestNotification()">
+      🔔 Telegram bildirishnoma yoqish
+    </button>
+    <button class="btn-reminder btn-calendar" onclick="downloadCalendar()">
+      📅 Telefon taqvimiga qo'shish
+    </button>
+  </div>
+  <div class="notif-status" id="notifStatus">Telegram ochiq bo'lsa, vaqti kelganda xabar keladi</div>
+</div>
+
+<div class="reset-wrap">
+  <button onclick="confirmReset()">Boshidan boshlash</button>
+</div>
+
+<div class="celebration" id="celebration">
+  <div class="emoji" id="celebEmoji">🎉</div>
+  <h2 id="celebTitle">Ajoyib!</h2>
+  <p id="celebText">Sessiya yakunlandi!</p>
+  <button onclick="closeCelebration()">Davom etish →</button>
+</div>
+
+<script>
+  const tg = window.Telegram?.WebApp;
+  if (tg) { tg.ready(); tg.expand(); tg.setHeaderColor('#14532d'); tg.setBackgroundColor('#0f0f0f'); }
+
+  const EXERCISES = [
+    { id: 'warmup',   icon: '🏃', name: 'Qizib olish',      base: 10, step: 0, unit: 'daqiqa' },
+    { id: 'squat',    icon: '🦵', name: 'O\'tirib turish',   base: 10, step: 5, unit: 'ta' },
+    { id: 'anchim',   icon: '🏋️', name: 'Anchimanya',       base: 10, step: 5, unit: 'ta' },
+    { id: 'gantel',   icon: '💪', name: 'Gantel ko\'tarish', base: 10, step: 5, unit: 'ta' },
+    { id: 'boyostir', icon: '🧍', name: 'Bo\'y o\'stirish',  base: 30, step: 5, unit: 'soniya' },
+  ];
+
+  // Active session: 'morning' or 'evening'
+  let activeSession = getCurrentSession();
+
+  function getCurrentSession() {
+    const h = new Date().getHours();
+    return h >= 20 ? 'evening' : 'morning';
+  }
+
+  function todayStr() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function getState() {
+    try { return JSON.parse(localStorage.getItem('tirnoqchi_v3') || '{}'); }
+    catch { return {}; }
+  }
+  function saveState(s) {
+    localStorage.setItem('tirnoqchi_v3', JSON.stringify(s));
+  }
+
+  function initState() {
+    let s = getState();
+    if (!s.startDate) { s.startDate = todayStr(); s.days = {}; saveState(s); }
+    return s;
+  }
+
+  function getDayNumber(s) {
+    const diff = Math.floor((new Date(todayStr()) - new Date(s.startDate)) / 86400000);
+    return diff + 1;
+  }
+
+  function getTargetCount(ex, dayNum) {
+    return ex.base + (dayNum - 1) * ex.step;
+  }
+
+  function getSessionData(s, date, session) {
+    return s.days?.[date]?.[session] || { done: [], completed: false };
+  }
+
+  // ── Switch session tab ──
+  function switchSession(sess) {
+    activeSession = sess;
+    render();
+  }
+
+  // ── Main render ──
+  function render() {
+    const s = initState();
+    const dayNum = getDayNumber(s);
+    const today = todayStr();
+    const sess = activeSession;
+    const sessData = getSessionData(s, today, sess);
+    const doneMashqs = sessData.done || [];
+    const sessCompleted = sessData.completed === true;
+
+    // Day badge
+    document.getElementById('dayBadge').textContent = `${dayNum}-kun`;
+
+    // Tabs
+    ['morning', 'evening'].forEach(t => {
+      const tab = document.getElementById(t === 'morning' ? 'tabMorning' : 'tabEvening');
+      const tick = document.getElementById(t === 'morning' ? 'tickMorning' : 'tickEvening');
+      const sd = getSessionData(s, today, t);
+      tab.classList.toggle('active', t === sess);
+      tick.className = 'tick' + (sd.completed ? ' done' : '');
+      tick.textContent = sd.completed ? '' : '';
+    });
+
+    // Session strip
+    const strip = document.getElementById('sessionStrip');
+    strip.className = 'session-strip ' + sess;
+    document.getElementById('stripIcon').textContent = sess === 'morning' ? '🌅' : '🌙';
+    document.getElementById('stripTitle').textContent = sess === 'morning' ? 'Ertalab sessiyasi' : 'Kechqurun sessiyasi';
+    document.getElementById('stripTime').textContent = sess === 'morning' ? '08:00 — mashq vaqti' : '20:00 — mashq vaqti';
+    const badge = document.getElementById('sessionDoneBadge');
+    badge.style.display = sessCompleted ? 'block' : 'none';
+
+    // Ring
+    const total = EXERCISES.length;
+    const doneCount = doneMashqs.length;
+    const pct = doneCount / total;
+    const circumference = 226.1;
+    document.getElementById('ringCircle').style.strokeDashoffset = circumference - pct * circumference;
+    document.getElementById('ringNum').textContent = doneCount;
+
+    const texts = [
+      'Boshlash vaqti! 🔥',
+      'Yaxshi start! Davom et 💪',
+      'Zo\'r! Ikkitasi bajarildi 🎯',
+      'Yarim yo\'lda! Yana ikkita qoldi ⚡',
+      'Deyarli tayyor! Bitta qoldi 🔥',
+      'Barchasini bajarding! 🏆',
+    ];
+    document.getElementById('progressText').textContent = texts[doneCount];
+    document.getElementById('progressBar').style.width = (pct * 100) + '%';
+
+    // Exercise cards
+    const list = document.getElementById('exerciseList');
+    list.innerHTML = '';
+    EXERCISES.forEach(ex => {
+      const target = getTargetCount(ex, dayNum);
+      const isDone = doneMashqs.includes(ex.id);
+      const card = document.createElement('div');
+      card.className = 'exercise-card' + (isDone ? ' done' : '');
+      card.innerHTML = `
+        <div class="exercise-icon">${ex.icon}</div>
+        <div class="exercise-info">
+          <h3>${ex.name}</h3>
+          <p>${isDone ? '✓ Bajarildi' : 'Bosing — belgilab qo\'y'}</p>
+        </div>
+        <div class="exercise-count">
+          <span class="num">${target}</span>
+          <span class="unit">${ex.unit}</span>
+        </div>
+        <div class="check-icon">${isDone ? '✓' : ''}</div>
+      `;
+      if (!sessCompleted) card.onclick = () => toggleExercise(ex.id);
+      list.appendChild(card);
+    });
+
+    // Complete button
+    const btn = document.getElementById('btnComplete');
+    const label = sess === 'morning' ? '🌅 Ertalab sessiyasini yakunla' : '🌙 Kechqurun sessiyasini yakunla';
+    if (sessCompleted) {
+      btn.textContent = '✅ Bu sessiya yakunlangan!';
+      btn.disabled = true;
+    } else if (doneCount === total) {
+      btn.textContent = '🏆 Barchasini bajardim — Yakunla!';
+      btn.disabled = false;
+    } else {
+      btn.textContent = `${label} (${doneCount}/${total})`;
+      btn.disabled = doneCount === 0;
+    }
+
+    // Day overview mini cards
+    renderDayOverview(s, today, total);
+
+    // Streak
+    renderStreak(s, dayNum);
+  }
+
+  function renderDayOverview(s, today, total) {
+    ['morning', 'evening'].forEach(sess => {
+      const sd = getSessionData(s, today, sess);
+      const done = sd.done?.length || 0;
+      const comp = sd.completed;
+      const pct = total > 0 ? (done / total * 100) : 0;
+      const barId = sess === 'morning' ? 'miniMorningBar' : 'miniEveningBar';
+      const statId = sess === 'morning' ? 'miniMorningStatus' : 'miniEveningStatus';
+      document.getElementById(barId).style.width = pct + '%';
+      document.getElementById(statId).textContent = comp
+        ? '✓ Yakunlandi'
+        : done > 0
+          ? `${done}/${total} bajarildi`
+          : '— bajarilmadi';
+    });
+  }
+
+  function renderStreak(s, dayNum) {
+    // Count days where BOTH sessions completed
+    const full = Object.values(s.days || {}).filter(d => d.morning?.completed && d.evening?.completed).length;
+    document.getElementById('streakCount').textContent = full + ' kun';
+
+    const dots = document.getElementById('streakDots');
+    dots.innerHTML = '';
+    const show = Math.min(dayNum, 14);
+    const start = new Date(s.startDate);
+    for (let i = 0; i < show; i++) {
+      const d = new Date(start);
+      d.setDate(d.getDate() + i);
+      const ds = d.toISOString().slice(0, 10);
+      const isToday = ds === todayStr();
+      const day = s.days?.[ds];
+      const mDone = day?.morning?.completed;
+      const eDone = day?.evening?.completed;
+      const dot = document.createElement('div');
+      if (mDone && eDone) dot.className = 'streak-dot full';
+      else if (mDone || eDone) dot.className = 'streak-dot half';
+      else if (isToday) dot.className = 'streak-dot today';
+      else dot.className = 'streak-dot';
+      dot.textContent = i + 1;
+      dot.title = ds;
+      dots.appendChild(dot);
+    }
+  }
+
+  // ── Actions ──
+  function toggleExercise(id) {
+    const s = getState();
+    const today = todayStr();
+    if (!s.days) s.days = {};
+    if (!s.days[today]) s.days[today] = {};
+    if (!s.days[today][activeSession]) s.days[today][activeSession] = { done: [], completed: false };
+    const done = s.days[today][activeSession].done;
+    const idx = done.indexOf(id);
+    if (idx === -1) {
+      done.push(id);
+      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    } else {
+      done.splice(idx, 1);
+    }
+    saveState(s);
+    render();
+  }
+
+  function completeSession() {
+    const s = getState();
+    const today = todayStr();
+    if (!s.days) s.days = {};
+    if (!s.days[today]) s.days[today] = {};
+    if (!s.days[today][activeSession]) s.days[today][activeSession] = { done: [], completed: false };
+    const sessData = s.days[today][activeSession];
+    if (!sessData.done?.length) return;
+    sessData.completed = true;
+    saveState(s);
+    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+
+    const dayNum = getDayNumber(s);
+    const otherSess = activeSession === 'morning' ? 'evening' : 'morning';
+    const otherDone = s.days[today]?.[otherSess]?.completed;
+    const bothDone = otherDone;
+
+    document.getElementById('celebEmoji').textContent = bothDone ? '🏆' : (activeSession === 'morning' ? '🌅' : '🌙');
+    document.getElementById('celebTitle').textContent = bothDone ? 'Mukammal kun!' : 'Zo\'r!';
+
+    if (bothDone) {
+      const nextSqt = getTargetCount(EXERCISES[1], dayNum + 1);
+      document.getElementById('celebText').textContent =
+        `${dayNum}-kun to\'liq yakunlandi!\nErtaga ${dayNum + 1}-kun:\n${nextSqt} ta o\'tirib turish va boshqalar. 💪`;
+    } else if (activeSession === 'morning') {
+      document.getElementById('celebText').textContent =
+        'Ertalab sessiya bajarildi! 🌅\nKechqurun soat 20:00 da davom eting. 🌙';
+    } else {
+      document.getElementById('celebText').textContent =
+        'Kechqurun sessiya bajarildi! 🌙\nErtalab sessiyani ham bajarmadingizmi — tekshiring.';
+    }
+
+    document.getElementById('celebration').classList.add('show');
+    render();
+  }
+
+  function closeCelebration() {
+    document.getElementById('celebration').classList.remove('show');
+  }
+
+  function confirmReset() {
+    if (confirm('Barcha ma\'lumotlarni o\'chirib, 1-kundan boshlaysizmi?')) {
+      localStorage.removeItem('tirnoqchi_v3');
+      activeSession = getCurrentSession();
+      render();
+    }
+  }
+
+  render();
+
+  // ── Notifications ──
+  function updateNotifBtn() {
+    const btn = document.getElementById('btnNotif');
+    const status = document.getElementById('notifStatus');
+    if (!('Notification' in window)) {
+      btn.textContent = '🔕 Bu qurilma bildirishnomani qo\'llab-quvvatlamaydi';
+      btn.classList.add('denied');
+      btn.disabled = true;
+      return;
+    }
+    const perm = Notification.permission;
+    if (perm === 'granted') {
+      btn.textContent = '✅ Bildirishnoma yoqilgan';
+      btn.classList.remove('denied');
+      btn.classList.add('granted');
+      status.textContent = 'Telegram ochiq bo\'lganda 08:00 va 20:00 da xabar keladi';
+    } else if (perm === 'denied') {
+      btn.textContent = '🚫 Ruxsat rad etilgan — telefon sozlamalaridan yoqing';
+      btn.classList.add('denied');
+      btn.disabled = true;
+      status.textContent = 'Sozlamalar → Telegram → Bildirishnomalar → Yoqish';
+    } else {
+      btn.textContent = '🔔 Telegram bildirishnoma yoqish';
+      btn.classList.remove('granted', 'denied');
+      status.textContent = 'Telegram ochiq bo\'lsa, vaqti kelganda xabar keladi';
+    }
+  }
+
+  async function requestNotification() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'granted') return;
+    const result = await Notification.requestPermission();
+    updateNotifBtn();
+    if (result === 'granted') {
+      new Notification('💪 Tirnirofka', {
+        body: 'Bildirishnomalar yoqildi! 08:00 va 20:00 da eslataman.',
+        icon: 'https://telegram.org/img/t_logo.png',
+      });
+    }
+  }
+
+  // Check every 30 seconds if it's reminder time
+  function checkReminderTime() {
+    if (Notification.permission !== 'granted') return;
+    const now = new Date();
+    const h = now.getHours();
+    const m = now.getMinutes();
+    const today = todayStr();
+    const key = `tirnoqchi_notif_${today}`;
+    const sent = JSON.parse(localStorage.getItem(key) || '{}');
+    const s = getState();
+
+    // 08:00 — morning reminder
+    if (h === 8 && m === 0 && !sent.morning) {
+      const sessData = getSessionData(s, today, 'morning');
+      if (!sessData.completed) {
+        new Notification('🌅 Ertalab tirnirofka vaqti!', {
+          body: 'Soat 08:00 — Ertalab mashqlarini boshlash vaqti! 💪',
+          icon: 'https://telegram.org/img/t_logo.png',
+          tag: 'morning-reminder',
+        });
+        sent.morning = true;
+        localStorage.setItem(key, JSON.stringify(sent));
+      }
+    }
+
+    // 20:00 — evening reminder
+    if (h === 20 && m === 0 && !sent.evening) {
+      const sessData = getSessionData(s, today, 'evening');
+      if (!sessData.completed) {
+        new Notification('🌙 Kechqurun tirnirofka vaqti!', {
+          body: 'Soat 20:00 — Kechqurun mashqlarini boshlash vaqti! 💪',
+          icon: 'https://telegram.org/img/t_logo.png',
+          tag: 'evening-reminder',
+        });
+        sent.evening = true;
+        localStorage.setItem(key, JSON.stringify(sent));
+      }
+    }
+  }
+
+  // ── Calendar (.ics) download ──
+  function downloadCalendar() {
+    const pad = n => String(n).padStart(2, '0');
+    const now = new Date();
+    const y = now.getFullYear();
+    const mo = pad(now.getMonth() + 1);
+    const d = pad(now.getDate());
+    const uid1 = `tirnoqchi-morning-${Date.now()}@tirnirofka`;
+    const uid2 = `tirnoqchi-evening-${Date.now() + 1}@tirnirofka`;
+
+    // Format: YYYYMMDDTHHMMSS (local time)
+    const dtMorning = `${y}${mo}${d}T080000`;
+    const dtMorningEnd = `${y}${mo}${d}T083000`;
+    const dtEvening = `${y}${mo}${d}T200000`;
+    const dtEveningEnd = `${y}${mo}${d}T203000`;
+
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Tirnirofka//UZ',
+      'CALSCALE:GREGORIAN',
+      'METHOD:PUBLISH',
+
+      // Morning event (daily repeat)
+      'BEGIN:VEVENT',
+      `UID:${uid1}`,
+      `DTSTART;TZID=Asia/Tashkent:${dtMorning}`,
+      `DTEND;TZID=Asia/Tashkent:${dtMorningEnd}`,
+      'RRULE:FREQ=DAILY',
+      'SUMMARY:🌅 Ertalab tirnirofka (08:00)',
+      'DESCRIPTION:Ertalab mashqlar: Qizib olish\\, O\'tirib turish\\, Anchimanya\\, Gantel ko\'tarish\\, Bo\'y o\'stirish',
+      'BEGIN:VALARM',
+      'TRIGGER:-PT5M',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:💪 Ertalab tirnirofka boshlanmoqda!',
+      'END:VALARM',
+      'END:VEVENT',
+
+      // Evening event (daily repeat)
+      'BEGIN:VEVENT',
+      `UID:${uid2}`,
+      `DTSTART;TZID=Asia/Tashkent:${dtEvening}`,
+      `DTEND;TZID=Asia/Tashkent:${dtEveningEnd}`,
+      'RRULE:FREQ=DAILY',
+      'SUMMARY:🌙 Kechqurun tirnirofka (20:00)',
+      'DESCRIPTION:Kechqurun mashqlar: Qizib olish\\, O\'tirib turish\\, Anchimanya\\, Gantel ko\'tarish\\, Bo\'y o\'stirish',
+      'BEGIN:VALARM',
+      'TRIGGER:-PT5M',
+      'ACTION:DISPLAY',
+      'DESCRIPTION:💪 Kechqurun tirnirofka boshlanmoqda!',
+      'END:VALARM',
+      'END:VEVENT',
+
+      'END:VCALENDAR',
+    ].join('\r\n');
+
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'tirnirofka-eslatma.ics';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Init notifications
+  updateNotifBtn();
+  setInterval(checkReminderTime, 30000);
+  checkReminderTime();
+</script>
+</body>
+</html>
