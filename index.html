@@ -43,7 +43,7 @@
         body {
             background-color: var(--md-surface);
             color: var(--md-on-surface);
-            padding: 0 0 80px 0;
+            padding: 0 0 90px 0;
             display: flex;
             justify-content: center;
             min-height: 100vh;
@@ -85,54 +85,16 @@
 
         .day-counter {
             background: linear-gradient(135deg, var(--md-primary-container), #1F3D2C);
-            padding: 12px 18px;
+            padding: 14px 18px;
             border-radius: var(--radius-xl);
             font-weight: 600;
             color: #69D4A4;
-            font-size: 14px;
+            font-size: 15px;
             flex: 1;
             text-align: center;
             border: 1px solid rgba(76, 175, 130, 0.2);
             box-shadow: var(--elevation-1);
             letter-spacing: 0.1px;
-        }
-
-        .btn-rest-day {
-            background: var(--md-surface-2);
-            color: var(--md-secondary);
-            border: 1.5px solid rgba(255, 183, 77, 0.35);
-            padding: 12px 18px;
-            border-radius: var(--radius-xl);
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
-            flex: 1;
-            box-shadow: var(--elevation-1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-rest-day::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: rgba(255, 183, 77, 0.08);
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .btn-rest-day:hover::before { opacity: 1; }
-
-        .btn-rest-day.active {
-            background: linear-gradient(135deg, #B8860B 0%, #FFB74D 100%);
-            color: #1A1200;
-            border-color: transparent;
-            box-shadow: 0 4px 14px rgba(255, 183, 77, 0.35);
-        }
-
-        .btn-rest-day:active {
-            transform: scale(0.96);
         }
 
         .rest-notification {
@@ -270,11 +232,6 @@
             transform: scale(0.94);
         }
 
-        .btn-check:hover:not(.done) {
-            box-shadow: 0 5px 16px rgba(76, 175, 130, 0.5);
-            transform: translateY(-1px);
-        }
-
         /* ===== STATS SECTION ===== */
         .stats-summary {
             display: grid;
@@ -292,22 +249,6 @@
             box-shadow: var(--elevation-1);
             position: relative;
             overflow: hidden;
-        }
-
-        .stats-box::after {
-            content: '';
-            position: absolute;
-            top: -20px;
-            right: -20px;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: rgba(76, 175, 130, 0.08);
-            pointer-events: none;
-        }
-
-        .stats-box:last-child::after {
-            background: rgba(255, 183, 77, 0.08);
         }
 
         .stats-box h4 {
@@ -354,20 +295,12 @@
             align-items: center;
             border: 1.5px solid var(--md-outline-variant);
             box-shadow: var(--elevation-1);
-            transition: all 0.2s ease;
-        }
-
-        .stats-row:hover {
-            border-color: rgba(76, 175, 130, 0.3);
-            transform: translateX(2px);
         }
 
         .stats-row span.name {
             color: var(--md-on-surface);
             font-weight: 500;
             font-size: 14px;
-            flex: 1;
-            padding-right: 12px;
         }
 
         .stats-row span.count {
@@ -377,9 +310,109 @@
             border-radius: var(--radius-xl);
             font-weight: 700;
             font-size: 13px;
-            white-space: nowrap;
-            border: 1px solid rgba(76, 175, 130, 0.2);
         }
+
+        /* ===== KALENDAR BO'LIMI USLUBLARI ===== */
+        .calendar-container {
+            background: var(--md-surface-2);
+            border: 1.5px solid var(--md-outline-variant);
+            border-radius: var(--radius-lg);
+            margin: 16px 20px 20px;
+            padding: 16px;
+            box-shadow: var(--elevation-2);
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 0 4px;
+        }
+
+        .calendar-month-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--md-on-surface);
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-weight: 600;
+            font-size: 11px;
+            color: var(--md-on-surface-variant);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 6px;
+        }
+
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: 50%;
+            color: var(--md-on-surface-variant);
+            background: transparent;
+            transition: all 0.2s ease;
+        }
+
+        .calendar-day.active-month {
+            color: var(--md-on-surface);
+            background: var(--md-surface-3);
+        }
+
+        .calendar-day.completed {
+            background: linear-gradient(135deg, #2E7D52 0%, #4CAF82 100%) !important;
+            color: #ffffff !important;
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba(76, 175, 130, 0.4);
+        }
+
+        .calendar-day.rest {
+            background: linear-gradient(135deg, #B8860B 0%, #FFB74D 100%) !important;
+            color: #1A1200 !important;
+            font-weight: 700;
+            box-shadow: 0 2px 6px rgba(255, 183, 77, 0.3);
+        }
+
+        .calendar-day.today {
+            border: 2px solid #69D4A4;
+        }
+
+        .calendar-legend {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 12px 20px 0;
+            font-size: 12px;
+            color: var(--md-on-surface-variant);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.completed { background: #4CAF82; }
+        .legend-dot.rest { background: #FFB74D; }
 
         /* ===== BOTTOM NAVIGATION ===== */
         .bottom-nav {
@@ -389,7 +422,7 @@
             transform: translateX(-50%);
             width: 100%;
             max-width: 480px;
-            background: rgba(26, 28, 30, 0.97);
+            background: rgba(26, 28, 30, 0.95);
             -webkit-backdrop-filter: blur(20px);
             backdrop-filter: blur(20px);
             border-top: 1px solid var(--md-outline-variant);
@@ -397,7 +430,6 @@
             justify-content: space-around;
             padding: 10px 0 14px;
             box-shadow: 0 -4px 24px rgba(0,0,0,0.4);
-            border-radius: 0;
             z-index: 100;
         }
 
@@ -413,34 +445,15 @@
             transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
             position: relative;
             letter-spacing: 0.2px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .nav-item .nav-icon {
-            font-size: 20px;
-            line-height: 1;
-        }
-
-        .nav-item .nav-label {
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.3px;
         }
 
         .nav-item::before {
             content: '';
             position: absolute;
-            top: 4px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 32px;
+            inset: 0;
             border-radius: var(--radius-xl);
             background: rgba(76, 175, 130, 0);
-            transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
+            transition: background 0.25s ease;
         }
 
         .nav-item.active {
@@ -448,367 +461,70 @@
         }
 
         .nav-item.active::before {
-            width: 64px;
             background: rgba(76, 175, 130, 0.15);
         }
 
         .nav-item:active {
-            transform: scale(0.90);
+            transform: scale(0.94);
         }
 
-        /* ===== SECTION HEADER DIVIDER ===== */
-        #section-main header,
-        #section-stats header,
-        #section-calendar header {
-            padding-bottom: 16px;
-            margin-bottom: 0;
-            border-bottom: none;
-        }
-
-        #section-stats header,
-        #section-calendar header {
-            padding: 20px 20px 0;
-        }
-
-        /* ===== CALENDAR SECTION ===== */
-        .calendar-wrapper {
-            padding: 16px 20px 24px;
-        }
-
-        /* Oy navigatsiyasi */
-        .calendar-nav {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            background: var(--md-surface-2);
-            border-radius: var(--radius-xl);
-            padding: 6px 8px;
-            border: 1.5px solid var(--md-outline-variant);
-            box-shadow: var(--elevation-1);
-        }
-
-        .cal-nav-btn {
-            background: none;
-            border: none;
-            color: var(--md-on-surface-variant);
-            cursor: pointer;
-            padding: 10px 16px;
-            border-radius: var(--radius-lg);
-            font-size: 18px;
-            line-height: 1;
-            transition: all 0.2s ease;
-            font-weight: 700;
-        }
-
-        .cal-nav-btn:hover {
-            background: rgba(76, 175, 130, 0.12);
-            color: #4CAF82;
-        }
-
-        .cal-nav-btn:active {
-            transform: scale(0.9);
-        }
-
-        .cal-month-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--md-on-surface);
-            letter-spacing: 0.2px;
-            text-align: center;
-            flex: 1;
-        }
-
-        /* Hafta kunlari sarlavhasi */
-        .calendar-weekdays {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 4px;
-            margin-bottom: 8px;
-        }
-
-        .cal-weekday {
-            text-align: center;
-            font-size: 11px;
-            font-weight: 700;
-            color: var(--md-on-surface-variant);
-            letter-spacing: 0.5px;
-            padding: 6px 0;
-            text-transform: uppercase;
-        }
-
-        .cal-weekday:first-child {
-            color: #F28B82;
-        }
-        .cal-weekday:last-child {
-            color: #8AB4F8;
-        }
-
-        /* Kunlar panjarasi */
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
-        }
-
-        .cal-day {
-            aspect-ratio: 1 / 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            border-radius: 50%;
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--md-on-surface-variant);
-            position: relative;
-            cursor: default;
-            transition: all 0.2s ease;
-            min-width: 0;
-        }
-
-        /* Bo'sh hujayra (oldingi oyning kunlari) */
-        .cal-day.empty {
-            background: transparent;
-        }
-
-        /* Oddiy kun — ma'lumot yo'q */
-        .cal-day.normal {
-            background: var(--md-surface-2);
-            color: var(--md-on-surface);
-            border: 1.5px solid var(--md-outline-variant);
-        }
-
-        /* Kelajak kunlari */
-        .cal-day.future {
-            background: transparent;
-            color: var(--md-outline);
-            border: 1.5px dashed var(--md-outline-variant);
-            opacity: 0.5;
-        }
-
-        /* Loyiha boshlanishidan oldingi kunlar */
-        .cal-day.before-start {
-            background: transparent;
-            color: var(--md-outline);
-            opacity: 0.3;
-            border: none;
-        }
-
-        /* ✅ Bajarilgan mashq kuni — YASHIL */
-        .cal-day.workout-done {
-            background: linear-gradient(135deg, #2E7D52 0%, #4CAF82 100%);
-            color: #ffffff;
-            border: none;
-            box-shadow: 0 3px 10px rgba(76, 175, 130, 0.45);
-            font-weight: 700;
-        }
-
-        /* ⚡ Qisman bajarilgan — och yashil */
-        .cal-day.workout-partial {
-            background: linear-gradient(135deg, #1B3D2A 0%, #2A5C3C 100%);
-            color: #69D4A4;
-            border: 1.5px solid rgba(76, 175, 130, 0.5);
-            font-weight: 700;
-        }
-
-        /* 😴 Dam olish kuni — SARIQ/TO'Q */
-        .cal-day.rest-day {
-            background: linear-gradient(135deg, #7A4A00 0%, #B8860B 100%);
-            color: #FFE08A;
-            border: none;
-            box-shadow: 0 3px 10px rgba(255, 183, 77, 0.35);
-            font-weight: 700;
-        }
-
-        /* 📍 Bugungi kun — maxsus ko'rsatkich */
-        .cal-day.today {
-            outline: 2.5px solid #4CAF82;
-            outline-offset: 2px;
-        }
-
-        .cal-day.today.normal {
-            background: rgba(76, 175, 130, 0.1);
-            color: #69D4A4;
-            border-color: rgba(76, 175, 130, 0.4);
-        }
-
-        /* Kun raqami va pastdagi nuqta */
-        .cal-day-num {
-            font-size: 14px;
-            line-height: 1;
-        }
-
-        .cal-dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.7);
-            margin-top: 2px;
-            display: none;
-        }
-
-        .cal-day.workout-done .cal-dot,
-        .cal-day.workout-partial .cal-dot {
-            display: block;
-            background: rgba(255,255,255,0.6);
-        }
-
-        .cal-day.rest-day .cal-dot {
-            display: block;
-            background: rgba(255,224,138,0.7);
-        }
-
-        /* Kalandar izoh (legend) */
-        .calendar-legend {
-            display: flex;
-            justify-content: center;
-            gap: 16px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            font-size: 12px;
-            color: var(--md-on-surface-variant);
-            font-weight: 500;
-        }
-
-        .legend-dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .legend-dot.done    { background: linear-gradient(135deg, #2E7D52, #4CAF82); }
-        .legend-dot.partial { background: linear-gradient(135deg, #1B3D2A, #2A5C3C); border: 1.5px solid rgba(76,175,130,0.5); }
-        .legend-dot.rest    { background: linear-gradient(135deg, #7A4A00, #B8860B); }
-        .legend-dot.today   { background: transparent; border: 2.5px solid #4CAF82; }
-        .legend-dot.empty   { background: var(--md-surface-2); border: 1.5px solid var(--md-outline-variant); }
-
-        /* Kalandar yig'indi statistikasi */
-        .cal-summary {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .cal-sum-box {
-            background: var(--md-surface-2);
-            border: 1.5px solid var(--md-outline-variant);
-            border-radius: var(--radius-md);
-            padding: 14px 10px;
-            text-align: center;
-            box-shadow: var(--elevation-1);
-        }
-
-        .cal-sum-box h5 {
-            font-size: 10px;
-            color: var(--md-on-surface-variant);
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-
-        .cal-sum-box p {
-            font-size: 26px;
-            font-weight: 700;
-            line-height: 1;
-        }
-
-        .cal-sum-box p.green  { color: #4CAF82; }
-        .cal-sum-box p.yellow { color: var(--md-secondary); }
-        .cal-sum-box p.gray   { color: var(--md-on-surface-variant); }
-
-        /* ===== SCROLL ANIMATIONS ===== */
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(16px); }
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to   { opacity: 1; transform: scale(1); }
-        }
-
-        .exercise-card {
+        .exercise-card, .stats-row, .calendar-container {
             animation: slideUp 0.35s cubic-bezier(0.2, 0, 0, 1) both;
-        }
-
-        .exercise-card:nth-child(1) { animation-delay: 0.04s; }
-        .exercise-card:nth-child(2) { animation-delay: 0.08s; }
-        .exercise-card:nth-child(3) { animation-delay: 0.12s; }
-        .exercise-card:nth-child(4) { animation-delay: 0.16s; }
-        .exercise-card:nth-child(5) { animation-delay: 0.20s; }
-        .exercise-card:nth-child(6) { animation-delay: 0.24s; }
-
-        .stats-row {
-            animation: slideUp 0.35s cubic-bezier(0.2, 0, 0, 1) both;
-        }
-
-        .stats-row:nth-child(1) { animation-delay: 0.04s; }
-        .stats-row:nth-child(2) { animation-delay: 0.08s; }
-        .stats-row:nth-child(3) { animation-delay: 0.12s; }
-        .stats-row:nth-child(4) { animation-delay: 0.16s; }
-        .stats-row:nth-child(5) { animation-delay: 0.20s; }
-        .stats-row:nth-child(6) { animation-delay: 0.24s; }
-
-        .calendar-grid {
-            animation: fadeIn 0.3s ease both;
-        }
-
-        /* Yuklash holatidagi to'liq kalandar */
-        .cal-loading {
-            text-align: center;
-            padding: 40px 20px;
-            color: var(--md-on-surface-variant);
-            font-size: 14px;
-        }
-
-        .cal-spinner {
-            width: 32px;
-            height: 32px;
-            border: 3px solid var(--md-outline-variant);
-            border-top-color: #4CAF82;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            margin: 0 auto 12px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <!-- 1-BO'LIM: ASOSIY MASHQLAR -->
     <div id="section-main" class="app-section active">
         <header>
             <h1>Workout Tracker</h1>
             <div class="header-status">
-                <div class="day-counter" id="day-display">Mashq kuni: Yuklanmoqda...</div>
-                <button class="btn-rest-day" id="rest-toggle-btn">Dam olish kuni</button>
+                <div class="day-counter" id="day-display">Yuklanmoqda...</div>
             </div>
         </header>
 
         <div class="rest-notification" id="rest-notice">
-            🛏 Bugun sizning dam olish kuningiz. Mushaklar tiklanmoqda, norma muzlatildi!
+            🛏 Bugun - Aqlli Dam Olish Kuni. Mushaklar tiklanmoqda, normalar keyingi kungacha muzlatildi!
         </div>
 
         <div class="exercise-list" id="workout-list">
-            <!-- Mashqlar shu yerga chiqadi -->
+            </div>
+    </div>
+
+    <div id="section-calendar" class="app-section">
+        <header>
+            <h1>Mashqlar Kalendari</h1>
+        </header>
+        
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <div class="calendar-month-title" id="calendar-month-year">Iyul 2026</div>
+            </div>
+            <div class="calendar-weekdays">
+                <div>Du</div><div>Se</div><div>Ch</div><div>Pa</div><div>Ju</div><div>Sh</div><div>Ya</div>
+            </div>
+            <div class="calendar-days" id="calendar-days-grid">
+                </div>
+        </div>
+
+        <div class="calendar-legend">
+            <div class="legend-item">
+                <div class="legend-dot completed"></div>
+                <span>Bajarilgan kun</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot rest"></div>
+                <span>Dam olish kuni</span>
+            </div>
         </div>
     </div>
 
-    <!-- 2-BO'LIM: STATISTIKA -->
     <div id="section-stats" class="app-section">
         <header>
             <h1>Umumiy Statistika</h1>
@@ -827,105 +543,21 @@
 
         <div class="stats-title">Bajarilgan jami mashqlar soni</div>
         <div class="stats-list" id="exercises-stats-list">
-            <!-- Mashqlar jami soni shu yerga chiqadi -->
-        </div>
-    </div>
-
-    <!-- 3-BO'LIM: KALENDAR -->
-    <div id="section-calendar" class="app-section">
-        <header>
-            <h1>Mashq Kalendari</h1>
-        </header>
-
-        <div class="calendar-wrapper">
-            <!-- Oy navigatsiyasi -->
-            <div class="calendar-nav">
-                <button class="cal-nav-btn" id="cal-prev-btn">&#8249;</button>
-                <div class="cal-month-title" id="cal-month-title">Yuklanmoqda...</div>
-                <button class="cal-nav-btn" id="cal-next-btn">&#8250;</button>
             </div>
-
-            <!-- Hafta kunlari sarlavhasi -->
-            <div class="calendar-weekdays">
-                <div class="cal-weekday">Yak</div>
-                <div class="cal-weekday">Du</div>
-                <div class="cal-weekday">Se</div>
-                <div class="cal-weekday">Ch</div>
-                <div class="cal-weekday">Pa</div>
-                <div class="cal-weekday">Ju</div>
-                <div class="cal-weekday">Sh</div>
-            </div>
-
-            <!-- Kunlar panjarasi -->
-            <div class="calendar-grid" id="calendar-grid">
-                <div class="cal-loading">
-                    <div class="cal-spinner"></div>
-                    Yuklanmoqda...
-                </div>
-            </div>
-
-            <!-- Oy statistikasi -->
-            <div class="cal-summary">
-                <div class="cal-sum-box">
-                    <h5>Mashq kunlari</h5>
-                    <p class="green" id="cal-stat-workout">0</p>
-                </div>
-                <div class="cal-sum-box">
-                    <h5>Dam olish</h5>
-                    <p class="yellow" id="cal-stat-rest">0</p>
-                </div>
-                <div class="cal-sum-box">
-                    <h5>Bajarilmagan</h5>
-                    <p class="gray" id="cal-stat-missed">0</p>
-                </div>
-            </div>
-
-            <!-- Izoh (legend) -->
-            <div class="calendar-legend">
-                <div class="legend-item">
-                    <div class="legend-dot done"></div>
-                    <span>Bajarildi</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-dot partial"></div>
-                    <span>Qisman</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-dot rest"></div>
-                    <span>Dam olish</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-dot today"></div>
-                    <span>Bugun</span>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
-<!-- Pastki Navigatsiya paneli -->
 <nav class="bottom-nav">
-    <button class="nav-item active" id="nav-main">
-        <span class="nav-icon">🏠</span>
-        <span class="nav-label">Asosiy</span>
-    </button>
-    <button class="nav-item" id="nav-calendar">
-        <span class="nav-icon">📅</span>
-        <span class="nav-label">Kalendar</span>
-    </button>
-    <button class="nav-item" id="nav-stats">
-        <span class="nav-icon">📊</span>
-        <span class="nav-label">Statistika</span>
-    </button>
+    <button class="nav-item active" id="nav-main">Asosiy</button>
+    <button class="nav-item" id="nav-calendar">Kalendar</button>
+    <button class="nav-item" id="nav-stats">Statistika</button>
 </nav>
 
-<!-- Firebase modullari -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
     import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // Firebase sozlamalari
     const firebaseConfig = {
       apiKey: "AIzaSyA6ky38ZKegqZySQDOA57AA2cc2OWATnhY",
       authDomain: "tirnirofka-d020e.firebaseapp.com",
@@ -937,12 +569,10 @@
       databaseURL: "https://tirnirofka-d020e-default-rtdb.firebaseio.com"
     };
 
-    // Firebase-ni ishga tushirish
     const app = initializeApp(firebaseConfig);
     const analytics = getAnalytics(app);
     const db = getDatabase(app);
 
-    // 📅 Loyiha boshlangan sana (2026-yil, Iyul 2-sana)
     const startDate = new Date(2026, 6, 2); 
     const todayStr = new Date().toISOString().split('T')[0];
 
@@ -951,9 +581,7 @@
     let isTodayRest = false;
     let totalDaysElapsed = 1;
     let totalRestDaysCount = 0;
-    let allRestDaysMap = {}; // Dam olish kunlari xaritasi
 
-    // Mashqlar identifikatorlari va nomlari
     const exercisesConfig = [
         { id: "turnik", name: "1. Turnik" },
         { id: "anchimaniya", name: "2. Anchimaniya" },
@@ -964,33 +592,25 @@
     ];
 
     const listContainer = document.getElementById('workout-list');
-    const restBtn = document.getElementById('rest-toggle-btn');
     const restNotice = document.getElementById('rest-notice');
 
-    // Navigatsiya tugmalari va bo'limlar elementlari
-    const navMain      = document.getElementById('nav-main');
-    const navStats     = document.getElementById('nav-stats');
-    const navCalendar  = document.getElementById('nav-calendar');
-    const sectionMain     = document.getElementById('section-main');
-    const sectionStats    = document.getElementById('section-stats');
+    const navMain = document.getElementById('nav-main');
+    const navCalendar = document.getElementById('nav-calendar');
+    const navStats = document.getElementById('nav-stats');
+    
+    const sectionMain = document.getElementById('section-main');
     const sectionCalendar = document.getElementById('section-calendar');
+    const sectionStats = document.getElementById('section-stats');
 
-    // ===== KALANDAR O'ZGARUVCHILARI =====
-    const totalExercises = exercisesConfig.length; // 6
-    let calViewYear  = new Date().getFullYear();
-    let calViewMonth = new Date().getMonth(); // 0-based
-    let calWorkoutsData  = null; // Firebase workouts cache
-    let calRestDaysData  = null; // Firebase restDays cache
+    // 🧠 Berilgan sananing jami o'tgan kunlar sonidan kelib chiqib, u dam olish kunimi yoki yo'qligini aniqlash (6+1 tizimi)
+    function checkIsRestDayByElapsed(elapsedDays) {
+        if (elapsedDays < 1) return false;
+        // Har 7-kun dam olish kuni bo'ladi (7, 14, 21, 28...)
+        return elapsedDays % 7 === 0;
+    }
 
-    // Oylar nomlari (o'zbekcha)
-    const MONTH_NAMES = [
-        "Yanvar", "Fevral", "Mart", "Aprel",
-        "May", "Iyun", "Iyul", "Avgust",
-        "Sentabr", "Oktabr", "Noyabr", "Dekabr"
-    ];
-
-    // Berilgan sanagacha bo'lgan faol mashq kunini (tartib raqamini) hisoblash funksiyasi
-    function getActiveWorkoutDayForDate(targetDateStr, restDaysData) {
+    // 🧠 Ma'lum bir sanadagi faol mashq kunining tartib raqamini aniqlash (Dam olish kunlarini chegirib tashlaydi)
+    function getActiveWorkoutDayForDate(targetDateStr) {
         const targetDate = new Date(targetDateStr);
         const diffTime = targetDate.getTime() - startDate.getTime();
         const elapsed = Math.floor(diffTime / (1000 * 3600 * 24)) + 1;
@@ -998,8 +618,8 @@
         if (elapsed < 1) return 1;
 
         let restCount = 0;
-        for (const rDate in restDaysData) {
-            if (restDaysData[rDate] === true && rDate <= targetDateStr && rDate >= startDate.toISOString().split('T')[0]) {
+        for (let i = 1; i <= elapsed; i++) {
+            if (checkIsRestDayByElapsed(i)) {
                 restCount++;
             }
         }
@@ -1007,55 +627,36 @@
         return activeDay > 0 ? activeDay : 1;
     }
 
-    // Kunlarni va Dam olish kunlarini hisoblab chiquvchi asosiy funksiya
     async function calculateWorkoutMetrics() {
         const today = new Date();
         const differenceInTime = today.getTime() - startDate.getTime();
         totalDaysElapsed = Math.floor(differenceInTime / (1000 * 3600 * 24)) + 1;
         if (totalDaysElapsed < 1) totalDaysElapsed = 1;
 
-        const dbRef = ref(db);
+        // Dam olish kunlarini avtomatik hisoblash (6 kun faoliyat + 1 kun dam olish)
         totalRestDaysCount = 0;
-        isTodayRest = false;
-        allRestDaysMap = {};
-
-        try {
-            const restDaysSnapshot = await get(child(dbRef, "restDays"));
-            if (restDaysSnapshot.exists()) {
-                allRestDaysMap = restDaysSnapshot.val();
-                
-                if (allRestDaysMap[todayStr] === true) {
-                    isTodayRest = true;
-                }
-
-                for (const date in allRestDaysMap) {
-                    if (allRestDaysMap[date] === true && date <= todayStr && date >= startDate.toISOString().split('T')[0]) {
-                        totalRestDaysCount++;
-                    }
-                }
+        for (let i = 1; i <= totalDaysElapsed; i++) {
+            if (checkIsRestDayByElapsed(i)) {
+                totalRestDaysCount++;
             }
-        } catch (error) {
-            console.error("Dam olish kunlarini hisoblashda xatolik:", error);
         }
 
+        isTodayRest = checkIsRestDayByElapsed(totalDaysElapsed);
         const activeWorkoutDays = totalDaysElapsed - totalRestDaysCount;
         currentDay = activeWorkoutDays > 0 ? activeWorkoutDays : 1;
         countPerDay = currentDay * 5;
 
-        document.getElementById('day-display').textContent = `Mashq kuni: ${currentDay}-kun`;
-        
         if (isTodayRest) {
-            restBtn.classList.add('active');
+            document.getElementById('day-display').textContent = `Dam olish kuni`;
             restNotice.style.display = 'block';
             listContainer.classList.add('rest-mode');
         } else {
-            restBtn.classList.remove('active');
+            document.getElementById('day-display').textContent = `Mashq kuni: ${currentDay}-kun`;
             restNotice.style.display = 'none';
             listContainer.classList.remove('rest-mode');
         }
     }
 
-    // Sahifani render qilish va holatni yuklash
     async function initApp() {
         await calculateWorkoutMetrics();
         listContainer.innerHTML = '';
@@ -1102,7 +703,6 @@
         });
     }
 
-    // Realtime Database-ga mashq holatini yozish funksiyasi
     async function toggleExercise(id) {
         if (isTodayRest) return;
 
@@ -1128,7 +728,78 @@
         }
     }
 
-    // Statistika bo'limini yuklash va aniq dona/ta hisobida hisoblash funksiyasi
+    async function loadCalendar() {
+        const gridContainer = document.getElementById('calendar-days-grid');
+        gridContainer.innerHTML = 'Yuklanmoqda...';
+
+        const dbRef = ref(db);
+        let workoutsData = {};
+        
+        try {
+            const snapshot = await get(child(dbRef, "workouts"));
+            if (snapshot.exists()) {
+                workoutsData = snapshot.val();
+            }
+        } catch (e) {
+            console.error("Kalendar yuklashda xatolik:", e);
+        }
+
+        gridContainer.innerHTML = '';
+        
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = now.getMonth();
+
+        const monthNames = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
+        document.getElementById('calendar-month-year').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+
+        let firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+        firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+
+        const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+        for (let i = 0; i < firstDayIndex; i++) {
+            const emptyDiv = document.createElement('div');
+            emptyDiv.className = 'calendar-day';
+            gridContainer.appendChild(emptyDiv);
+        }
+
+        for (let day = 1; day <= totalDaysInMonth; day++) {
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'calendar-day active-month';
+            dayDiv.textContent = day;
+
+            const dateObj = new Date(currentYear, currentMonth, day);
+            const dateStr = dateObj.toISOString().split('T')[0];
+
+            if (dateStr === todayStr) {
+                dayDiv.classList.add('today');
+            }
+
+            const diffTime = dateObj.getTime() - startDate.getTime();
+            const elapsed = Math.floor(diffTime / (1000 * 3600 * 24)) + 1;
+
+            if (dateObj >= startDate || dateStr === startDate.toISOString().split('T')[0]) {
+                // Aqlli tizim bo'yicha dam olish kunini tekshirish
+                if (checkIsRestDayByElapsed(elapsed)) {
+                    dayDiv.classList.add('rest');
+                } 
+                // Mashqlar bajarilganini tekshirish
+                else if (workoutsData[dateStr]) {
+                    const dayWorkouts = workoutsData[dateStr];
+                    const hasDoneAny = Object.values(dayWorkouts).some(val => val === true);
+                    if (hasDoneAny) {
+                        dayDiv.classList.add('completed');
+                    }
+                }
+            } else {
+                dayDiv.style.opacity = "0.2";
+            }
+
+            gridContainer.appendChild(dayDiv);
+        }
+    }
+
     async function loadStatistics() {
         document.getElementById('stats-total-days').textContent = totalDaysElapsed;
         document.getElementById('stats-rest-days').textContent = totalRestDaysCount;
@@ -1137,7 +808,6 @@
         const statsContainer = document.getElementById('exercises-stats-list');
         statsContainer.innerHTML = 'Hisoblanmoqda...';
 
-        // Har bir mashq turi uchun jami bajarilgan donalar soni
         let exercisesTotalCount = {
             turnik: 0,
             anchimaniya: 0,
@@ -1152,30 +822,24 @@
             if (workoutsSnapshot.exists()) {
                 const workoutsData = workoutsSnapshot.val();
                 
-                // Har bir sanani aylanib chiqamiz
                 for (const date in workoutsData) {
                     const dayExercises = workoutsData[date];
-                    
-                    // Shu sanadagi faol mashq kunining tartib raqamini aniqlaymiz
-                    const calculatedDayNum = getActiveWorkoutDayForDate(date, allRestDaysMap);
+                    const calculatedDayNum = getActiveWorkoutDayForDate(date);
                     const calculatedNorma = calculatedDayNum * 5;
 
                     for (const exId in dayExercises) {
                         if (dayExercises[exId] === true && exercisesTotalCount.hasOwnProperty(exId)) {
-                            // Agar mashq bajarilgan bo'lsa, o'sha kundagi normani jami yig'indiga qo'shamiz
                             exercisesTotalCount[exId] += calculatedNorma;
                         }
                     }
                 }
             }
 
-            // Statistikani interfeysga chiqarish
             statsContainer.innerHTML = '';
             exercisesConfig.forEach(ex => {
                 const row = document.createElement('div');
                 row.className = 'stats-row';
                 
-                // Gantel uchun o'ng/chap qo'shimchasini chiroyli ko'rsatish
                 let unitText = "ta";
                 if (ex.id === "gantel") {
                     unitText = "ta o'ng / chap";
@@ -1194,213 +858,31 @@
         }
     }
 
-    // ===================================================
-    // ============= KALENDAR FUNKSIYALARI ===============
-    // ===================================================
+    function switchSection(activeNavId, activeSectionId) {
+        [navMain, navCalendar, navStats].forEach(btn => btn.classList.remove('active'));
+        [sectionMain, sectionCalendar, sectionStats].forEach(sec => sec.classList.remove('active'));
 
-    // Firebase-dan barcha workout va restDays ma'lumotlarini yuklash
-    async function fetchCalendarData() {
-        const dbRef = ref(db);
-        try {
-            const [workoutsSnap, restSnap] = await Promise.all([
-                get(child(dbRef, "workouts")),
-                get(child(dbRef, "restDays"))
-            ]);
-            calWorkoutsData = workoutsSnap.exists() ? workoutsSnap.val() : {};
-            calRestDaysData  = restSnap.exists()    ? restSnap.val()    : {};
-        } catch (err) {
-            console.error("Kalandar ma'lumotlarini yuklashda xatolik:", err);
-            calWorkoutsData = {};
-            calRestDaysData  = {};
-        }
+        document.getElementById(activeNavId).classList.add('active');
+        document.getElementById(activeSectionId).classList.add('active');
     }
-
-    // Sana stringini hisoblash: YYYY-MM-DD
-    function toDateStr(year, month, day) {
-        const mm = String(month + 1).padStart(2, '0');
-        const dd = String(day).padStart(2, '0');
-        return `${year}-${mm}-${dd}`;
-    }
-
-    // Shu kun uchun holat aniqlash
-    function getDayStatus(dateStr) {
-        const startStr = startDate.toISOString().split('T')[0];
-
-        // Loyihadan oldingi kunlar
-        if (dateStr < startStr) return 'before-start';
-
-        // Kelajak kunlar
-        if (dateStr > todayStr) return 'future';
-
-        // Dam olish kuni?
-        if (calRestDaysData[dateStr] === true) return 'rest';
-
-        // Mashq ma'lumotlari bor?
-        if (calWorkoutsData[dateStr]) {
-            const dayData = calWorkoutsData[dateStr];
-            const doneCount = Object.values(dayData).filter(v => v === true).length;
-            if (doneCount === totalExercises) return 'done';      // To'liq bajarildi
-            if (doneCount > 0)               return 'partial';   // Qisman bajarildi
-        }
-
-        // Loyiha boshidan bugunga qadar — ma'lumot yo'q (bajarilmagan)
-        return 'normal';
-    }
-
-    // Kalendarni render qilish
-    function renderCalendar() {
-        const grid       = document.getElementById('calendar-grid');
-        const monthTitle = document.getElementById('cal-month-title');
-
-        monthTitle.textContent = `${MONTH_NAMES[calViewMonth]} ${calViewYear}`;
-
-        // Oyning birinchi kuni hafta kuni (0=Yakshanba)
-        const firstDay = new Date(calViewYear, calViewMonth, 1).getDay();
-        // Oyning oxirgi sanasi
-        const daysInMonth = new Date(calViewYear, calViewMonth + 1, 0).getDate();
-
-        // Oy statistikasi hisoblash
-        let statWorkout = 0;
-        let statRest    = 0;
-        let statMissed  = 0;
-        const startStr  = startDate.toISOString().split('T')[0];
-
-        // Grid yaratish
-        let html = '';
-
-        // Bo'sh hujayralar (oy boshidan oldin)
-        for (let i = 0; i < firstDay; i++) {
-            html += `<div class="cal-day empty"></div>`;
-        }
-
-        // Oyning kunlari
-        for (let d = 1; d <= daysInMonth; d++) {
-            const dateStr = toDateStr(calViewYear, calViewMonth, d);
-            const status  = getDayStatus(dateStr);
-            const isToday = dateStr === todayStr;
-
-            let dayClass = 'cal-day';
-            switch (status) {
-                case 'before-start': dayClass += ' before-start'; break;
-                case 'future':       dayClass += ' future';       break;
-                case 'rest':         dayClass += ' rest-day';     statRest++;    break;
-                case 'done':         dayClass += ' workout-done'; statWorkout++; break;
-                case 'partial':      dayClass += ' workout-partial'; statWorkout++; break;
-                case 'normal':
-                default:
-                    dayClass += ' normal';
-                    // Loyiha sanasidan bugunga qadar va bugungacha bo'lgan normal kun = bajarilmagan
-                    if (dateStr >= startStr && dateStr < todayStr) {
-                        statMissed++;
-                    }
-                    break;
-            }
-
-            if (isToday) dayClass += ' today';
-
-            // Dot faqat qiziqarli holatlar uchun
-            const showDot = (status === 'done' || status === 'partial' || status === 'rest');
-
-            html += `
-                <div class="${dayClass}" title="${dateStr}">
-                    <span class="cal-day-num">${d}</span>
-                    ${showDot ? '<span class="cal-dot"></span>' : ''}
-                </div>
-            `;
-        }
-
-        grid.innerHTML = html;
-
-        // Oy statistikasini yangilash
-        document.getElementById('cal-stat-workout').textContent = statWorkout;
-        document.getElementById('cal-stat-rest').textContent    = statRest;
-        document.getElementById('cal-stat-missed').textContent  = statMissed;
-    }
-
-    // Kalendarni to'liq yuklash (ma'lumot + render)
-    async function loadCalendar() {
-        const grid = document.getElementById('calendar-grid');
-        grid.innerHTML = `<div class="cal-loading" style="grid-column: 1 / -1;"><div class="cal-spinner"></div>Yuklanmoqda...</div>`;
-
-        // Ma'lumotlarni yuklaymiz (agar hali yuklanmagan bo'lsa yoki yangilash kerak bo'lsa)
-        await fetchCalendarData();
-        renderCalendar();
-    }
-
-    // ===================================================
-    // ============= NAVIGATSIYA HODISALARI ==============
-    // ===================================================
-
-    // Barcha bo'limlarni yashirish va nav-larni o'chirish
-    function hideAllSections() {
-        sectionMain.classList.remove('active');
-        sectionStats.classList.remove('active');
-        sectionCalendar.classList.remove('active');
-        navMain.classList.remove('active');
-        navStats.classList.remove('active');
-        navCalendar.classList.remove('active');
-    }
-
-    // Dam olish kuni tugmasi bosilganda ishlaydigan hodisa
-    restBtn.addEventListener('click', async () => {
-        isTodayRest = !isTodayRest;
-
-        try {
-            await set(ref(db, `restDays/${todayStr}`), isTodayRest);
-            console.log("Dam olish holati yangilandi!");
-            // Kalandar keshini tozalash (yangi ma'lumot uchun)
-            calRestDaysData = null;
-            initApp();
-        } catch (error) {
-            console.error("Dam olish holatini saqlashda xatolik:", error);
-        }
-    });
 
     navMain.addEventListener('click', () => {
-        hideAllSections();
-        navMain.classList.add('active');
-        sectionMain.classList.add('active');
-        initApp();
-    });
-
-    navStats.addEventListener('click', async () => {
-        hideAllSections();
-        navStats.classList.add('active');
-        sectionStats.classList.add('active');
-        await calculateWorkoutMetrics();
-        loadStatistics();
+        switchSection('nav-main', 'section-main');
+        initApp(); 
     });
 
     navCalendar.addEventListener('click', async () => {
-        hideAllSections();
-        navCalendar.classList.add('active');
-        sectionCalendar.classList.add('active');
-        // Har safar kalendarni yangi ma'lumot bilan yuklash
-        calWorkoutsData = null;
-        calRestDaysData  = null;
-        await loadCalendar();
+        switchSection('nav-calendar', 'section-calendar');
+        await calculateWorkoutMetrics();
+        loadCalendar();
     });
 
-    // Kalandar oy navigatsiyasi
-    document.getElementById('cal-prev-btn').addEventListener('click', () => {
-        calViewMonth--;
-        if (calViewMonth < 0) {
-            calViewMonth = 11;
-            calViewYear--;
-        }
-        renderCalendar();
+    navStats.addEventListener('click', async () => {
+        switchSection('nav-stats', 'section-stats');
+        await calculateWorkoutMetrics();
+        loadStatistics(); 
     });
 
-    document.getElementById('cal-next-btn').addEventListener('click', () => {
-        calViewMonth++;
-        if (calViewMonth > 11) {
-            calViewMonth = 0;
-            calViewYear++;
-        }
-        renderCalendar();
-    });
-
-    // Ilovani ilk bor ishga tushirish
     initApp();
 </script>
 
