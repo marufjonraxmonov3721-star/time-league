@@ -15,7 +15,7 @@
         body {
             background-color: #121214;
             color: #e1e1e6;
-            padding: 20px 20px 80px 20px; /* Navigatsiya uchun pastdan joy qoldirildi */
+            padding: 20px 20px 80px 20px; /* Navigatsiya uchun pastdan joy */
             display: flex;
             justify-content: center;
         }
@@ -316,9 +316,9 @@
             </div>
         </div>
 
-        <div class="stats-title">Bajarilgan mashqlar soni (kun hisobida)</div>
+        <div class="stats-title">Bajarilgan jami mashqlar soni</div>
         <div class="stats-list" id="exercises-stats-list">
-            <!-- Mashqlar statistikasi shu yerga chiqadi -->
+            <!-- Mashqlar jami soni shu yerga chiqadi -->
         </div>
     </div>
 </div>
@@ -361,6 +361,7 @@
     let isTodayRest = false;
     let totalDaysElapsed = 1;
     let totalRestDaysCount = 0;
+    let allRestDaysMap = {}; // Dam olish kunlari xaritasi
 
     // Mashqlar identifikatorlari va nomlari
     const exercisesConfig = [
@@ -382,6 +383,24 @@
     const sectionMain = document.getElementById('section-main');
     const sectionStats = document.getElementById('section-stats');
 
+    // Berilgan sanagacha bo'lgan faol mashq kunini (tartib raqamini) hisoblash funksiyasi
+    function getActiveWorkoutDayForDate(targetDateStr, restDaysData) {
+        const targetDate = new Date(targetDateStr);
+        const diffTime = targetDate.getTime() - startDate.getTime();
+        const elapsed = Math.floor(diffTime / (1000 * 3600 * 24)) + 1;
+        
+        if (elapsed < 1) return 1;
+
+        let restCount = 0;
+        for (const rDate in restDaysData) {
+            if (restDaysData[rDate] === true && rDate <= targetDateStr && rDate >= startDate.toISOString().split('T')[0]) {
+                restCount++;
+            }
+        }
+        const activeDay = elapsed - restCount;
+        return activeDay > 0 ? activeDay : 1;
+    }
+
     // Kunlarni va Dam olish kunlarini hisoblab chiquvchi asosiy funksiya
     async function calculateWorkoutMetrics() {
         const today = new Date();
@@ -392,18 +411,19 @@
         const dbRef = ref(db);
         totalRestDaysCount = 0;
         isTodayRest = false;
+        allRestDaysMap = {};
 
         try {
             const restDaysSnapshot = await get(child(dbRef, "restDays"));
             if (restDaysSnapshot.exists()) {
-                const restDaysData = restDaysSnapshot.val();
+                allRestDaysMap = restDaysSnapshot.val();
                 
-                if (restDaysData[todayStr] === true) {
+                if (allRestDaysMap[todayStr] === true) {
                     isTodayRest = true;
                 }
 
-                for (const date in restDaysData) {
-                    if (restDaysData[date] === true && date <= todayStr && date >= startDate.toISOString().split('T')[0]) {
+                for (const date in allRestDaysMap) {
+                    if (allRestDaysMap[date] === true && date <= todayStr && date >= startDate.toISOString().split('T')[0]) {
                         totalRestDaysCount++;
                     }
                 }
@@ -502,17 +522,17 @@
         }
     }
 
-    // Statistika bo'limini yuklash va hisoblash funksiyasi
+    // Statistika bo'limini yuklash va aniq dona/ta hisobida hisoblash funksiyasi
     async function loadStatistics() {
         document.getElementById('stats-total-days').textContent = totalDaysElapsed;
         document.getElementById('stats-rest-days').textContent = totalRestDaysCount;
 
         const dbRef = ref(db);
         const statsContainer = document.getElementById('exercises-stats-list');
-        statsContainer.innerHTML = 'Yuklanmoqda...';
+        statsContainer.innerHTML = 'Hisoblanmoqda...';
 
-        // Har bir mashq uchun bajarilgan kunlar sonini hisoblaydigan obyekt
-        let exercisesCounter = {
+        // Har bir mashq turi uchun jami bajarilgan donalar soni
+        let exercisesTotalCount = {
             turnik: 0,
             anchimaniya: 0,
             figura_anchimaniya: 0,
@@ -526,31 +546,44 @@
             if (workoutsSnapshot.exists()) {
                 const workoutsData = workoutsSnapshot.val();
                 
-                // Barcha kunlar bo'yicha aylanib chiqib, true bo'lganlarini sanaymiz
+                // Har bir sanani aylanib chiqamiz
                 for (const date in workoutsData) {
                     const dayExercises = workoutsData[date];
+                    
+                    // Shu sanadagi faol mashq kunining tartib raqamini aniqlaymiz
+                    const calculatedDayNum = getActiveWorkoutDayForDate(date, allRestDaysMap);
+                    const calculatedNorma = calculatedDayNum * 5;
+
                     for (const exId in dayExercises) {
-                        if (dayExercises[exId] === true && exercisesCounter.hasOwnProperty(exId)) {
-                            exercisesCounter[exId]++;
+                        if (dayExercises[exId] === true && exercisesTotalCount.hasOwnProperty(exId)) {
+                            // Agar mashq bajarilgan bo'lsa, o'sha kundagi normani jami yig'indiga qo'shamiz
+                            exercisesTotalCount[exId] += calculatedNorma;
                         }
                     }
                 }
             }
 
-            // Statistikani ekranga chiqarish
+            // Statistikani interfeysga chiqarish
             statsContainer.innerHTML = '';
             exercisesConfig.forEach(ex => {
                 const row = document.createElement('div');
                 row.className = 'stats-row';
+                
+                // Gantel uchun o'ng/chap qo'shimchasini chiroyli ko'rsatish
+                let unitText = "ta";
+                if (ex.id === "gantel") {
+                    unitText = "ta o'ng / chap";
+                }
+
                 row.innerHTML = `
                     <span class="name">${ex.name}</span>
-                    <span class="count">${exercisesCounter[ex.id]} kun</span>
+                    <span class="count">${exercisesTotalCount[ex.id]} ${unitText}</span>
                 `;
                 statsContainer.appendChild(row);
             });
 
         } catch (error) {
-            console.error("Statistikani yuklashda xatolik:", error);
+            console.error("Statistikani hisoblashda xatolik:", error);
             statsContainer.innerHTML = 'Xatolik yuz berdi.';
         }
     }
@@ -574,15 +607,18 @@
         navStats.classList.remove('active');
         sectionMain.classList.add('active');
         sectionStats.classList.remove('active');
-        initApp(); // Asosiy sahifaga qaytganda ma'lumotni yangilash
+        initApp(); 
     });
 
-    navStats.addEventListener('click', () => {
+    navStats.addEventListener('click', async () => {
         navStats.classList.add('active');
         navMain.classList.remove('active');
         sectionStats.classList.add('active');
         sectionMain.classList.remove('active');
-        loadStatistics(); // Statistika sahifasiga o'tganda hisob-kitobni yangilash
+        
+        // Avval eng so'nggi metrikalarni yangilab, keyin statistikani hisoblaymiz
+        await calculateWorkoutMetrics();
+        loadStatistics(); 
     });
 
     // Ilovani ilk bor ishga tushirish
