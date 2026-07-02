@@ -53,26 +53,21 @@
             width: 100%;
             max-width: 480px;
             padding: 0;
-            margin-bottom: 0;
         }
 
         /* ===== HEADER ===== */
         header {
-            margin-bottom: 0;
-            text-align: left;
-            border-bottom: none;
             padding: 20px 20px 0 20px;
         }
 
         header h1 {
             font-size: 28px;
             font-weight: 700;
-            color: var(--md-on-surface);
-            letter-spacing: -0.3px;
             background: linear-gradient(135deg, #4CAF82 0%, #69D4A4 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            letter-spacing: -0.3px;
         }
 
         .header-status {
@@ -94,7 +89,6 @@
             text-align: center;
             border: 1px solid rgba(76, 175, 130, 0.2);
             box-shadow: var(--elevation-1);
-            letter-spacing: 0.1px;
         }
 
         .rest-notification {
@@ -108,7 +102,6 @@
             font-size: 14px;
             margin: 16px 20px 0;
             display: none;
-            letter-spacing: 0.1px;
             box-shadow: 0 2px 10px rgba(255, 183, 77, 0.1);
         }
 
@@ -143,7 +136,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            transition: all 0.3s cubic-bezier(0.2, 0, 0, 1);
             box-shadow: var(--elevation-1);
             position: relative;
             overflow: hidden;
@@ -158,13 +150,11 @@
             width: 4px;
             background: var(--md-outline-variant);
             border-radius: 4px 0 0 4px;
-            transition: background 0.3s ease, width 0.3s ease;
         }
 
         .exercise-card.completed {
             border-color: rgba(76, 175, 130, 0.4);
             background: linear-gradient(135deg, #1B2E23, #1E3328);
-            box-shadow: 0 2px 12px rgba(76, 175, 130, 0.15);
         }
 
         .exercise-card.completed::before {
@@ -174,14 +164,12 @@
 
         .exercise-info {
             flex: 1;
-            padding-right: 12px;
         }
 
         .exercise-info h3 {
             font-size: 15px;
             font-weight: 500;
             color: var(--md-on-surface);
-            line-height: 1.4;
         }
 
         .exercise-info p {
@@ -193,7 +181,6 @@
             display: inline-block;
             padding: 3px 10px;
             border-radius: 20px;
-            letter-spacing: 0.2px;
         }
 
         .exercise-card.completed .exercise-info h3 {
@@ -215,10 +202,8 @@
             font-weight: 600;
             cursor: pointer;
             font-size: 13px;
-            transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
             box-shadow: 0 3px 10px rgba(76, 175, 130, 0.35);
             white-space: nowrap;
-            letter-spacing: 0.2px;
         }
 
         .btn-check.done {
@@ -226,10 +211,6 @@
             color: #4CAF82;
             border: 1.5px solid rgba(76, 175, 130, 0.4);
             box-shadow: none;
-        }
-
-        .btn-check:active {
-            transform: scale(0.94);
         }
 
         /* ===== STATS SECTION ===== */
@@ -247,8 +228,6 @@
             text-align: center;
             border: 1.5px solid var(--md-outline-variant);
             box-shadow: var(--elevation-1);
-            position: relative;
-            overflow: hidden;
         }
 
         .stats-box h4 {
@@ -257,14 +236,12 @@
             text-transform: uppercase;
             margin-bottom: 10px;
             letter-spacing: 0.8px;
-            font-weight: 500;
         }
 
         .stats-box p {
             font-size: 34px;
             font-weight: 700;
             color: #4CAF82;
-            line-height: 1;
         }
 
         .stats-box p.accent {
@@ -276,7 +253,6 @@
             color: var(--md-on-surface);
             margin: 0 20px 12px;
             font-weight: 600;
-            letter-spacing: 0.1px;
         }
 
         .stats-list {
@@ -294,7 +270,6 @@
             justify-content: space-between;
             align-items: center;
             border: 1.5px solid var(--md-outline-variant);
-            box-shadow: var(--elevation-1);
         }
 
         .stats-row span.name {
@@ -312,7 +287,7 @@
             font-size: 13px;
         }
 
-        /* ===== KALENDAR BO'LIMI USLUBLARI ===== */
+        /* ===== KALENDAR BO'LIMI ===== */
         .calendar-container {
             background: var(--md-surface-2);
             border: 1.5px solid var(--md-outline-variant);
@@ -345,7 +320,6 @@
             color: var(--md-on-surface-variant);
             margin-bottom: 8px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         .calendar-days {
@@ -364,7 +338,6 @@
             border-radius: 50%;
             color: var(--md-on-surface-variant);
             background: transparent;
-            transition: all 0.2s ease;
         }
 
         .calendar-day.active-month {
@@ -442,18 +415,7 @@
             cursor: pointer;
             padding: 8px 24px;
             border-radius: var(--radius-xl);
-            transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
             position: relative;
-            letter-spacing: 0.2px;
-        }
-
-        .nav-item::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: var(--radius-xl);
-            background: rgba(76, 175, 130, 0);
-            transition: background 0.25s ease;
         }
 
         .nav-item.active {
@@ -461,11 +423,11 @@
         }
 
         .nav-item.active::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--radius-xl);
             background: rgba(76, 175, 130, 0.15);
-        }
-
-        .nav-item:active {
-            transform: scale(0.94);
         }
 
         @keyframes slideUp {
@@ -493,8 +455,7 @@
             🛏 Bugun - Aqlli Dam Olish Kuni. Mushaklar tiklanmoqda, normalar keyingi kungacha muzlatildi!
         </div>
 
-        <div class="exercise-list" id="workout-list">
-            </div>
+        <div class="exercise-list" id="workout-list"></div>
     </div>
 
     <div id="section-calendar" class="app-section">
@@ -509,8 +470,7 @@
             <div class="calendar-weekdays">
                 <div>Du</div><div>Se</div><div>Ch</div><div>Pa</div><div>Ju</div><div>Sh</div><div>Ya</div>
             </div>
-            <div class="calendar-days" id="calendar-days-grid">
-                </div>
+            <div class="calendar-days" id="calendar-days-grid"></div>
         </div>
 
         <div class="calendar-legend">
@@ -542,8 +502,7 @@
         </div>
 
         <div class="stats-title">Bajarilgan jami mashqlar soni</div>
-        <div class="stats-list" id="exercises-stats-list">
-            </div>
+        <div class="stats-list" id="exercises-stats-list"></div>
     </div>
 </div>
 
@@ -555,7 +514,6 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
     import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
@@ -565,16 +523,19 @@
       storageBucket: "tirnirofka-d020e.firebasestorage.app",
       messagingSenderId: "377605946412",
       appId: "1:377605946412:web:6e22a9e3381d53404c2589",
-      measurementId: "G-M4B3LNFQ1V",
       databaseURL: "https://tirnirofka-d020e-default-rtdb.firebaseio.com"
     };
 
     const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
     const db = getDatabase(app);
 
-    const startDate = new Date(2026, 6, 2); 
-    const todayStr = new Date().toISOString().split('T')[0];
+    // To'g'ri mahalliy vaqtni YYYY-MM-DD formatida olish funksiyasi
+    function getLocalDateString(date = new Date()) {
+        return date.toLocaleDateString('sv'); // 'sv' standarti YYYY-MM-DD formatini xatosiz beradi
+    }
+
+    const startDate = new Date(2026, 6, 2); // 2026-07-02
+    const todayStr = getLocalDateString();
 
     let currentDay = 1;
     let countPerDay = 5;
@@ -602,26 +563,21 @@
     const sectionCalendar = document.getElementById('section-calendar');
     const sectionStats = document.getElementById('section-stats');
 
-    // 🧠 Berilgan sananing jami o'tgan kunlar sonidan kelib chiqib, u dam olish kunimi yoki yo'qligini aniqlash (6+1 tizimi)
     function checkIsRestDayByElapsed(elapsedDays) {
         if (elapsedDays < 1) return false;
-        // Har 7-kun dam olish kuni bo'ladi (7, 14, 21, 28...)
-        return elapsedDays % 7 === 0;
+        return elapsedDays % 7 === 0; // Har 7-kun (6 kun mashqdan keyin) avtomatik dam olish
     }
 
-    // 🧠 Ma'lum bir sanadagi faol mashq kunining tartib raqamini aniqlash (Dam olish kunlarini chegirib tashlaydi)
     function getActiveWorkoutDayForDate(targetDateStr) {
         const targetDate = new Date(targetDateStr);
-        const diffTime = targetDate.getTime() - startDate.getTime();
+        const diffTime = targetDate.setHours(0,0,0,0) - new Date(startDate).setHours(0,0,0,0);
         const elapsed = Math.floor(diffTime / (1000 * 3600 * 24)) + 1;
         
         if (elapsed < 1) return 1;
 
         let restCount = 0;
         for (let i = 1; i <= elapsed; i++) {
-            if (checkIsRestDayByElapsed(i)) {
-                restCount++;
-            }
+            if (checkIsRestDayByElapsed(i)) restCount++;
         }
         const activeDay = elapsed - restCount;
         return activeDay > 0 ? activeDay : 1;
@@ -629,16 +585,13 @@
 
     async function calculateWorkoutMetrics() {
         const today = new Date();
-        const differenceInTime = today.getTime() - startDate.getTime();
-        totalDaysElapsed = Math.floor(differenceInTime / (1000 * 3600 * 24)) + 1;
+        const diffTime = today.setHours(0,0,0,0) - new Date(startDate).setHours(0,0,0,0);
+        totalDaysElapsed = Math.floor(diffTime / (1000 * 3600 * 24)) + 1;
         if (totalDaysElapsed < 1) totalDaysElapsed = 1;
 
-        // Dam olish kunlarini avtomatik hisoblash (6 kun faoliyat + 1 kun dam olish)
         totalRestDaysCount = 0;
         for (let i = 1; i <= totalDaysElapsed; i++) {
-            if (checkIsRestDayByElapsed(i)) {
-                totalRestDaysCount++;
-            }
+            if (checkIsRestDayByElapsed(i)) totalRestDaysCount++;
         }
 
         isTodayRest = checkIsRestDayByElapsed(totalDaysElapsed);
@@ -675,11 +628,9 @@
 
         try {
             const snapshot = await get(child(dbRef, `workouts/${todayStr}`));
-            if (snapshot.exists()) {
-                completedData = snapshot.val();
-            }
+            if (snapshot.exists()) completedData = snapshot.val();
         } catch (error) {
-            console.error("Mashq ma'lumotlarini yuklashda xatolik:", error);
+            console.error("Yuklashda xatolik:", error);
         }
 
         baseExercises.forEach(ex => {
@@ -708,7 +659,6 @@
 
         const card = document.getElementById(`card-${id}`);
         const btn = document.getElementById(`btn-${id}`);
-        
         card.classList.toggle('completed');
         const isCompleted = card.classList.contains('completed');
 
@@ -722,30 +672,25 @@
 
         try {
             await set(ref(db, `workouts/${todayStr}/${id}`), isCompleted);
-            console.log("Mashq holati saqlandi!");
         } catch (error) {
-            console.error("Xatolik yuz berdi: ", error);
+            console.error("Saqlashda xatolik: ", error);
         }
     }
 
     async function loadCalendar() {
         const gridContainer = document.getElementById('calendar-days-grid');
-        gridContainer.innerHTML = 'Yuklanmoqda...';
+        gridContainer.innerHTML = '';
 
         const dbRef = ref(db);
         let workoutsData = {};
         
         try {
             const snapshot = await get(child(dbRef, "workouts"));
-            if (snapshot.exists()) {
-                workoutsData = snapshot.val();
-            }
+            if (snapshot.exists()) workoutsData = snapshot.val();
         } catch (e) {
             console.error("Kalendar yuklashda xatolik:", e);
         }
 
-        gridContainer.innerHTML = '';
-        
         const now = new Date();
         const currentYear = now.getFullYear();
         const currentMonth = now.getMonth();
@@ -755,7 +700,6 @@
 
         let firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
         firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
-
         const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
         for (let i = 0; i < firstDayIndex; i++) {
@@ -770,32 +714,25 @@
             dayDiv.textContent = day;
 
             const dateObj = new Date(currentYear, currentMonth, day);
-            const dateStr = dateObj.toISOString().split('T')[0];
+            const dateStr = getLocalDateString(dateObj);
 
             if (dateStr === todayStr) {
                 dayDiv.classList.add('today');
             }
 
-            const diffTime = dateObj.getTime() - startDate.getTime();
+            const diffTime = dateObj.setHours(0,0,0,0) - new Date(startDate).setHours(0,0,0,0);
             const elapsed = Math.floor(diffTime / (1000 * 3600 * 24)) + 1;
 
-            if (dateObj >= startDate || dateStr === startDate.toISOString().split('T')[0]) {
-                // Aqlli tizim bo'yicha dam olish kunini tekshirish
+            if (dateObj >= startDate || dateStr === getLocalDateString(startDate)) {
                 if (checkIsRestDayByElapsed(elapsed)) {
                     dayDiv.classList.add('rest');
-                } 
-                // Mashqlar bajarilganini tekshirish
-                else if (workoutsData[dateStr]) {
-                    const dayWorkouts = workoutsData[dateStr];
-                    const hasDoneAny = Object.values(dayWorkouts).some(val => val === true);
-                    if (hasDoneAny) {
-                        dayDiv.classList.add('completed');
-                    }
+                } else if (workoutsData[dateStr]) {
+                    const hasDoneAny = Object.values(workoutsData[dateStr]).some(val => val === true);
+                    if (hasDoneAny) dayDiv.classList.add('completed');
                 }
             } else {
                 dayDiv.style.opacity = "0.2";
             }
-
             gridContainer.appendChild(dayDiv);
         }
     }
@@ -808,20 +745,12 @@
         const statsContainer = document.getElementById('exercises-stats-list');
         statsContainer.innerHTML = 'Hisoblanmoqda...';
 
-        let exercisesTotalCount = {
-            turnik: 0,
-            anchimaniya: 0,
-            figura_anchimaniya: 0,
-            boy_anchimaniya: 0,
-            pres: 0,
-            gantel: 0
-        };
+        let exercisesTotalCount = { turnik: 0, anchimaniya: 0, figura_anchimaniya: 0, boy_anchimaniya: 0, pres: 0, gantel: 0 };
 
         try {
             const workoutsSnapshot = await get(child(dbRef, "workouts"));
             if (workoutsSnapshot.exists()) {
                 const workoutsData = workoutsSnapshot.val();
-                
                 for (const date in workoutsData) {
                     const dayExercises = workoutsData[date];
                     const calculatedDayNum = getActiveWorkoutDayForDate(date);
@@ -839,21 +768,11 @@
             exercisesConfig.forEach(ex => {
                 const row = document.createElement('div');
                 row.className = 'stats-row';
-                
-                let unitText = "ta";
-                if (ex.id === "gantel") {
-                    unitText = "ta o'ng / chap";
-                }
-
-                row.innerHTML = `
-                    <span class="name">${ex.name}</span>
-                    <span class="count">${exercisesTotalCount[ex.id]} ${unitText}</span>
-                `;
+                let unitText = ex.id === "gantel" ? "ta o'ng / chap" : "ta";
+                row.innerHTML = `<span class="name">${ex.name}</span><span class="count">${exercisesTotalCount[ex.id]} ${unitText}</span>`;
                 statsContainer.appendChild(row);
             });
-
         } catch (error) {
-            console.error("Statistikani hisoblashda xatolik:", error);
             statsContainer.innerHTML = 'Xatolik yuz berdi.';
         }
     }
@@ -861,30 +780,15 @@
     function switchSection(activeNavId, activeSectionId) {
         [navMain, navCalendar, navStats].forEach(btn => btn.classList.remove('active'));
         [sectionMain, sectionCalendar, sectionStats].forEach(sec => sec.classList.remove('active'));
-
         document.getElementById(activeNavId).classList.add('active');
         document.getElementById(activeSectionId).classList.add('active');
     }
 
-    navMain.addEventListener('click', () => {
-        switchSection('nav-main', 'section-main');
-        initApp(); 
-    });
-
-    navCalendar.addEventListener('click', async () => {
-        switchSection('nav-calendar', 'section-calendar');
-        await calculateWorkoutMetrics();
-        loadCalendar();
-    });
-
-    navStats.addEventListener('click', async () => {
-        switchSection('nav-stats', 'section-stats');
-        await calculateWorkoutMetrics();
-        loadStatistics(); 
-    });
+    navMain.addEventListener('click', () => { switchSection('nav-main', 'section-main'); initApp(); });
+    navCalendar.addEventListener('click', async () => { switchSection('nav-calendar', 'section-calendar'); await calculateWorkoutMetrics(); loadCalendar(); });
+    navStats.addEventListener('click', async () => { switchSection('nav-stats', 'section-stats'); await calculateWorkoutMetrics(); loadStatistics(); });
 
     initApp();
 </script>
-
 </body>
 </html>
