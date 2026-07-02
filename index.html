@@ -47,20 +47,69 @@
             margin-top: 4px;
         }
 
+        .header-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            gap: 10px;
+        }
+
         .day-counter {
             background: #29292e;
-            padding: 8px 12px;
+            padding: 10px 14px;
             border-radius: 8px;
-            display: inline-block;
-            margin-top: 10px;
             font-weight: bold;
             color: #fba94c;
+            font-size: 14px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .btn-rest-day {
+            background: #29292e;
+            color: #fba94c;
+            border: 1px solid #fba94c;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            flex: 1;
+        }
+
+        .btn-rest-day.active {
+            background: #fba94c;
+            color: #121214;
+        }
+
+        .btn-rest-day:active {
+            transform: scale(0.95);
+        }
+
+        .rest-notification {
+            background: rgba(251, 169, 76, 0.1);
+            border: 1px dashed #fba94c;
+            color: #fba94c;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: none;
         }
 
         .exercise-list {
             display: flex;
             flex-direction: column;
             gap: 12px;
+            transition: opacity 0.3s ease;
+        }
+
+        .exercise-list.rest-mode {
+            opacity: 0.4;
+            pointer-events: none; /* Dam olish kunida tugmalar bosilmaydi */
         }
 
         .exercise-card {
@@ -124,8 +173,15 @@
 <div class="app-container">
     <header>
         <h1>Workout Tracker</h1>
-        <div class="day-counter" id="day-display">Mashq kuni: 1-kun</div>
+        <div class="header-status">
+            <div class="day-counter" id="day-display">Mashq kuni: Yuklanmoqda...</div>
+            <button class="btn-rest-day" id="rest-toggle-btn">Dam olish kuni</button>
+        </div>
     </header>
+
+    <div class="rest-notification" id="rest-notice">
+        🛏 Bugun sizning dam olish kuningiz. Mushaklar tiklanmoqda, norma muzlatildi!
+    </div>
 
     <div class="exercise-list" id="workout-list">
         <!-- Mashqlar shu yerga chiqadi -->
@@ -147,7 +203,6 @@
       messagingSenderId: "377605946412",
       appId: "1:377605946412:web:6e22a9e3381d53404c2589",
       measurementId: "G-M4B3LNFQ1V",
-      // Realtime Database URL manzili avtomatik projectId asosida aniqlanadi, agar ishlamasa shu yerga databaseURL qo'shiladi.
       databaseURL: "https://tirnirofka-d020e-default-rtdb.firebaseio.com"
     };
 
@@ -156,39 +211,92 @@
     const analytics = getAnalytics(app);
     const db = getDatabase(app);
 
-    // 📅 Loyiha boshlangan sana (Bugun: 2026-yil, Iyul 2-sana)
+    // 📅 Loyiha boshlangan sana (2026-yil, Iyul 2-sana)
     const startDate = new Date(2026, 6, 2); 
+    const todayStr = new Date().toISOString().split('T')[0];
 
-    function calculateCurrentDay() {
-        const today = new Date();
-        const differenceInTime = today.getTime() - startDate.getTime();
-        const differenceInDays = Math.floor(differenceInTime / (1000 * 3600 * 24)) + 1;
-        return differenceInDays > 0 ? differenceInDays : 1;
-    }
-
-    const currentDay = calculateCurrentDay();
-    const countPerDay = currentDay * 5; // Har kuni 5 tadan ko'payadi
-
-    document.getElementById('day-display').textContent = `Mashq kuni: ${currentDay}-kun`;
-
-    // Mashqlar ro'yxati bazasi
-    const baseExercises = [
-        { id: "turnik", name: "1. Turnik", target: `${countPerDay} ta` },
-        { id: "anchimaniya", name: "2. Anchimaniya", target: `${countPerDay} ta` },
-        { id: "figura_anchimaniya", name: "3. Figura uchun anchimaniya", target: `${countPerDay} ta` },
-        { id: "boy_anchimaniya", name: "4. Bo'y o'stirish va Qomatni tik qilish uchun anchimaniya", target: `${countPerDay} ta` },
-        { id: "pres", name: "5. Pres", target: `${countPerDay} ta` },
-        { id: "gantel", name: "6. Gantel ko'tarish", target: `${countPerDay} ta o'ng qo'l / ${countPerDay} ta chap qo'l` }
-    ];
+    let currentDay = 1;
+    let countPerDay = 5;
+    let isTodayRest = false;
 
     const listContainer = document.getElementById('workout-list');
+    const restBtn = document.getElementById('rest-toggle-btn');
+    const restNotice = document.getElementById('rest-notice');
+
+    // Kunlarni va Dam olish kunlarini hisoblab chiquvchi asosiy funksiya
+    async function calculateWorkoutMetrics() {
+        const today = new Date();
+        const differenceInTime = today.getTime() - startDate.getTime();
+        const totalDaysElapsed = Math.floor(differenceInTime / (1000 * 3600 * 24)) + 1;
+
+        // Baza ma'lumotlaridan barcha dam olish kunlarini tekshirish
+        const dbRef = ref(db);
+        let totalRestDaysCount = 0;
+
+        try {
+            const restDaysSnapshot = await get(child(dbRef, "restDays"));
+            if (restDaysSnapshot.exists()) {
+                const restDaysData = restDaysSnapshot.val();
+                
+                // Bugungi kun dam olish kuni ekanligini aniqlash
+                if (restDaysData[todayStr] === true) {
+                    isTodayRest = true;
+                }
+
+                // Loyiha boshlangan kundan to bugungacha bo'lgan dam olish kunlari sonini hisoblash
+                for (const date in restDaysData) {
+                    if (restDaysData[date] === true && date <= todayStr && date >= startDate.toISOString().split('T')[0]) {
+                        totalRestDaysCount++;
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Dam olish kunlarini hisoblashda xatolik:", error);
+        }
+
+        // Haqiqiy mashq kunini hisoblash (O'tgan jami kunlar - Dam olish kunlari)
+        // Agar bugun dam olish kuni bo'lsa, u ham ayriladi va norma o'smay turadi
+        const activeWorkoutDays = totalDaysElapsed - totalRestDaysCount;
+        currentDay = activeWorkoutDays > 0 ? activeWorkoutDays : 1;
+
+        // Agar bugun dam olish kuni bo'lsa va bu birinchi kun bo'lmasa, normani kechagidek qoldirish mantiqi
+        if (isTodayRest) {
+            countPerDay = currentDay * 5; 
+        } else {
+            countPerDay = currentDay * 5;
+        }
+
+        document.getElementById('day-display').textContent = `Mashq kuni: ${currentDay}-kun`;
+        
+        // Dam olish tugmasi va bildirishnomasining holatini yangilash
+        if (isTodayRest) {
+            restBtn.classList.add('active');
+            restNotice.style.display = 'block';
+            listContainer.classList.add('rest-mode');
+        } else {
+            restBtn.classList.remove('active');
+            restNotice.style.display = 'none';
+            listContainer.classList.remove('rest-mode');
+        }
+    }
 
     // Sahifani render qilish va holatni yuklash
     async function initApp() {
+        // Avval mantiqiy kunlarni va dam olish kunlarini hisoblaymiz
+        await calculateWorkoutMetrics();
+        
         listContainer.innerHTML = '';
         
-        // Bugungi sana bo'yicha Realtime Database-dan holatni tekshirish
-        const todayStr = new Date().toISOString().split('T')[0];
+        // Mashqlar ro'yxati bazasi (dinamik hisoblangan norma bilan)
+        const baseExercises = [
+            { id: "turnik", name: "1. Turnik", target: `${countPerDay} ta` },
+            { id: "anchimaniya", name: "2. Anchimaniya", target: `${countPerDay} ta` },
+            { id: "figura_anchimaniya", name: "3. Figura uchun anchimaniya", target: `${countPerDay} ta` },
+            { id: "boy_anchimaniya", name: "4. Bo'y o'stirish va Qomatni tik qilish uchun anchimaniya", target: `${countPerDay} ta` },
+            { id: "pres", name: "5. Pres", target: `${countPerDay} ta` },
+            { id: "gantel", name: "6. Gantel ko'tarish", target: `${countPerDay} ta o'ng qo'l / ${countPerDay} ta chap qo'l` }
+        ];
+
         const dbRef = ref(db);
         let completedData = {};
 
@@ -198,7 +306,7 @@
                 completedData = snapshot.val();
             }
         } catch (error) {
-            console.error("Ma'lumotni yuklashda xatolik:", error);
+            console.error("Mashq ma'lumotlarini yuklashda xatolik:", error);
         }
 
         baseExercises.forEach(ex => {
@@ -217,13 +325,15 @@
                 <button class="btn-check ${isDone ? 'done' : ''}" id="btn-${ex.id}">${isDone ? '✓ Bajarildi' : 'Bajarildi'}</button>
             `;
             
-            card.querySelector('button').addEventListener('click', () => toggleExercise(ex.id, todayStr));
+            card.querySelector('button').addEventListener('click', () => toggleExercise(ex.id));
             listContainer.appendChild(card);
         });
     }
 
-    // Realtime Database-ga ma'lumotni yozish funksiyasi
-    async function toggleExercise(id, dateStr) {
+    // Realtime Database-ga mashq holatini yozish funksiyasi
+    async function toggleExercise(id) {
+        if (isTodayRest) return; // Agar dam olish kuni bo'lsa mashq bajarib bo'lmaydi
+
         const card = document.getElementById(`card-${id}`);
         const btn = document.getElementById(`btn-${id}`);
         
@@ -238,16 +348,31 @@
             btn.classList.remove('done');
         }
 
-        // Realtime Database-ga alohida maydonni yangilab yozish
         try {
-            await set(ref(db, `workouts/${dateStr}/${id}`), isCompleted);
-            console.log("Realtime Database-ga muvaffaqiyatli saqlandi!");
+            await set(ref(db, `workouts/${todayStr}/${id}`), isCompleted);
+            console.log("Mashq holati saqlandi!");
         } catch (error) {
             console.error("Xatolik yuz berdi: ", error);
         }
     }
 
-    // Ilovani boshlash
+    // Dam olish kuni tugmasi bosilganda ishlaydigan hodisa
+    restBtn.addEventListener('click', async () => {
+        isTodayRest = !isTodayRest;
+
+        try {
+            // Firebase-da dam olish kunini yangilash
+            await set(ref(db, `restDays/${todayStr}`), isTodayRest);
+            console.log("Dam olish holati yangilandi!");
+            
+            // Sahifani yangitdan yuklab, normani qayta hisoblash
+            initApp();
+        } catch (error) {
+            console.error("Dam olish holatini saqlashda xatolik:", error);
+        }
+    });
+
+    // Ilovani ilk bor ishga tushirish
     initApp();
 </script>
 
