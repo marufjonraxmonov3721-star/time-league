@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #121214;
+            color: #e1e1e6;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            background: #202024;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        }
+
+        header {
+            margin-bottom: 24px;
+            text-align: center;
+            border-bottom: 1px solid #29292e;
+            padding-bottom: 16px;
+        }
+
+        header h1 {
+            font-size: 24px;
+            color: #00b37e;
+        }
+
+        header p {
+            font-size: 14px;
+            color: #8d8d99;
+            margin-top: 4px;
+        }
+
+        .day-counter {
+            background: #29292e;
+            padding: 8px 12px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #fba94c;
+        }
+
+        .exercise-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .exercise-card {
+            background: #29292e;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .exercise-card.completed {
+            border-color: #00b37e;
+            background: #1c2e24;
+        }
+
+        .exercise-info h3 {
+            font-size: 16px;
+            color: #ffffff;
+        }
+
+        .exercise-info p {
+            font-size: 13px;
+            color: #fba94c;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .exercise-card.completed .exercise-info h3 {
+            text-decoration: line-through;
+            color: #8d8d99;
+        }
+
+        .btn-check {
+            background: #00b37e;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .btn-check.done {
+            background: #29292e;
+            color: #00b37e;
+            border: 1px solid #00b37e;
+        }
+
+        .btn-check:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <header>
+        <h1>Workout Tracker</h1>
+        <div class="day-counter" id="day-display">Mashq kuni: 1-kun</div>
+    </header>
+
+    <div class="exercise-list" id="workout-list">
+        <!-- Mashqlar shu yerga chiqadi -->
+    </div>
+</div>
+
+<!-- Firebase modullarini ulash -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // Sizning Firebase sozlamalaringiz
+    const firebaseConfig = {
+      apiKey: "AIzaSyA6ky38ZKegqZySQDOA57AA2cc2OWATnhY",
+      authDomain: "tirnirofka-d020e.firebaseapp.com",
+      projectId: "tirnirofka-d020e",
+      storageBucket: "tirnirofka-d020e.firebasestorage.app",
+      messagingSenderId: "377605946412",
+      appId: "1:377605946412:web:6e22a9e3381d53404c2589",
+      measurementId: "G-M4B3LNFQ1V"
+    };
+
+    // Firebase-ni ishga tushirish
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
+    // 📅 Loyiha boshlangan sana (Ilovani birinchi marta ishga tushirgan kuningiz)
+    // Agar kunni o'zgartirmoqchi bo'lsangiz shu yerni tahrirlaysiz (Yil, Oy-1, Kun)
+    const startDate = new Date(2026, 6, 2); // 2026-yil, Iyul (6-indeks), 2-sana
+
+    function calculateCurrentDay() {
+        const today = new Date();
+        const differenceInTime = today.getTime() - startDate.getTime();
+        const differenceInDays = Math.floor(differenceInTime / (1000 * 3600 * 24)) + 1;
+        return differenceInDays > 0 ? differenceInDays : 1;
+    }
+
+    const currentDay = calculateCurrentDay();
+    const countPerDay = currentDay * 5; // Har kuni 5 tadan ko'payadi
+
+    document.getElementById('day-display').textContent = `Mashq kuni: ${currentDay}-kun`;
+
+    // Mashqlar ro'yxati bazasi
+    const baseExercises = [
+        { id: "turnik", name: "1. Turnik", target: `${countPerDay} ta` },
+        { id: "anchimaniya", name: "2. Anchimaniya", target: `${countPerDay} ta` },
+        { id: "figura_anchimaniya", name: "3. Figura uchun anchimaniya", target: `${countPerDay} ta` },
+        { id: "boy_anchimaniya", name: "4. Bo'y o'stirish va Qomatni tik qilish uchun anchimaniya", target: `${countPerDay} ta` },
+        { id: "pres", name: "5. Pres", target: `${countPerDay} ta` },
+        { id: "gantel", name: "6. Gantel ko'tarish", target: `${countPerDay} ta o'ng qo'l / ${countPerDay} ta chap qo'l` }
+    ];
+
+    const listContainer = document.getElementById('workout-list');
+
+    // Sahifani render qilish va holatni yuklash
+    async function initApp() {
+        listContainer.innerHTML = '';
+        
+        // Bugungi sana bo'yicha Firebase-dan holatni tekshirish
+        const todayStr = new Date().toISOString().split('T')[0];
+        const docRef = doc(db, "workouts", todayStr);
+        const docSnap = await getDoc(docRef);
+        let completedData = {};
+
+        if (docSnap.exists()) {
+            completedData = docSnap.data();
+        }
+
+        baseExercises.forEach(ex => {
+            const card = document.createElement('div');
+            card.className = 'exercise-card';
+            card.id = `card-${ex.id}`;
+
+            const isDone = completedData[ex.id] || false;
+            if (isDone) card.classList.add('completed');
+
+            card.innerHTML = `
+                <div class="exercise-info">
+                    <h3>${ex.name}</h3>
+                    <p>Norma: ${ex.target}</p>
+                </div>
+                <button class="btn-check ${isDone ? 'done' : ''}" id="btn-${ex.id}">${isDone ? '✓ Bajarildi' : 'Bajarildi'}</button>
+            `;
+            
+            // Tugmaga bosish funksiyasini ulash
+            card.querySelector('button').addEventListener('click', () => toggleExercise(ex.id, todayStr));
+            listContainer.appendChild(card);
+        });
+    }
+
+    // Firebase-ga ma'lumotni yozish funksiyasi
+    async function toggleExercise(id, dateStr) {
+        const card = document.getElementById(`card-${id}`);
+        const btn = document.getElementById(`btn-${id}`);
+        
+        card.classList.toggle('completed');
+        const isCompleted = card.classList.contains('completed');
+
+        if (isCompleted) {
+            btn.textContent = '✓ Bajarildi';
+            btn.classList.add('done');
+        } else {
+            btn.textContent = 'Bajarildi';
+            btn.classList.remove('done');
+        }
+
+        // Firebase Firestore-ga saqlash
+        try {
+            await setDoc(doc(db, "workouts", dateStr), {
+                [id]: isCompleted
+            }, { merge: true });
+            console.log("Firebase-ga saqlandi!");
+        } catch (error) {
+            console.error("Xatolik yuz berdi: ", error);
+        }
+    }
+
+    // Ilovani boshlash
+    initApp();
+</script>
+
+</body>
+</html>
