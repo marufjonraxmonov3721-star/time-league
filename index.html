@@ -15,7 +15,7 @@
         body {
             background-color: #121214;
             color: #e1e1e6;
-            padding: 20px;
+            padding: 20px 20px 80px 20px; /* Navigatsiya uchun pastdan joy qoldirildi */
             display: flex;
             justify-content: center;
         }
@@ -27,6 +27,7 @@
             border-radius: 16px;
             padding: 20px;
             box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
         }
 
         header {
@@ -39,12 +40,6 @@
         header h1 {
             font-size: 24px;
             color: #00b37e;
-        }
-
-        header p {
-            font-size: 14px;
-            color: #8d8d99;
-            margin-top: 4px;
         }
 
         .header-status {
@@ -100,6 +95,16 @@
             display: none;
         }
 
+        /* Bo'limlar boshqaruvi */
+        .app-section {
+            display: none;
+        }
+
+        .app-section.active {
+            display: block;
+        }
+
+        /* Mashqlar ro'yxati */
         .exercise-list {
             display: flex;
             flex-direction: column;
@@ -109,7 +114,7 @@
 
         .exercise-list.rest-mode {
             opacity: 0.4;
-            pointer-events: none; /* Dam olish kunida tugmalar bosilmaydi */
+            pointer-events: none;
         }
 
         .exercise-card {
@@ -166,35 +171,171 @@
         .btn-check:active {
             transform: scale(0.95);
         }
+
+        /* Statistika bo'limi uslublari */
+        .stats-summary {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stats-box {
+            background: #29292e;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #323238;
+        }
+
+        .stats-box h4 {
+            font-size: 12px;
+            color: #8d8d99;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .stats-box p {
+            font-size: 20px;
+            font-weight: bold;
+            color: #00b37e;
+        }
+
+        .stats-box p.accent {
+            color: #fba94c;
+        }
+
+        .stats-title {
+            font-size: 18px;
+            color: #ffffff;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .stats-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .stats-row {
+            background: #29292e;
+            padding: 14px 16px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stats-row span.name {
+            color: #ffffff;
+            font-weight: 500;
+        }
+
+        .stats-row span.count {
+            background: #1c2e24;
+            color: #00b37e;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* Pastki Navigatsiya paneli */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            background: #202024;
+            border-top: 1px solid #29292e;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -4px 16px rgba(0,0,0,0.2);
+            border-radius: 16px 16px 0 0;
+            z-index: 100;
+        }
+
+        .nav-item {
+            background: none;
+            border: none;
+            color: #8d8d99;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 6px 20px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item.active {
+            color: #00b37e;
+            background: #1c2e24;
+        }
     </style>
 </head>
 <body>
 
 <div class="app-container">
-    <header>
-        <h1>Workout Tracker</h1>
-        <div class="header-status">
-            <div class="day-counter" id="day-display">Mashq kuni: Yuklanmoqda...</div>
-            <button class="btn-rest-day" id="rest-toggle-btn">Dam olish kuni</button>
-        </div>
-    </header>
+    <!-- 1-BO'LIM: ASOSIY MASHQLAR -->
+    <div id="section-main" class="app-section active">
+        <header>
+            <h1>Workout Tracker</h1>
+            <div class="header-status">
+                <div class="day-counter" id="day-display">Mashq kuni: Yuklanmoqda...</div>
+                <button class="btn-rest-day" id="rest-toggle-btn">Dam olish kuni</button>
+            </div>
+        </header>
 
-    <div class="rest-notification" id="rest-notice">
-        🛏 Bugun sizning dam olish kuningiz. Mushaklar tiklanmoqda, norma muzlatildi!
+        <div class="rest-notification" id="rest-notice">
+            🛏 Bugun sizning dam olish kuningiz. Mushaklar tiklanmoqda, norma muzlatildi!
+        </div>
+
+        <div class="exercise-list" id="workout-list">
+            <!-- Mashqlar shu yerga chiqadi -->
+        </div>
     </div>
 
-    <div class="exercise-list" id="workout-list">
-        <!-- Mashqlar shu yerga chiqadi -->
+    <!-- 2-BO'LIM: STATISTIKA -->
+    <div id="section-stats" class="app-section">
+        <header>
+            <h1>Umumiy Statistika</h1>
+        </header>
+
+        <div class="stats-summary">
+            <div class="stats-box">
+                <h4>O'tgan kunlar</h4>
+                <p id="stats-total-days">0</p>
+            </div>
+            <div class="stats-box">
+                <h4>Dam olish kunlari</h4>
+                <p id="stats-rest-days" class="accent">0</p>
+            </div>
+        </div>
+
+        <div class="stats-title">Bajarilgan mashqlar soni (kun hisobida)</div>
+        <div class="stats-list" id="exercises-stats-list">
+            <!-- Mashqlar statistikasi shu yerga chiqadi -->
+        </div>
     </div>
 </div>
 
-<!-- Firebase modullarini ulash (Realtime Database bilan) -->
+<!-- Pastki Navigatsiya paneli -->
+<nav class="bottom-nav">
+    <button class="nav-item active" id="nav-main">Asosiy</button>
+    <button class="nav-item" id="nav-stats">Statistika</button>
+</nav>
+
+<!-- Firebase modullari -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
     import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // Sizning Firebase sozlamalaringiz
+    // Firebase sozlamalari
     const firebaseConfig = {
       apiKey: "AIzaSyA6ky38ZKegqZySQDOA57AA2cc2OWATnhY",
       authDomain: "tirnirofka-d020e.firebaseapp.com",
@@ -218,32 +359,49 @@
     let currentDay = 1;
     let countPerDay = 5;
     let isTodayRest = false;
+    let totalDaysElapsed = 1;
+    let totalRestDaysCount = 0;
+
+    // Mashqlar identifikatorlari va nomlari
+    const exercisesConfig = [
+        { id: "turnik", name: "1. Turnik" },
+        { id: "anchimaniya", name: "2. Anchimaniya" },
+        { id: "figura_anchimaniya", name: "3. Figura uchun anchimaniya" },
+        { id: "boy_anchimaniya", name: "4. Bo'y o'stirish va Qomatni tik qilish uchun anchimaniya" },
+        { id: "pres", name: "5. Pres" },
+        { id: "gantel", name: "6. Gantel ko'tarish" }
+    ];
 
     const listContainer = document.getElementById('workout-list');
     const restBtn = document.getElementById('rest-toggle-btn');
     const restNotice = document.getElementById('rest-notice');
 
+    // Navigatsiya tugmalari va bo'limlar elementlari
+    const navMain = document.getElementById('nav-main');
+    const navStats = document.getElementById('nav-stats');
+    const sectionMain = document.getElementById('section-main');
+    const sectionStats = document.getElementById('section-stats');
+
     // Kunlarni va Dam olish kunlarini hisoblab chiquvchi asosiy funksiya
     async function calculateWorkoutMetrics() {
         const today = new Date();
         const differenceInTime = today.getTime() - startDate.getTime();
-        const totalDaysElapsed = Math.floor(differenceInTime / (1000 * 3600 * 24)) + 1;
+        totalDaysElapsed = Math.floor(differenceInTime / (1000 * 3600 * 24)) + 1;
+        if (totalDaysElapsed < 1) totalDaysElapsed = 1;
 
-        // Baza ma'lumotlaridan barcha dam olish kunlarini tekshirish
         const dbRef = ref(db);
-        let totalRestDaysCount = 0;
+        totalRestDaysCount = 0;
+        isTodayRest = false;
 
         try {
             const restDaysSnapshot = await get(child(dbRef, "restDays"));
             if (restDaysSnapshot.exists()) {
                 const restDaysData = restDaysSnapshot.val();
                 
-                // Bugungi kun dam olish kuni ekanligini aniqlash
                 if (restDaysData[todayStr] === true) {
                     isTodayRest = true;
                 }
 
-                // Loyiha boshlangan kundan to bugungacha bo'lgan dam olish kunlari sonini hisoblash
                 for (const date in restDaysData) {
                     if (restDaysData[date] === true && date <= todayStr && date >= startDate.toISOString().split('T')[0]) {
                         totalRestDaysCount++;
@@ -254,21 +412,12 @@
             console.error("Dam olish kunlarini hisoblashda xatolik:", error);
         }
 
-        // Haqiqiy mashq kunini hisoblash (O'tgan jami kunlar - Dam olish kunlari)
-        // Agar bugun dam olish kuni bo'lsa, u ham ayriladi va norma o'smay turadi
         const activeWorkoutDays = totalDaysElapsed - totalRestDaysCount;
         currentDay = activeWorkoutDays > 0 ? activeWorkoutDays : 1;
-
-        // Agar bugun dam olish kuni bo'lsa va bu birinchi kun bo'lmasa, normani kechagidek qoldirish mantiqi
-        if (isTodayRest) {
-            countPerDay = currentDay * 5; 
-        } else {
-            countPerDay = currentDay * 5;
-        }
+        countPerDay = currentDay * 5;
 
         document.getElementById('day-display').textContent = `Mashq kuni: ${currentDay}-kun`;
         
-        // Dam olish tugmasi va bildirishnomasining holatini yangilash
         if (isTodayRest) {
             restBtn.classList.add('active');
             restNotice.style.display = 'block';
@@ -282,12 +431,9 @@
 
     // Sahifani render qilish va holatni yuklash
     async function initApp() {
-        // Avval mantiqiy kunlarni va dam olish kunlarini hisoblaymiz
         await calculateWorkoutMetrics();
-        
         listContainer.innerHTML = '';
         
-        // Mashqlar ro'yxati bazasi (dinamik hisoblangan norma bilan)
         const baseExercises = [
             { id: "turnik", name: "1. Turnik", target: `${countPerDay} ta` },
             { id: "anchimaniya", name: "2. Anchimaniya", target: `${countPerDay} ta` },
@@ -332,7 +478,7 @@
 
     // Realtime Database-ga mashq holatini yozish funksiyasi
     async function toggleExercise(id) {
-        if (isTodayRest) return; // Agar dam olish kuni bo'lsa mashq bajarib bo'lmaydi
+        if (isTodayRest) return;
 
         const card = document.getElementById(`card-${id}`);
         const btn = document.getElementById(`btn-${id}`);
@@ -356,20 +502,87 @@
         }
     }
 
+    // Statistika bo'limini yuklash va hisoblash funksiyasi
+    async function loadStatistics() {
+        document.getElementById('stats-total-days').textContent = totalDaysElapsed;
+        document.getElementById('stats-rest-days').textContent = totalRestDaysCount;
+
+        const dbRef = ref(db);
+        const statsContainer = document.getElementById('exercises-stats-list');
+        statsContainer.innerHTML = 'Yuklanmoqda...';
+
+        // Har bir mashq uchun bajarilgan kunlar sonini hisoblaydigan obyekt
+        let exercisesCounter = {
+            turnik: 0,
+            anchimaniya: 0,
+            figura_anchimaniya: 0,
+            boy_anchimaniya: 0,
+            pres: 0,
+            gantel: 0
+        };
+
+        try {
+            const workoutsSnapshot = await get(child(dbRef, "workouts"));
+            if (workoutsSnapshot.exists()) {
+                const workoutsData = workoutsSnapshot.val();
+                
+                // Barcha kunlar bo'yicha aylanib chiqib, true bo'lganlarini sanaymiz
+                for (const date in workoutsData) {
+                    const dayExercises = workoutsData[date];
+                    for (const exId in dayExercises) {
+                        if (dayExercises[exId] === true && exercisesCounter.hasOwnProperty(exId)) {
+                            exercisesCounter[exId]++;
+                        }
+                    }
+                }
+            }
+
+            // Statistikani ekranga chiqarish
+            statsContainer.innerHTML = '';
+            exercisesConfig.forEach(ex => {
+                const row = document.createElement('div');
+                row.className = 'stats-row';
+                row.innerHTML = `
+                    <span class="name">${ex.name}</span>
+                    <span class="count">${exercisesCounter[ex.id]} kun</span>
+                `;
+                statsContainer.appendChild(row);
+            });
+
+        } catch (error) {
+            console.error("Statistikani yuklashda xatolik:", error);
+            statsContainer.innerHTML = 'Xatolik yuz berdi.';
+        }
+    }
+
     // Dam olish kuni tugmasi bosilganda ishlaydigan hodisa
     restBtn.addEventListener('click', async () => {
         isTodayRest = !isTodayRest;
 
         try {
-            // Firebase-da dam olish kunini yangilash
             await set(ref(db, `restDays/${todayStr}`), isTodayRest);
             console.log("Dam olish holati yangilandi!");
-            
-            // Sahifani yangitdan yuklab, normani qayta hisoblash
             initApp();
         } catch (error) {
             console.error("Dam olish holatini saqlashda xatolik:", error);
         }
+    });
+
+    // Navigatsiya hodisalari
+    navMain.addEventListener('click', () => {
+        navMain.classList.add('active');
+        navStats.classList.remove('active');
+        sectionMain.classList.add('active');
+        sectionStats.classList.remove('active');
+        initApp(); // Asosiy sahifaga qaytganda ma'lumotni yangilash
+    });
+
+    navStats.addEventListener('click', () => {
+        navStats.classList.add('active');
+        navMain.classList.remove('active');
+        sectionStats.classList.add('active');
+        sectionMain.classList.remove('active');
+        loadStatistics(); // Statistika sahifasiga o'tganda hisob-kitobni yangilash
     });
 
     // Ilovani ilk bor ishga tushirish
