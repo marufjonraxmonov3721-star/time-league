@@ -323,7 +323,7 @@
             white-space: nowrap;
         }
 
-        /* ===== KALENDAR BO'LIMI ===== */
+        /* ===== KALENDAR BO'LIMI (YANGILANGAN) ===== */
         .calendar-container {
             background: var(--md-surface-2);
             border: 1.5px solid var(--md-outline-variant);
@@ -345,6 +345,27 @@
             font-size: 16px;
             font-weight: 600;
             color: var(--md-on-surface);
+        }
+
+        .calendar-nav-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-calendar-nav {
+            background: var(--md-surface-3);
+            border: 1.5px solid var(--md-outline-variant);
+            color: var(--md-on-surface);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s ease;
+        }
+
+        .btn-calendar-nav:hover {
+            background: var(--md-surface-variant);
         }
 
         .calendar-weekdays {
@@ -503,7 +524,11 @@
         
         <div class="calendar-container">
             <div class="calendar-header">
-                <div class="calendar-month-title" id="calendar-month-year">Iyul 2026</div>
+                <div class="calendar-month-title" id="calendar-month-year">Yuklanmoqda...</div>
+                <div class="calendar-nav-buttons">
+                    <button class="btn-calendar-nav" id="btn-prev-month">◀</button>
+                    <button class="btn-calendar-nav" id="btn-next-month">▶</button>
+                </div>
             </div>
             <div class="calendar-weekdays">
                 <div>Du</div><div>Se</div><div>Ch</div><div>Pa</div><div>Ju</div><div>Sh</div><div>Ya</div>
@@ -584,6 +609,9 @@
     let startDate = defaultStartDate;
     const todayStr = getLocalDateString();
 
+    // Kalendarda navigatsiya qilish uchun joriy ko'rinib turgan yil va oy obyekti
+    let calendarViewDate = new Date(); 
+
     let currentDay = 1;
     let countPerDay = 5;
     let isTodayRest = false;
@@ -609,6 +637,9 @@
     const sectionCalendar = document.getElementById('section-calendar');
     const sectionStats = document.getElementById('section-stats');
     const btnAppReset = document.getElementById('btn-app-reset');
+    
+    const btnPrevMonth = document.getElementById('btn-prev-month');
+    const btnNextMonth = document.getElementById('btn-next-month');
 
     function checkIsRestDayByElapsed(elapsedDays) {
         if (elapsedDays < 1) return false;
@@ -638,7 +669,6 @@
                 const savedDateStr = snapshot.val();
                 startDate = new Date(savedDateStr);
             } else {
-                // Agar bazada yo'l bo'lsa, default sanani yozib qo'yamiz
                 await set(ref(db, 'settings/startDate'), getLocalDateString(defaultStartDate));
                 startDate = defaultStartDate;
             }
@@ -743,6 +773,7 @@
         }
     }
 
+    // DINAMIK METOD: KEYINGI VA OLDINGI OYLAR BILAN KALENDARNI GENERATSIYA QILISH
     async function loadCalendar() {
         const gridContainer = document.getElementById('calendar-days-grid');
         gridContainer.innerHTML = '';
@@ -757,29 +788,31 @@
             console.error("Kalendar yuklashda xatolik:", e);
         }
 
-        const now = new Date();
-        const currentYear = now.getFullYear();
-        const currentMonth = now.getMonth();
+        // calendarViewDate obyektidan joriy tanlangan yil va oyni olamiz
+        const viewYear = calendarViewDate.getFullYear();
+        const viewMonth = calendarViewDate.getMonth();
 
         const monthNames = ["Yanvar", "Fevral", "Mart", "Aprel", "May", "Iyun", "Iyul", "Avgust", "Sentabr", "Oktabr", "Noyabr", "Dekabr"];
-        document.getElementById('calendar-month-year').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+        document.getElementById('calendar-month-year').textContent = `${monthNames[viewMonth]} ${viewYear}`;
 
-        let firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+        let firstDayIndex = new Date(viewYear, viewMonth, 1).getDay();
         firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
-        const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const totalDaysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
 
+        // Bo'sh kunlarni (oldingi oydan qolgan joylar) chizish
         for (let i = 0; i < firstDayIndex; i++) {
             const emptyDiv = document.createElement('div');
             emptyDiv.className = 'calendar-day';
             gridContainer.appendChild(emptyDiv);
         }
 
+        // Oy kunlarini chizish
         for (let day = 1; day <= totalDaysInMonth; day++) {
             const dayDiv = document.createElement('div');
             dayDiv.className = 'calendar-day active-month';
             dayDiv.textContent = day;
 
-            const dateObj = new Date(currentYear, currentMonth, day);
+            const dateObj = new Date(viewYear, viewMonth, day);
             const dateStr = getLocalDateString(dateObj);
 
             if (dateStr === todayStr) {
@@ -789,6 +822,7 @@
             const diffTime = dateObj.setHours(0,0,0,0) - new Date(startDate).setHours(0,0,0,0);
             const elapsed = Math.floor(diffTime / (1000 * 3600 * 24)) + 1;
 
+            // Agar ko'rib chiqilayotgan kun dastur boshlangan sanadan keyin bo'lsa hisoblaymiz
             if (dateObj >= startDate || dateStr === getLocalDateString(startDate)) {
                 if (checkIsRestDayByElapsed(elapsed)) {
                     dayDiv.classList.add('rest');
@@ -797,7 +831,7 @@
                     if (hasDoneAny) dayDiv.classList.add('completed');
                 }
             } else {
-                dayDiv.style.opacity = "0.2";
+                dayDiv.style.opacity = "0.2"; // Dastur boshlanishidan oldingi kunlar xiralashtiriladi
             }
             gridContainer.appendChild(dayDiv);
         }
@@ -843,22 +877,18 @@
         }
     }
 
-    // YANGILANGAN RESTART FUNKSIYASI
     async function resetAppDatabase() {
         const confirmReset = confirm("Diqqat! Barcha kiritilgan mashqlar tarixlari butunlay o'chiriladi va hisoblagich bugundan boshlab 1-kunga qaytariladi. Ishonchingiz komilmi?");
         if (!confirmReset) return;
 
         try {
-            // 1. Mashqlar tarixini o'chiramiz
             await remove(ref(db, "workouts"));
             
-            // 2. Boshlanish sanasini aynan bugungi kunga o'zgartiramiz!
             const currentTodayStr = getLocalDateString();
             await set(ref(db, 'settings/startDate'), currentTodayStr);
             
             alert("Tizim muvaffaqiyatli tozalandi! Mashqlar bugundan boshlab 1-kundan qayta boshlandi.");
             
-            // 3. Hisob-kitoblarni yangilab, faol bo'limni qayta yuklaymiz
             await calculateWorkoutMetrics();
             if (sectionMain.classList.contains('active')) {
                 initApp();
@@ -880,8 +910,19 @@
         document.getElementById(activeSectionId).classList.add('active');
     }
 
+    // NAVIGATSIYA TUGMALARI VA KESINGI/OLDINGI OYLAR HODISALARI
+    btnPrevMonth.addEventListener('click', () => {
+        calendarViewDate.setMonth(calendarViewDate.getMonth() - 1);
+        loadCalendar();
+    });
+
+    btnNextMonth.addEventListener('click', () => {
+        calendarViewDate.setMonth(calendarViewDate.getMonth() + 1);
+        loadCalendar();
+    });
+
     navMain.addEventListener('click', () => { switchSection('nav-main', 'section-main'); initApp(); });
-    navCalendar.addEventListener('click', async () => { switchSection('nav-calendar', 'section-calendar'); await calculateWorkoutMetrics(); loadCalendar(); });
+    navCalendar.addEventListener('click', async () => { switchSection('nav-calendar', 'section-calendar'); calendarViewDate = new Date(); await calculateWorkoutMetrics(); loadCalendar(); });
     navStats.addEventListener('click', async () => { switchSection('nav-stats', 'section-stats'); await calculateWorkoutMetrics(); loadStatistics(); });
     
     btnAppReset.addEventListener('click', resetAppDatabase);
