@@ -30,6 +30,8 @@
             --md-on-surface: #E2E3E5;
             --md-on-surface-variant: #8C9198;
             --md-error: #F2788D;
+            --md-error-container: #410E18;
+            --md-on-error: #FFFFFF;
             --md-success: #4CAF82;
             --radius-sm: 12px;
             --radius-md: 16px;
@@ -164,12 +166,14 @@
 
         .exercise-info {
             flex: 1;
+            padding-right: 8px;
         }
 
         .exercise-info h3 {
             font-size: 15px;
             font-weight: 500;
             color: var(--md-on-surface);
+            line-height: 1.4;
         }
 
         .exercise-info p {
@@ -211,6 +215,35 @@
             color: #4CAF82;
             border: 1.5px solid rgba(76, 175, 130, 0.4);
             box-shadow: none;
+        }
+
+        /* ===== RESET BUTTON STYLING ===== */
+        .danger-zone {
+            margin: 0 20px 16px;
+            padding: 4px 0;
+        }
+
+        .btn-reset {
+            width: 100%;
+            background: linear-gradient(135deg, #E55C70 0%, #CC334B 100%);
+            color: var(--md-on-primary);
+            border: none;
+            padding: 14px;
+            border-radius: var(--radius-lg);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(229, 92, 112, 0.25);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-reset:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 6px rgba(229, 92, 112, 0.15);
         }
 
         /* ===== STATS SECTION ===== */
@@ -276,6 +309,8 @@
             color: var(--md-on-surface);
             font-weight: 500;
             font-size: 14px;
+            padding-right: 10px;
+            line-height: 1.3;
         }
 
         .stats-row span.count {
@@ -285,6 +320,7 @@
             border-radius: var(--radius-xl);
             font-weight: 700;
             font-size: 13px;
+            white-space: nowrap;
         }
 
         /* ===== KALENDAR BO'LIMI ===== */
@@ -435,7 +471,7 @@
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        .exercise-card, .stats-row, .calendar-container {
+        .exercise-card, .stats-row, .calendar-container, .danger-zone {
             animation: slideUp 0.35s cubic-bezier(0.2, 0, 0, 1) both;
         }
     </style>
@@ -443,6 +479,7 @@
 <body>
 
 <div class="app-container">
+    <!-- 1-BO'LIM: ASOSIY MASHQLAR -->
     <div id="section-main" class="app-section active">
         <header>
             <h1>Workout Tracker</h1>
@@ -458,6 +495,7 @@
         <div class="exercise-list" id="workout-list"></div>
     </div>
 
+    <!-- 2-BO'LIM: KALENDAR -->
     <div id="section-calendar" class="app-section">
         <header>
             <h1>Mashqlar Kalendari</h1>
@@ -485,6 +523,7 @@
         </div>
     </div>
 
+    <!-- 3-BO'LIM: STATISTIKA -->
     <div id="section-stats" class="app-section">
         <header>
             <h1>Umumiy Statistika</h1>
@@ -501,6 +540,13 @@
             </div>
         </div>
 
+        <!-- RESTART TUGMASI (DANGER ZONE) -->
+        <div class="danger-zone">
+            <button class="btn-reset" id="btn-app-reset">
+                🔄 Tizimni Boshidan Boshlash
+            </button>
+        </div>
+
         <div class="stats-title">Bajarilgan jami mashqlar soni</div>
         <div class="stats-list" id="exercises-stats-list"></div>
     </div>
@@ -514,7 +560,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, set, get, child, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA6ky38ZKegqZySQDOA57AA2cc2OWATnhY",
@@ -529,9 +575,8 @@
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
 
-    // To'g'ri mahalliy vaqtni YYYY-MM-DD formatida olish funksiyasi
     function getLocalDateString(date = new Date()) {
-        return date.toLocaleDateString('sv'); // 'sv' standarti YYYY-MM-DD formatini xatosiz beradi
+        return date.toLocaleDateString('sv');
     }
 
     const startDate = new Date(2026, 6, 2); // 2026-07-02
@@ -543,13 +588,13 @@
     let totalDaysElapsed = 1;
     let totalRestDaysCount = 0;
 
+    // TURNIK SHU YERDAN BUTUNLAY OLIB TASHLANDI
     const exercisesConfig = [
-        { id: "turnik", name: "1. Turnik" },
-        { id: "anchimaniya", name: "2. Anchimaniya" },
-        { id: "figura_anchimaniya", name: "3. Figura uchun anchimaniya" },
-        { id: "boy_anchimaniya", name: "4. Bo'y o'stirish va Qomatni tik qilish uchun anchimaniya" },
-        { id: "pres", name: "5. Pres" },
-        { id: "gantel", name: "6. Gantel ko'tarish" }
+        { id: "anchimaniya", name: "1. Anchimaniya" },
+        { id: "figura_anchimaniya", name: "2. Figura uchun anchimaniya" },
+        { id: "boy_anchimaniya", name: "3. Bo'y o'stirish va Qomatni tik qilish uchun anchimaniya" },
+        { id: "pres", name: "4. Pres" },
+        { id: "gantel", name: "5. Gantel ko'tarish" }
     ];
 
     const listContainer = document.getElementById('workout-list');
@@ -562,10 +607,11 @@
     const sectionMain = document.getElementById('section-main');
     const sectionCalendar = document.getElementById('section-calendar');
     const sectionStats = document.getElementById('section-stats');
+    const btnAppReset = document.getElementById('btn-app-reset');
 
     function checkIsRestDayByElapsed(elapsedDays) {
         if (elapsedDays < 1) return false;
-        return elapsedDays % 7 === 0; // Har 7-kun (6 kun mashqdan keyin) avtomatik dam olish
+        return elapsedDays % 7 === 0; // 6 kun mashq + 1 kun dam olish
     }
 
     function getActiveWorkoutDayForDate(targetDateStr) {
@@ -614,13 +660,13 @@
         await calculateWorkoutMetrics();
         listContainer.innerHTML = '';
         
+        // TURNIK SHU YERDAN HAM OLIB TASHLANDI
         const baseExercises = [
-            { id: "turnik", name: "1. Turnik", target: `${countPerDay} ta` },
-            { id: "anchimaniya", name: "2. Anchimaniya", target: `${countPerDay} ta` },
-            { id: "figura_anchimaniya", name: "3. Figura uchun anchimaniya", target: `${countPerDay} ta` },
-            { id: "boy_anchimaniya", name: "4. Bo'y o'stirish va Qomatni tik qilish uchun anchimaniya", target: `${countPerDay} ta` },
-            { id: "pres", name: "5. Pres", target: `${countPerDay} ta` },
-            { id: "gantel", name: "6. Gantel ko'tarish", target: `${countPerDay} ta o'ng qo'l / ${countPerDay} ta chap qo'l` }
+            { id: "anchimaniya", name: "1. Anchimaniya", target: `${countPerDay} ta` },
+            { id: "figura_anchimaniya", name: "2. Figura uchun anchimaniya", target: `${countPerDay} ta` },
+            { id: "boy_anchimaniya", name: "3. Bo'y o'stirish va Qomatni tik qilish uchun anchimaniya", target: `${countPerDay} ta` },
+            { id: "pres", name: "4. Pres", target: `${countPerDay} ta` },
+            { id: "gantel", name: "5. Gantel ko'tarish", target: `${countPerDay} ta o'ng qo'l / ${countPerDay} ta chap qo'l` }
         ];
 
         const dbRef = ref(db);
@@ -745,7 +791,8 @@
         const statsContainer = document.getElementById('exercises-stats-list');
         statsContainer.innerHTML = 'Hisoblanmoqda...';
 
-        let exercisesTotalCount = { turnik: 0, anchimaniya: 0, figura_anchimaniya: 0, boy_anchimaniya: 0, pres: 0, gantel: 0 };
+        // TURNIK STATISTIKADAN HAM O'CHIRILDI
+        let exercisesTotalCount = { anchimaniya: 0, figura_anchimaniya: 0, boy_anchimaniya: 0, pres: 0, gantel: 0 };
 
         try {
             const workoutsSnapshot = await get(child(dbRef, "workouts"));
@@ -777,6 +824,31 @@
         }
     }
 
+    // RESTART (BOSHIDAN BOSHLACH) FUNKSIYASI
+    async function resetAppDatabase() {
+        const confirmReset = confirm("Diqqat! Barcha kiritilgan mashqlar tarixlari butunlay o'chiriladi va hisoblagich boshidan (1-kundan) boshlanadi. Ishonchingiz komilmi?");
+        if (!confirmReset) return;
+
+        try {
+            // Firebase "workouts" tugunini to'liq tozalaymiz
+            await remove(ref(db, "workouts"));
+            alert("Tizim muvaffaqiyatli tozalandi! Mashqlar 1-kundan qaytadan boshlanadi.");
+            
+            // Sahifani yangilab, ma'lumotlarni qayta yuklaymiz
+            await calculateWorkoutMetrics();
+            if (sectionMain.classList.contains('active')) {
+                initApp();
+            } else if (sectionCalendar.classList.contains('active')) {
+                loadCalendar();
+            } else if (sectionStats.classList.contains('active')) {
+                loadStatistics();
+            }
+        } catch (error) {
+            console.error("Tozalashda xatolik yuz berdi:", error);
+            alert("Xatolik yuz berdi, iltimos qaytadan urinib ko'ring.");
+        }
+    }
+
     function switchSection(activeNavId, activeSectionId) {
         [navMain, navCalendar, navStats].forEach(btn => btn.classList.remove('active'));
         [sectionMain, sectionCalendar, sectionStats].forEach(sec => sec.classList.remove('active'));
@@ -787,6 +859,9 @@
     navMain.addEventListener('click', () => { switchSection('nav-main', 'section-main'); initApp(); });
     navCalendar.addEventListener('click', async () => { switchSection('nav-calendar', 'section-calendar'); await calculateWorkoutMetrics(); loadCalendar(); });
     navStats.addEventListener('click', async () => { switchSection('nav-stats', 'section-stats'); await calculateWorkoutMetrics(); loadStatistics(); });
+    
+    // RESTART TUGMASIGA HODISA BIRIKTIRISH
+    btnAppReset.addEventListener('click', resetAppDatabase);
 
     initApp();
 </script>
