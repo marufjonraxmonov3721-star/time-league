@@ -323,7 +323,7 @@
             white-space: nowrap;
         }
 
-        /* ===== KALENDAR BO'LIMI (YANGILANGAN) ===== */
+        /* ===== KALENDAR BO'LIMI ===== */
         .calendar-container {
             background: var(--md-surface-2);
             border: 1.5px solid var(--md-outline-variant);
@@ -510,7 +510,7 @@
         </header>
 
         <div class="rest-notification" id="rest-notice">
-            🛏 Bugun - Aqlli Dam Olish Kuni. Mushaklar tiklanmoqda, normalar keyingi kungacha muzlatildi!
+            🛏 Ketma-ket 6 kunlik normani 100% bajardingiz! Bugun - Avtomatik Dam Olish Kuni.
         </div>
 
         <div class="exercise-list" id="workout-list"></div>
@@ -556,11 +556,11 @@
 
         <div class="stats-summary">
             <div class="stats-box">
-                <h4>O'tgan kunlar</h4>
+                <h4>Faol Mashq Kunlari</h4>
                 <p id="stats-total-days">0</p>
             </div>
             <div class="stats-box">
-                <h4>Dam olish kunlari</h4>
+                <h4>Dam Olish Kunlari</h4>
                 <p id="stats-rest-days" class="accent">0</p>
             </div>
         </div>
@@ -604,19 +604,18 @@
         return date.toLocaleDateString('sv');
     }
 
-    // Default boshlang'ich sana, agar bazada bo'lmasa ishlatiladi
     let defaultStartDate = new Date(2026, 6, 2); 
     let startDate = defaultStartDate;
     const todayStr = getLocalDateString();
 
-    // Kalendarda navigatsiya qilish uchun joriy ko'rinib turgan yil va oy obyekti
     let calendarViewDate = new Date(); 
 
-    let currentDay = 1;
-    let countPerDay = 5;
-    let isTodayRest = false;
-    let totalDaysElapsed = 1;
-    let totalRestDaysCount = 0;
+    let currentDay = 1;      // Faol bajarilgan mashqlar kuni soni (Normani belgilaydi)
+    let countPerDay = 5;     // joriy kunlik norma soni
+    let isTodayRest = false; // Bugun dam olish kunimi?
+
+    // Butun tarix xaritasi (Kalendar va statistika hisoblash uchun)
+    let globalTimeline = {};
 
     const exercisesConfig = [
         { id: "anchimaniya", name: "1. Anchimaniya" },
@@ -641,33 +640,12 @@
     const btnPrevMonth = document.getElementById('btn-prev-month');
     const btnNextMonth = document.getElementById('btn-next-month');
 
-    function checkIsRestDayByElapsed(elapsedDays) {
-        if (elapsedDays < 1) return false;
-        return elapsedDays % 7 === 0; // 6 kun mashq + 1 kun dam olish
-    }
-
-    function getActiveWorkoutDayForDate(targetDateStr) {
-        const targetDate = new Date(targetDateStr);
-        const diffTime = targetDate.setHours(0,0,0,0) - new Date(startDate).setHours(0,0,0,0);
-        const elapsed = Math.floor(diffTime / (1000 * 3600 * 24)) + 1;
-        
-        if (elapsed < 1) return 1;
-
-        let restCount = 0;
-        for (let i = 1; i <= elapsed; i++) {
-            if (checkIsRestDayByElapsed(i)) restCount++;
-        }
-        const activeDay = elapsed - restCount;
-        return activeDay > 0 ? activeDay : 1;
-    }
-
     async function syncStartDateFromDatabase() {
         const dbRef = ref(db);
         try {
             const snapshot = await get(child(dbRef, 'settings/startDate'));
             if (snapshot.exists()) {
-                const savedDateStr = snapshot.val();
-                startDate = new Date(savedDateStr);
+                startDate = new Date(snapshot.val());
             } else {
                 await set(ref(db, 'settings/startDate'), getLocalDateString(defaultStartDate));
                 startDate = defaultStartDate;
@@ -678,39 +656,107 @@
         }
     }
 
-    async function calculateWorkoutMetrics() {
+    // Barcha kunlarni ketma-ketlikda tahlil qiluvchi asosiy mantiqiy funksiya
+    async function buildTimelineMetrics() {
         await syncStartDateFromDatabase();
-
-        const today = new Date();
-        const diffTime = today.setHours(0,0,0,0) - new Date(startDate).setHours(0,0,0,0);
-        totalDaysElapsed = Math.floor(diffTime / (1000 * 3600 * 24)) + 1;
-        if (totalDaysElapsed < 1) totalDaysElapsed = 1;
-
-        totalRestDaysCount = 0;
-        for (let i = 1; i <= totalDaysElapsed; i++) {
-            if (checkIsRestDayByElapsed(i)) totalRestDaysCount++;
+        
+        const dbRef = ref(db);
+        let workoutsData = {};
+        try {
+            const snapshot = await get(child(dbRef, "workouts"));
+            if (snapshot.exists()) workoutsData = snapshot.val();
+        } catch (e) {
+            console.error("Ma'lumotlar yuklanishida xatolik:", e);
         }
 
-        isTodayRest = checkIsRestDayByElapsed(totalDaysElapsed);
-        const activeWorkoutDays = totalDaysElapsed - totalRestDaysCount;
-        currentDay = activeWorkoutDays > 0 ? activeWorkoutDays : 1;
-        countPerDay = currentDay * 5;
+        globalTimeline = {};
+        
+        let loopDate = new Date(startDate);
+        const todayObj = new Date();
+        todayObj.setHours(0,0,0,0);
+
+        let activeDayCounter = 1; // 1-kundan boshlanadi
+        let consecutiveStreak = 0; // Ketma-ket 100% bajarilgan kunlar streeki
+
+        // Start sanasidan bugungacha (yoki kalendar doirasida kelgusi kunlar uchun ham) zanjir simulyatsiyasi
+        // Hisoblash doirasi xatolik bermasligi uchun bugundan keyingi 40 kungacha hisoblaydi
+        const maxDate = new Date();
+        maxDate.setDate(maxDate.getDate() + 40);
+
+        while (loopDate <= maxDate) {
+            const loopDateStr = getLocalDateString(loopDate);
+            
+            // Agar ketma-ket 6 kun 100% bajarilgan bo'lsa -> Keyingi kun AVTOMATIK DAM OLISH
+            if (consecutiveStreak === 6) {
+                globalTimeline[loopDateStr] = {
+                    type: 'rest',
+                    dayNum: null,
+                    norma: null,
+                    completed: false
+                };
+                consecutiveStreak = 0; // Dam olishdan keyin joriy zanjir nolga tushadi
+                loopDate.setDate(loopDate.getDate() + 1);
+                continue;
+            }
+
+            // Oddiy mashq kuni holatini tekshirish
+            const dayWorkouts = workoutsData[loopDateStr] || {};
+            // 5 ta mashqdan barchasi true bo'lsagina kun 100% to'liq hisoblanadi
+            const is100Percent = exercisesConfig.every(ex => dayWorkouts[ex.id] === true);
+
+            globalTimeline[loopDateStr] = {
+                type: 'workout',
+                dayNum: activeDayCounter,
+                norma: activeDayCounter * 5,
+                completed: is100Percent,
+                rawDetails: dayWorkouts
+            };
+
+            if (is100Percent) {
+                consecutiveStreak++;
+                activeDayCounter++; // Norma faqat muvaffaqiyatli to'liq kundan keyin o'sadi
+            } else {
+                // Agar bugun bo'lsa yoki hali to'ldirilmagan o'tgan kun bo'lsa streak uziladi
+                if (loopDate < todayObj) {
+                     consecutiveStreak = 0; 
+                }
+                // Bugun to'liq bajarilmagan bo'lsa ham norma to'liq kun hisoblanguncha joyida muzlab turadi
+                // activeDayCounter o'zgarmaydi, ya'ni norma oshmaydi.
+            }
+
+            loopDate.setDate(loopDate.getDate() + 1);
+        }
+
+        // Bugungi joriy holat metrikalarini o'rnatamiz
+        const todayTimeline = globalTimeline[todayStr];
+        if (todayTimeline) {
+            if (todayTimeline.type === 'rest') {
+                isTodayRest = true;
+                currentDay = null;
+                countPerDay = null;
+            } else {
+                isTodayRest = false;
+                currentDay = todayTimeline.dayNum;
+                countPerDay = todayTimeline.norma;
+            }
+        }
+    }
+
+    async function initApp() {
+        await buildTimelineMetrics();
+        listContainer.innerHTML = '';
 
         if (isTodayRest) {
             document.getElementById('day-display').textContent = `Dam olish kuni`;
             restNotice.style.display = 'block';
             listContainer.classList.add('rest-mode');
+            return;
         } else {
             document.getElementById('day-display').textContent = `Mashq kuni: ${currentDay}-kun`;
             restNotice.style.display = 'none';
             listContainer.classList.remove('rest-mode');
         }
-    }
 
-    async function initApp() {
-        await calculateWorkoutMetrics();
-        listContainer.innerHTML = '';
-        
         const baseExercises = [
             { id: "anchimaniya", name: "1. Anchimaniya", target: `${countPerDay} ta` },
             { id: "figura_anchimaniya", name: "2. Figura uchun anchimaniya", target: `${countPerDay} ta` },
@@ -719,15 +765,8 @@
             { id: "gantel", name: "5. Gantel ko'tarish", target: `${countPerDay} ta o'ng qo'l / ${countPerDay} ta chap qo'l` }
         ];
 
-        const dbRef = ref(db);
-        let completedData = {};
-
-        try {
-            const snapshot = await get(child(dbRef, `workouts/${todayStr}`));
-            if (snapshot.exists()) completedData = snapshot.val();
-        } catch (error) {
-            console.error("Yuklashda xatolik:", error);
-        }
+        const todayTimeline = globalTimeline[todayStr];
+        const completedData = (todayTimeline && todayTimeline.rawDetails) ? todayTimeline.rawDetails : {};
 
         baseExercises.forEach(ex => {
             const card = document.createElement('div');
@@ -768,27 +807,22 @@
 
         try {
             await set(ref(db, `workouts/${todayStr}/${id}`), isCompleted);
+            // Har bir element bosilganda umumiy vaqt chizig'i qayta hisoblanadi (dam olish kunini aniqlash uchun)
+            await buildTimelineMetrics();
+            if (isTodayRest) {
+                initApp(); 
+            }
         } catch (error) {
             console.error("Saqlashda xatolik: ", error);
         }
     }
 
-    // DINAMIK METOD: KEYINGI VA OLDINGI OYLAR BILAN KALENDARNI GENERATSIYA QILISH
     async function loadCalendar() {
         const gridContainer = document.getElementById('calendar-days-grid');
         gridContainer.innerHTML = '';
 
-        const dbRef = ref(db);
-        let workoutsData = {};
-        
-        try {
-            const snapshot = await get(child(dbRef, "workouts"));
-            if (snapshot.exists()) workoutsData = snapshot.val();
-        } catch (e) {
-            console.error("Kalendar yuklashda xatolik:", e);
-        }
+        await buildTimelineMetrics();
 
-        // calendarViewDate obyektidan joriy tanlangan yil va oyni olamiz
         const viewYear = calendarViewDate.getFullYear();
         const viewMonth = calendarViewDate.getMonth();
 
@@ -799,14 +833,12 @@
         firstDayIndex = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
         const totalDaysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
 
-        // Bo'sh kunlarni (oldingi oydan qolgan joylar) chizish
         for (let i = 0; i < firstDayIndex; i++) {
             const emptyDiv = document.createElement('div');
             emptyDiv.className = 'calendar-day';
             gridContainer.appendChild(emptyDiv);
         }
 
-        // Oy kunlarini chizish
         for (let day = 1; day <= totalDaysInMonth; day++) {
             const dayDiv = document.createElement('div');
             dayDiv.className = 'calendar-day active-month';
@@ -819,62 +851,69 @@
                 dayDiv.classList.add('today');
             }
 
-            const diffTime = dateObj.setHours(0,0,0,0) - new Date(startDate).setHours(0,0,0,0);
-            const elapsed = Math.floor(diffTime / (1000 * 3600 * 24)) + 1;
+            const dayMetrics = globalTimeline[dateStr];
 
-            // Agar ko'rib chiqilayotgan kun dastur boshlangan sanadan keyin bo'lsa hisoblaymiz
             if (dateObj >= startDate || dateStr === getLocalDateString(startDate)) {
-                if (checkIsRestDayByElapsed(elapsed)) {
-                    dayDiv.classList.add('rest');
-                } else if (workoutsData[dateStr]) {
-                    const hasDoneAny = Object.values(workoutsData[dateStr]).some(val => val === true);
-                    if (hasDoneAny) dayDiv.classList.add('completed');
+                if (dayMetrics) {
+                    if (dayMetrics.type === 'rest') {
+                        dayDiv.classList.add('rest');
+                    } else if (dayMetrics.type === 'workout' && dayMetrics.completed) {
+                        dayDiv.classList.add('completed');
+                    }
                 }
             } else {
-                dayDiv.style.opacity = "0.2"; // Dastur boshlanishidan oldingi kunlar xiralashtiriladi
+                dayDiv.style.opacity = "0.2"; 
             }
             gridContainer.appendChild(dayDiv);
         }
     }
 
     async function loadStatistics() {
-        document.getElementById('stats-total-days').textContent = totalDaysElapsed;
-        document.getElementById('stats-rest-days').textContent = totalRestDaysCount;
+        await buildTimelineMetrics();
 
-        const dbRef = ref(db);
-        const statsContainer = document.getElementById('exercises-stats-list');
-        statsContainer.innerHTML = 'Hisoblanmoqda...';
-
+        let totalActiveCompletedDays = 0;
+        let totalRestDaysCount = 0;
         let exercisesTotalCount = { anchimaniya: 0, figura_anchimaniya: 0, boy_anchimaniya: 0, pres: 0, gantel: 0 };
 
-        try {
-            const workoutsSnapshot = await get(child(dbRef, "workouts"));
-            if (workoutsSnapshot.exists()) {
-                const workoutsData = workoutsSnapshot.val();
-                for (const date in workoutsData) {
-                    const dayExercises = workoutsData[date];
-                    const calculatedDayNum = getActiveWorkoutDayForDate(date);
-                    const calculatedNorma = calculatedDayNum * 5;
+        const todayObj = new Date();
+        todayObj.setHours(0,0,0,0);
 
-                    for (const exId in dayExercises) {
-                        if (dayExercises[exId] === true && exercisesTotalCount.hasOwnProperty(exId)) {
-                            exercisesTotalCount[exId] += calculatedNorma;
-                        }
+        // Faqat o'tgan va joriy kungacha bo'lgan davr statistikasini hisoblaymiz
+        for (const dateStr in globalTimeline) {
+            const dateParts = dateStr.split('-');
+            const checkDate = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+            if (checkDate > todayObj) continue;
+
+            const metric = globalTimeline[dateStr];
+            if (metric.type === 'rest') {
+                totalRestDaysCount++;
+            } else if (metric.type === 'workout') {
+                if (metric.completed) {
+                    totalActiveCompletedDays++;
+                }
+                // Har bir alohida bajarilgan mashq element hajmini joriy kunga mos normada qo'shish
+                const details = metric.rawDetails || {};
+                for (const exId in details) {
+                    if (details[exId] === true && exercisesTotalCount.hasOwnProperty(exId)) {
+                        exercisesTotalCount[exId] += metric.norma;
                     }
                 }
             }
-
-            statsContainer.innerHTML = '';
-            exercisesConfig.forEach(ex => {
-                const row = document.createElement('div');
-                row.className = 'stats-row';
-                let unitText = ex.id === "gantel" ? "ta o'ng / chap" : "ta";
-                row.innerHTML = `<span class="name">${ex.name}</span><span class="count">${exercisesTotalCount[ex.id]} ${unitText}</span>`;
-                statsContainer.appendChild(row);
-            });
-        } catch (error) {
-            statsContainer.innerHTML = 'Xatolik yuz berdi.';
         }
+
+        document.getElementById('stats-total-days').textContent = totalActiveCompletedDays;
+        document.getElementById('stats-rest-days').textContent = totalRestDaysCount;
+
+        const statsContainer = document.getElementById('exercises-stats-list');
+        statsContainer.innerHTML = '';
+
+        exercisesConfig.forEach(ex => {
+            const row = document.createElement('div');
+            row.className = 'stats-row';
+            let unitText = ex.id === "gantel" ? "ta o'ng / chap" : "ta";
+            row.innerHTML = `<span class="name">${ex.name}</span><span class="count">${exercisesTotalCount[ex.id]} ${unitText}</span>`;
+            statsContainer.appendChild(row);
+        });
     }
 
     async function resetAppDatabase() {
@@ -883,13 +922,12 @@
 
         try {
             await remove(ref(db, "workouts"));
-            
             const currentTodayStr = getLocalDateString();
             await set(ref(db, 'settings/startDate'), currentTodayStr);
             
             alert("Tizim muvaffaqiyatli tozalandi! Mashqlar bugundan boshlab 1-kundan qayta boshlandi.");
             
-            await calculateWorkoutMetrics();
+            await buildTimelineMetrics();
             if (sectionMain.classList.contains('active')) {
                 initApp();
             } else if (sectionCalendar.classList.contains('active')) {
@@ -910,7 +948,6 @@
         document.getElementById(activeSectionId).classList.add('active');
     }
 
-    // NAVIGATSIYA TUGMALARI VA KESINGI/OLDINGI OYLAR HODISALARI
     btnPrevMonth.addEventListener('click', () => {
         calendarViewDate.setMonth(calendarViewDate.getMonth() - 1);
         loadCalendar();
@@ -922,8 +959,8 @@
     });
 
     navMain.addEventListener('click', () => { switchSection('nav-main', 'section-main'); initApp(); });
-    navCalendar.addEventListener('click', async () => { switchSection('nav-calendar', 'section-calendar'); calendarViewDate = new Date(); await calculateWorkoutMetrics(); loadCalendar(); });
-    navStats.addEventListener('click', async () => { switchSection('nav-stats', 'section-stats'); await calculateWorkoutMetrics(); loadStatistics(); });
+    navCalendar.addEventListener('click', async () => { switchSection('nav-calendar', 'section-calendar'); calendarViewDate = new Date(); await buildTimelineMetrics(); loadCalendar(); });
+    navStats.addEventListener('click', async () => { switchSection('nav-stats', 'section-stats'); await buildTimelineMetrics(); loadStatistics(); });
     
     btnAppReset.addEventListener('click', resetAppDatabase);
 
