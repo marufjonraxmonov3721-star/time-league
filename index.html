@@ -579,7 +579,9 @@
         return date.toLocaleDateString('sv');
     }
 
-    const startDate = new Date(2026, 6, 2); // 2026-07-02
+    // Default boshlang'ich sana, agar bazada bo'lmasa ishlatiladi
+    let defaultStartDate = new Date(2026, 6, 2); 
+    let startDate = defaultStartDate;
     const todayStr = getLocalDateString();
 
     let currentDay = 1;
@@ -588,7 +590,6 @@
     let totalDaysElapsed = 1;
     let totalRestDaysCount = 0;
 
-    // TURNIK SHU YERDAN BUTUNLAY OLIB TASHLANDI
     const exercisesConfig = [
         { id: "anchimaniya", name: "1. Anchimaniya" },
         { id: "figura_anchimaniya", name: "2. Figura uchun anchimaniya" },
@@ -629,7 +630,27 @@
         return activeDay > 0 ? activeDay : 1;
     }
 
+    async function syncStartDateFromDatabase() {
+        const dbRef = ref(db);
+        try {
+            const snapshot = await get(child(dbRef, 'settings/startDate'));
+            if (snapshot.exists()) {
+                const savedDateStr = snapshot.val();
+                startDate = new Date(savedDateStr);
+            } else {
+                // Agar bazada yo'l bo'lsa, default sanani yozib qo'yamiz
+                await set(ref(db, 'settings/startDate'), getLocalDateString(defaultStartDate));
+                startDate = defaultStartDate;
+            }
+        } catch (error) {
+            console.error("Sana yuklashda xatolik:", error);
+            startDate = defaultStartDate;
+        }
+    }
+
     async function calculateWorkoutMetrics() {
+        await syncStartDateFromDatabase();
+
         const today = new Date();
         const diffTime = today.setHours(0,0,0,0) - new Date(startDate).setHours(0,0,0,0);
         totalDaysElapsed = Math.floor(diffTime / (1000 * 3600 * 24)) + 1;
@@ -660,7 +681,6 @@
         await calculateWorkoutMetrics();
         listContainer.innerHTML = '';
         
-        // TURNIK SHU YERDAN HAM OLIB TASHLANDI
         const baseExercises = [
             { id: "anchimaniya", name: "1. Anchimaniya", target: `${countPerDay} ta` },
             { id: "figura_anchimaniya", name: "2. Figura uchun anchimaniya", target: `${countPerDay} ta` },
@@ -791,7 +811,6 @@
         const statsContainer = document.getElementById('exercises-stats-list');
         statsContainer.innerHTML = 'Hisoblanmoqda...';
 
-        // TURNIK STATISTIKADAN HAM O'CHIRILDI
         let exercisesTotalCount = { anchimaniya: 0, figura_anchimaniya: 0, boy_anchimaniya: 0, pres: 0, gantel: 0 };
 
         try {
@@ -824,17 +843,22 @@
         }
     }
 
-    // RESTART (BOSHIDAN BOSHLACH) FUNKSIYASI
+    // YANGILANGAN RESTART FUNKSIYASI
     async function resetAppDatabase() {
-        const confirmReset = confirm("Diqqat! Barcha kiritilgan mashqlar tarixlari butunlay o'chiriladi va hisoblagich boshidan (1-kundan) boshlanadi. Ishonchingiz komilmi?");
+        const confirmReset = confirm("Diqqat! Barcha kiritilgan mashqlar tarixlari butunlay o'chiriladi va hisoblagich bugundan boshlab 1-kunga qaytariladi. Ishonchingiz komilmi?");
         if (!confirmReset) return;
 
         try {
-            // Firebase "workouts" tugunini to'liq tozalaymiz
+            // 1. Mashqlar tarixini o'chiramiz
             await remove(ref(db, "workouts"));
-            alert("Tizim muvaffaqiyatli tozalandi! Mashqlar 1-kundan qaytadan boshlanadi.");
             
-            // Sahifani yangilab, ma'lumotlarni qayta yuklaymiz
+            // 2. Boshlanish sanasini aynan bugungi kunga o'zgartiramiz!
+            const currentTodayStr = getLocalDateString();
+            await set(ref(db, 'settings/startDate'), currentTodayStr);
+            
+            alert("Tizim muvaffaqiyatli tozalandi! Mashqlar bugundan boshlab 1-kundan qayta boshlandi.");
+            
+            // 3. Hisob-kitoblarni yangilab, faol bo'limni qayta yuklaymiz
             await calculateWorkoutMetrics();
             if (sectionMain.classList.contains('active')) {
                 initApp();
@@ -860,7 +884,6 @@
     navCalendar.addEventListener('click', async () => { switchSection('nav-calendar', 'section-calendar'); await calculateWorkoutMetrics(); loadCalendar(); });
     navStats.addEventListener('click', async () => { switchSection('nav-stats', 'section-stats'); await calculateWorkoutMetrics(); loadStatistics(); });
     
-    // RESTART TUGMASIGA HODISA BIRIKTIRISH
     btnAppReset.addEventListener('click', resetAppDatabase);
 
     initApp();
